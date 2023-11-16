@@ -1,15 +1,16 @@
-﻿using System;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+﻿using System.Text.RegularExpressions;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
+using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Entities;
+using CounterStrikeSharp.API.Modules.Menu;
+using CounterStrikeSharp.API.Modules.Timers;
 using Dapper;
 using MySqlConnector;
 using VipCoreApi;
+using ChatMenu = CounterStrikeSharp.API.Modules.Menu.ChatMenu;
 
 namespace VIPCore;
 
@@ -40,21 +41,28 @@ public class VipCore : BasePlugin
             Task.Run(() => OnClientConnectedAsync(slot, Utilities.GetPlayerFromSlot(slot)));
         });
         
-        RegisterListener<Listeners.OnClientDisconnectPost>(slot => Users[slot + 1] = null);
-    }
-
-    [ConsoleCommand("Test")]
-    public void OncMDtEST(CCSPlayerController? player, CommandInfo infi)
-    {
-        if (player == null) return;
-
-        var user = Users[player.EntityIndex!.Value.Value];
-
-        if (user != null)
+        RegisterListener<Listeners.OnClientDisconnectPost>(slot =>
         {
-            Server.PrintToChatAll($"SteamId: {user.steamid} | Group: {user.vip_group}");
-        }
+            Users[slot + 1] = null;
+        });
+
+        CreateMenu();
+        
+        AddTimer(300, () => Task.Run(RemoveExpiredUsers), TimerFlags.REPEAT);
     }
+
+    // [ConsoleCommand("Test")]
+    // public void OncMDtEST(CCSPlayerController? player, CommandInfo infi)
+    // {
+    //     if (player == null) return;
+    //
+    //     var user = Users[player.EntityIndex!.Value.Value];
+    //
+    //     if (user != null)
+    //     {
+    //         Server.PrintToChatAll($"SteamId: {user.steamid} | Group: {user.vip_group}");
+    //     }
+    // }
 
     private async Task OnClientConnectedAsync(int playerSlot, CCSPlayerController player)
     {
@@ -76,6 +84,7 @@ public class VipCore : BasePlugin
             start_vip_time = user.start_vip_time,
             end_vip_time = user.end_vip_time
         };
+
         Console.WriteLine("ADD USER TO USERS");
     }
 
@@ -127,6 +136,37 @@ public class VipCore : BasePlugin
         var steamId = ExtractValueInQuotes(splitCmdArgs[0]);
 
         Task.Run(() => RemoveUserFromDb(steamId));
+    }
+    
+    [RequiresPermissions("@css/root", "@vip/vip")]
+    [ConsoleCommand("css_vip_reload")]
+    public void OnCommandReloadConfig(CCSPlayerController? controller, CommandInfo command)
+    {
+        if (_cfg != null) Config = _cfg.LoadConfig();
+
+        const string msg = "configuration successfully rebooted!";
+
+        ReplyToCommand(controller, msg);
+    }
+    
+    private void CreateMenu()
+    {
+        var menu = new ChatMenu("\x08--[ \x0CVIP MENU \x08]--");
+        
+        menu.AddMenuOption("SOON", (player, option) => player.PrintToChat("SOON"));
+
+        AddCommand("css_vip", "command that opens the VIP MENU", (player, _) =>
+        {
+            if (player == null) return;
+
+            // if (!(player.EntityIndex!.Value.Value))
+            // {
+            //     PrintToChat(player, "You do not have access to this command!");
+            //     return;
+            // }
+
+            ChatMenus.OpenMenu(player, menu);
+        });
     }
 
     private string[] ParseCommandArguments(string argString)
@@ -290,25 +330,24 @@ public class VipCore : BasePlugin
         return string.Empty;
     }
 
-    public bool IsUserInDatabase(string steamId, string vipGroup)
-    {
-        try
-        {
-            using var connection = new MySqlConnection(_dbConnectionString);
-
-            var existingUser = connection.QueryFirstOrDefault<User>(
-                "SELECT * FROM vipcore_users WHERE steamid = @SteamId AND vip_group = @VipGroup",
-                new { SteamId = steamId, VipGroup = vipGroup });
-
-            return existingUser != null;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-    }
-
+    // public bool IsUserInDatabase(string steamId, string vipGroup)
+    // {
+    //     try
+    //     {
+    //         using var connection = new MySqlConnection(_dbConnectionString);
+    //
+    //         var existingUser = connection.QueryFirstOrDefault<User>(
+    //             "SELECT * FROM vipcore_users WHERE steamid = @SteamId AND vip_group = @VipGroup",
+    //             new { SteamId = steamId, VipGroup = vipGroup });
+    //
+    //         return existingUser != null;
+    //     }
+    //     catch (Exception e)
+    //     {
+    //         Console.WriteLine(e);
+    //         throw;
+    //     }
+    // }
 
     private void ReplyToCommand(CCSPlayerController? controller, string msg)
     {
@@ -351,11 +390,11 @@ public class VipCoreApi : IVipCoreApi
         _vipCore = vipCore;
     }
 
-    public void RegisterFeature(string feature, string defaultValue)
+    public void RegisterFeature(string feature)
     {
         foreach (var config in _vipCore.Config!.Groups)
         {
-            if (feature != null) config.Value.Values.TryAdd(feature, defaultValue);
+            if (feature != null) config.Value.Values.TryAdd(feature, string.Empty);
         }
 
         Console.WriteLine($"Feature '{feature}' registered successfully for all groups.");
@@ -397,7 +436,10 @@ public class VipCoreApi : IVipCoreApi
 
         if (_vipCore.Config.Groups.TryGetValue(user.vip_group, out var vipGroup))
         {
-            return vipGroup.Values.ContainsKey(feature);
+            if (vipGroup.Values.TryGetValue(feature, out var featureValue))
+            {
+                return !string.IsNullOrEmpty(featureValue);
+            }
         }
 
         Console.WriteLine("Couldn't find VipGroup in Config.Groups.");
@@ -417,6 +459,11 @@ public class VipCoreApi : IVipCoreApi
     public string GetFeatureStringValue(CCSPlayerController player, string feature)
     {
         return IsClientFeature(player, feature) ? GetFeatureValue(player, feature) : string.Empty;
+    }
+    
+    public bool GetFeatureBoolValue(CCSPlayerController player, string feature)
+    {
+        return IsClientFeature(player, feature) && int.Parse(GetFeatureValue(player, feature)) == 1;
     }
 
     private string GetFeatureValue(CCSPlayerController player, string feature)
