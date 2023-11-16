@@ -1,1 +1,7 @@
 VIPCore/modules
+VIPCore/VIPCore/.idea
+VIPCore/VIPCore/bin
+VIPCore/VIPCore/obj
+VIPCore/shared/VipCoreApi/.idea
+VIPCore/shared/VipCoreApi/bin
+VIPCore/shared/VipCoreApi/obj
