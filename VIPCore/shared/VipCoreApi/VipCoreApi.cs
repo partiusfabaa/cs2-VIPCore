@@ -12,4 +12,7 @@ public interface IVipCoreApi
     public float GetFeatureFloatValue(CCSPlayerController player, string feature);
     public string GetFeatureStringValue(CCSPlayerController player, string feature);
     public bool GetFeatureBoolValue(CCSPlayerController player, string feature);
+    public string GetClientVipGroup(CCSPlayerController player);
+    public void GiveClientVip(CCSPlayerController player, string group, int time);
+    public void RemoveClientVip(string steamId);
 }

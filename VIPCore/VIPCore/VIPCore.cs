@@ -229,7 +229,7 @@ public class VipCore : BasePlugin
         }
     }
 
-    private async Task AddUserToDb(User user)
+    public async Task AddUserToDb(User user)
     {
         try
         {
@@ -256,7 +256,7 @@ public class VipCore : BasePlugin
         }
     }
 
-    private async void RemoveUserFromDb(string steamId)
+    public async Task RemoveUserFromDb(string steamId)
     {
         try
         {
@@ -330,24 +330,28 @@ public class VipCore : BasePlugin
         return string.Empty;
     }
 
-    // public bool IsUserInDatabase(string steamId, string vipGroup)
-    // {
-    //     try
-    //     {
-    //         using var connection = new MySqlConnection(_dbConnectionString);
-    //
-    //         var existingUser = connection.QueryFirstOrDefault<User>(
-    //             "SELECT * FROM vipcore_users WHERE steamid = @SteamId AND vip_group = @VipGroup",
-    //             new { SteamId = steamId, VipGroup = vipGroup });
-    //
-    //         return existingUser != null;
-    //     }
-    //     catch (Exception e)
-    //     {
-    //         Console.WriteLine(e);
-    //         throw;
-    //     }
-    // }
+    public async Task<string> GetVipGroupFromDatabase(string steamId)
+    {
+        try
+        { 
+            await using var connection = new MySqlConnection(_dbConnectionString);
+    
+            var user = await connection.QueryFirstOrDefaultAsync<User>(
+                "SELECT vip_group FROM vipcore_users WHERE steamid = @SteamId",
+                new { SteamId = steamId });
+
+            if (user != null) return user.vip_group;
+            
+            PrintToServer("User not found", ConsoleColor.DarkRed);
+            return string.Empty;
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
 
     private void ReplyToCommand(CCSPlayerController? controller, string msg)
     {
@@ -464,6 +468,37 @@ public class VipCoreApi : IVipCoreApi
     public bool GetFeatureBoolValue(CCSPlayerController player, string feature)
     {
         return IsClientFeature(player, feature) && int.Parse(GetFeatureValue(player, feature)) == 1;
+    }
+
+    public string GetClientVipGroup(CCSPlayerController player)
+    {
+        return Task.Run(() => _vipCore.GetVipGroupFromDatabase(new SteamID(player.SteamID).SteamId2)).Result;
+    }
+
+    public void GiveClientVip(CCSPlayerController player, string group, int time)
+    {
+        Task.Run(() => GiveClientVipAsync(player, group, time));
+    }
+    
+    public void RemoveClientVip(string steamId)
+    {
+        Task.Run(() => RemoveClientVipAsync(steamId));
+    }
+
+    private async Task GiveClientVipAsync(CCSPlayerController player, string group, int timeSeconds)
+    {
+        await _vipCore.AddUserToDb(new User
+        {
+            steamid = new SteamID(player.SteamID).SteamId2,
+            vip_group = group,
+            start_vip_time = DateTime.UtcNow.GetUnixEpoch(),
+            end_vip_time = timeSeconds == 0 ? timeSeconds : DateTime.UtcNow.AddSeconds(timeSeconds).GetUnixEpoch()
+        });
+    }
+    
+    private async Task RemoveClientVipAsync(string steamId)
+    {
+        await _vipCore.RemoveUserFromDb(steamId);
     }
 
     private string GetFeatureValue(CCSPlayerController player, string feature)
