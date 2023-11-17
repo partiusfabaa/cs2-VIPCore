@@ -16,13 +16,17 @@ namespace VIPCore;
 
 public class VipCore : BasePlugin
 {
-    public override string ModuleName => "VIP Core";
+    public override string ModuleAuthor => "thesamefabius";
+    public override string ModuleName => "[VIP] Core";
     public override string ModuleVersion => "v1.0.0";
 
     private string _dbConnectionString = string.Empty;
     private Cfg? _cfg;
     public Config? Config;
     public readonly User?[] Users = new User[Server.MaxPlayers];
+
+    private readonly ChatMenu?[] _vipMenu = new ChatMenu?[Server.MaxPlayers];
+    public readonly Dictionary<string, Action<CCSPlayerController>> UserSettings = new();
 
     public VipCore()
     {
@@ -38,16 +42,18 @@ public class VipCore : BasePlugin
 
         RegisterListener<Listeners.OnClientConnected>(slot =>
         {
+            _vipMenu[slot + 1] = new ChatMenu("[\x0CVIP Menu\x01]");
             Task.Run(() => OnClientConnectedAsync(slot, Utilities.GetPlayerFromSlot(slot)));
         });
-        
+
         RegisterListener<Listeners.OnClientDisconnectPost>(slot =>
         {
             Users[slot + 1] = null;
+            _vipMenu[slot + 1] = null;
         });
 
         CreateMenu();
-        
+
         AddTimer(300, () => Task.Run(RemoveExpiredUsers), TimerFlags.REPEAT);
     }
 
@@ -137,7 +143,7 @@ public class VipCore : BasePlugin
 
         Task.Run(() => RemoveUserFromDb(steamId));
     }
-    
+
     [RequiresPermissions("@css/root", "@vip/vip")]
     [ConsoleCommand("css_vip_reload")]
     public void OnCommandReloadConfig(CCSPlayerController? controller, CommandInfo command)
@@ -148,24 +154,40 @@ public class VipCore : BasePlugin
 
         ReplyToCommand(controller, msg);
     }
-    
+
     private void CreateMenu()
     {
-        var menu = new ChatMenu("\x08--[ \x0CVIP MENU \x08]--");
-        
-        menu.AddMenuOption("SOON", (player, option) => player.PrintToChat("SOON"));
-
         AddCommand("css_vip", "command that opens the VIP MENU", (player, _) =>
         {
             if (player == null) return;
 
-            // if (!(player.EntityIndex!.Value.Value))
-            // {
-            //     PrintToChat(player, "You do not have access to this command!");
-            //     return;
-            // }
+            if (!IsUserActiveVip(player))
+            {
+                PrintToChat(player, "You do not have access to this command!");
+                return;
+            }
 
-            ChatMenus.OpenMenu(player, menu);
+            var index = player.EntityIndex!.Value.Value;
+
+            _vipMenu[index]!.MenuOptions.Clear();
+            if (Config != null)
+            {
+                if (Config.Groups.TryGetValue(Users[index]!.vip_group, out var vipGroup))
+                {
+                    foreach (var setting in UserSettings)
+                    {
+                        if (vipGroup.Values.TryGetValue(setting.Key, out var featureValue))
+                        {
+                            if (string.IsNullOrEmpty(featureValue)) return;
+                            
+                            _vipMenu[index]!.AddMenuOption(setting.Key,
+                                (controller, _) => setting.Value(controller));
+                        }
+                    }
+                }
+            }
+
+            ChatMenus.OpenMenu(player, _vipMenu[index]!);
         });
     }
 
@@ -283,7 +305,7 @@ public class VipCore : BasePlugin
         }
     }
 
-    private async Task<User?> GetUserFromDb(SteamID steamId)
+    public async Task<User?> GetUserFromDb(SteamID steamId)
     {
         try
         {
@@ -333,24 +355,38 @@ public class VipCore : BasePlugin
     public async Task<string> GetVipGroupFromDatabase(string steamId)
     {
         try
-        { 
+        {
             await using var connection = new MySqlConnection(_dbConnectionString);
-    
+
             var user = await connection.QueryFirstOrDefaultAsync<User>(
                 "SELECT vip_group FROM vipcore_users WHERE steamid = @SteamId",
                 new { SteamId = steamId });
 
             if (user != null) return user.vip_group;
-            
+
             PrintToServer("User not found", ConsoleColor.DarkRed);
             return string.Empty;
-
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
             throw;
         }
+    }
+
+    public bool IsUserActiveVip(CCSPlayerController player)
+    {
+        var index = player.EntityIndex!.Value.Value;
+        var user = Users[index];
+        if (user == null) return false;
+
+        if (user.end_vip_time != 0 && DateTime.UtcNow.GetUnixEpoch() > user.end_vip_time)
+        {
+            Users[index] = null;
+            return false;
+        }
+
+        return user.end_vip_time == 0 || DateTime.UtcNow.GetUnixEpoch() < user.end_vip_time;
     }
 
     private void ReplyToCommand(CCSPlayerController? controller, string msg)
@@ -361,7 +397,7 @@ public class VipCore : BasePlugin
             PrintToServer($"{msg}", ConsoleColor.DarkMagenta);
     }
 
-    private void PrintToChat(CCSPlayerController player, string msg)
+    public void PrintToChat(CCSPlayerController player, string msg)
     {
         player.PrintToChat($"\x08[ \x0CVIPCore \x08] {msg}");
     }
@@ -394,11 +430,20 @@ public class VipCoreApi : IVipCoreApi
         _vipCore = vipCore;
     }
 
-    public void RegisterFeature(string feature)
+    public void RegisterFeature(string feature, Action<CCSPlayerController> selectItem)
     {
         foreach (var config in _vipCore.Config!.Groups)
         {
-            if (feature != null) config.Value.Values.TryAdd(feature, string.Empty);
+            if (feature != null)
+            {
+                config.Value.Values.TryAdd(feature, string.Empty);
+                foreach (var keyValuePair in config.Value.Values)
+                {
+                    if (string.IsNullOrEmpty(keyValuePair.Value)) continue;
+
+                    _vipCore.UserSettings.TryAdd(feature, selectItem);
+                }
+            }
         }
 
         Console.WriteLine($"Feature '{feature}' registered successfully for all groups.");
@@ -408,7 +453,11 @@ public class VipCoreApi : IVipCoreApi
     {
         foreach (var config in _vipCore.Config!.Groups)
         {
-            if (feature != null) config.Value.Values.Remove(feature);
+            if (feature != null)
+            {
+                config.Value.Values.Remove(feature);
+                _vipCore.UserSettings.Remove(feature);
+            }
         }
 
         Console.WriteLine($"Feature '{feature}' unregistered successfully for all groups.");
@@ -416,17 +465,7 @@ public class VipCoreApi : IVipCoreApi
 
     public bool IsClientVip(CCSPlayerController player)
     {
-        var index = player.EntityIndex!.Value.Value;
-        var user = _vipCore.Users[index];
-        if (user == null) return false;
-
-        if (user.end_vip_time != 0 && DateTime.UtcNow.GetUnixEpoch() > user.end_vip_time)
-        {
-            _vipCore.Users[index] = null;
-            return false;
-        }
-
-        return user.end_vip_time == 0 || DateTime.UtcNow.GetUnixEpoch() < user.end_vip_time;
+        return _vipCore.IsUserActiveVip(player);
     }
 
     public bool IsClientFeature(CCSPlayerController player, string feature)
@@ -464,7 +503,7 @@ public class VipCoreApi : IVipCoreApi
     {
         return IsClientFeature(player, feature) ? GetFeatureValue(player, feature) : string.Empty;
     }
-    
+
     public bool GetFeatureBoolValue(CCSPlayerController player, string feature)
     {
         return IsClientFeature(player, feature) && int.Parse(GetFeatureValue(player, feature)) == 1;
@@ -479,26 +518,46 @@ public class VipCoreApi : IVipCoreApi
     {
         Task.Run(() => GiveClientVipAsync(player, group, time));
     }
-    
-    public void RemoveClientVip(string steamId)
+
+    public void RemoveClientVip(CCSPlayerController player)
     {
-        Task.Run(() => RemoveClientVipAsync(steamId));
+        Task.Run(() => RemoveClientVipAsync(player));
+    }
+
+    public void PrintToChat(CCSPlayerController player, string message)
+    {
+        _vipCore.PrintToChat(player, message);
     }
 
     private async Task GiveClientVipAsync(CCSPlayerController player, string group, int timeSeconds)
     {
+        var steamId = new SteamID(player.SteamID);
         await _vipCore.AddUserToDb(new User
         {
-            steamid = new SteamID(player.SteamID).SteamId2,
+            steamid = steamId.SteamId2,
             vip_group = group,
             start_vip_time = DateTime.UtcNow.GetUnixEpoch(),
             end_vip_time = timeSeconds == 0 ? timeSeconds : DateTime.UtcNow.AddSeconds(timeSeconds).GetUnixEpoch()
         });
+
+        var user = await _vipCore.GetUserFromDb(steamId);
+
+        if (user != null)
+        {
+            _vipCore.Users[player.EntityIndex!.Value.Value] = new User
+            {
+                steamid = steamId.SteamId2,
+                vip_group = user.vip_group,
+                start_vip_time = user.start_vip_time,
+                end_vip_time = user.end_vip_time
+            };
+        }
     }
-    
-    private async Task RemoveClientVipAsync(string steamId)
+
+    private async Task RemoveClientVipAsync(CCSPlayerController player)
     {
-        await _vipCore.RemoveUserFromDb(steamId);
+        await _vipCore.RemoveUserFromDb(new SteamID(player.SteamID).SteamId2);
+        _vipCore.Users[player.EntityIndex!.Value.Value] = null;
     }
 
     private string GetFeatureValue(CCSPlayerController player, string feature)
@@ -506,7 +565,7 @@ public class VipCoreApi : IVipCoreApi
         var user = _vipCore.Users[player.EntityIndex!.Value.Value];
 
         if (user == null || string.IsNullOrEmpty(user.vip_group)) return string.Empty;
-        
+
         if (_vipCore.Config?.Groups.TryGetValue(user.vip_group, out var vipGroup) == true)
         {
             if (vipGroup.Values.TryGetValue(feature, out var value))
@@ -515,6 +574,7 @@ public class VipCoreApi : IVipCoreApi
                 return value;
             }
         }
+
         Console.WriteLine($"Feature not found, returning default value: {string.Empty}");
         return string.Empty;
     }

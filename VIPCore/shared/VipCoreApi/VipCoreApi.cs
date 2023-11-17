@@ -4,7 +4,7 @@ namespace VipCoreApi;
 
 public interface IVipCoreApi
 {
-    public void RegisterFeature(string feature);
+    public void RegisterFeature(string feature, Action<CCSPlayerController> selectItem);
     public void UnRegisterFeature(string feature);
     public bool IsClientVip(CCSPlayerController player);
     public bool IsClientFeature(CCSPlayerController player, string feature);
@@ -14,5 +14,6 @@ public interface IVipCoreApi
     public bool GetFeatureBoolValue(CCSPlayerController player, string feature);
     public string GetClientVipGroup(CCSPlayerController player);
     public void GiveClientVip(CCSPlayerController player, string group, int time);
-    public void RemoveClientVip(string steamId);
+    public void RemoveClientVip(CCSPlayerController player);
+    public void PrintToChat(CCSPlayerController player, string message);
 }
