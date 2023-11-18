@@ -26,12 +26,12 @@ public class Cfg
     {
         var config = new Config
         {
-            Groups = new Dictionary<string, VipGroup>()
+            Groups = new Dictionary<string, VipGroup>
             {
                 {
                     "GROUP_NAME", new VipGroup
                     {
-                        Values = new Dictionary<string, string>()
+                        Values = new Dictionary<string, object>()
                     }
                 }
             },
@@ -63,7 +63,7 @@ public class Config
 
 public class VipGroup
 {
-    public Dictionary<string, string> Values { get; set; } = null!;
+    public Dictionary<string, object> Values { get; init; } = null!;
 }
 
 public class VipDb

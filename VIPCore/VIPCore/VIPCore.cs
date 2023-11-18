@@ -11,6 +11,8 @@ using Dapper;
 using MySqlConnector;
 using VipCoreApi;
 using ChatMenu = CounterStrikeSharp.API.Modules.Menu.ChatMenu;
+using JsonException = System.Text.Json.JsonException;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace VIPCore;
 
@@ -22,11 +24,12 @@ public class VipCore : BasePlugin
 
     private string _dbConnectionString = string.Empty;
     private Cfg? _cfg;
+    private readonly ChatMenu?[] _vipMenu = new ChatMenu?[Server.MaxPlayers];
+
     public Config? Config;
     public readonly User?[] Users = new User[Server.MaxPlayers];
-
-    private readonly ChatMenu?[] _vipMenu = new ChatMenu?[Server.MaxPlayers];
     public readonly Dictionary<string, Action<CCSPlayerController>> UserSettings = new();
+    public bool IsCoreLoad;
 
     public VipCore()
     {
@@ -35,6 +38,7 @@ public class VipCore : BasePlugin
 
     public override void Load(bool hotReload)
     {
+        IsCoreLoad = true;
         _cfg = new Cfg(this);
         Config = _cfg!.LoadConfig();
         _dbConnectionString = BuildConnectionString();
@@ -170,6 +174,7 @@ public class VipCore : BasePlugin
             var index = player.EntityIndex!.Value.Value;
 
             _vipMenu[index]!.MenuOptions.Clear();
+
             if (Config != null)
             {
                 if (Config.Groups.TryGetValue(Users[index]!.vip_group, out var vipGroup))
@@ -178,8 +183,8 @@ public class VipCore : BasePlugin
                     {
                         if (vipGroup.Values.TryGetValue(setting.Key, out var featureValue))
                         {
-                            if (string.IsNullOrEmpty(featureValue)) return;
-                            
+                            if (string.IsNullOrEmpty(featureValue.ToString())) return;
+
                             _vipMenu[index]!.AddMenuOption(setting.Key,
                                 (controller, _) => setting.Value(controller));
                         }
@@ -268,7 +273,7 @@ public class VipCore : BasePlugin
 
             await connection.ExecuteAsync(@"
                 INSERT INTO vipcore_users (steamid, vip_group, start_vip_time, end_vip_time)
-                VALUES (@SteamId, @VipGroup, @StartVipTime, @EndVipTime);", user);
+                VALUES (@steamid, @vip_group, @start_vip_time, @end_vip_time);", user);
 
             PrintToServer($"Player '{user.steamid}' has been successfully added", ConsoleColor.Green);
         }
@@ -439,14 +444,14 @@ public class VipCoreApi : IVipCoreApi
                 config.Value.Values.TryAdd(feature, string.Empty);
                 foreach (var keyValuePair in config.Value.Values)
                 {
-                    if (string.IsNullOrEmpty(keyValuePair.Value)) continue;
+                    if (string.IsNullOrEmpty(keyValuePair.Value.ToString())) continue;
 
                     _vipCore.UserSettings.TryAdd(feature, selectItem);
                 }
             }
         }
 
-        Console.WriteLine($"Feature '{feature}' registered successfully for all groups.");
+        Console.WriteLine($"Feature '{feature}' registered successfully");
     }
 
     public void UnRegisterFeature(string feature)
@@ -460,7 +465,7 @@ public class VipCoreApi : IVipCoreApi
             }
         }
 
-        Console.WriteLine($"Feature '{feature}' unregistered successfully for all groups.");
+        Console.WriteLine($"Feature '{feature}' unregistered successfully");
     }
 
     public bool IsClientVip(CCSPlayerController player)
@@ -479,34 +484,11 @@ public class VipCoreApi : IVipCoreApi
 
         if (_vipCore.Config.Groups.TryGetValue(user.vip_group, out var vipGroup))
         {
-            if (vipGroup.Values.TryGetValue(feature, out var featureValue))
-            {
-                return !string.IsNullOrEmpty(featureValue);
-            }
+            return vipGroup.Values.ContainsKey(feature);
         }
 
         Console.WriteLine("Couldn't find VipGroup in Config.Groups.");
         return false;
-    }
-
-    public int GetFeatureIntValue(CCSPlayerController player, string feature)
-    {
-        return IsClientFeature(player, feature) ? int.Parse(GetFeatureValue(player, feature)) : int.MinValue;
-    }
-
-    public float GetFeatureFloatValue(CCSPlayerController player, string feature)
-    {
-        return IsClientFeature(player, feature) ? float.Parse(GetFeatureValue(player, feature)) : float.MinValue;
-    }
-
-    public string GetFeatureStringValue(CCSPlayerController player, string feature)
-    {
-        return IsClientFeature(player, feature) ? GetFeatureValue(player, feature) : string.Empty;
-    }
-
-    public bool GetFeatureBoolValue(CCSPlayerController player, string feature)
-    {
-        return IsClientFeature(player, feature) && int.Parse(GetFeatureValue(player, feature)) == 1;
     }
 
     public string GetClientVipGroup(CCSPlayerController player)
@@ -527,6 +509,11 @@ public class VipCoreApi : IVipCoreApi
     public void PrintToChat(CCSPlayerController player, string message)
     {
         _vipCore.PrintToChat(player, message);
+    }
+
+    public bool VipCoreLoad()
+    {
+        return _vipCore.IsCoreLoad;
     }
 
     private async Task GiveClientVipAsync(CCSPlayerController player, string group, int timeSeconds)
@@ -560,23 +547,33 @@ public class VipCoreApi : IVipCoreApi
         _vipCore.Users[player.EntityIndex!.Value.Value] = null;
     }
 
-    private string GetFeatureValue(CCSPlayerController player, string feature)
+    public T GetFeatureValue<T>(CCSPlayerController player, string feature)
     {
         var user = _vipCore.Users[player.EntityIndex!.Value.Value];
 
-        if (user == null || string.IsNullOrEmpty(user.vip_group)) return string.Empty;
+        if (user == null || string.IsNullOrEmpty(user.vip_group))
+            return default(T)!;
 
         if (_vipCore.Config?.Groups.TryGetValue(user.vip_group, out var vipGroup) == true)
         {
             if (vipGroup.Values.TryGetValue(feature, out var value))
             {
                 Console.WriteLine($"Checking feature: {feature} - {value}");
-                return value;
+                try
+                {
+                    var stringValue = value.ToString();
+                    var deserializedValue = JsonSerializer.Deserialize<T>(stringValue!);
+                    return deserializedValue!;
+                }
+                catch (JsonException)
+                {
+                    Console.WriteLine($"Failed to deserialize feature '{feature}' value: {value}");
+                }
             }
         }
 
         Console.WriteLine($"Feature not found, returning default value: {string.Empty}");
-        return string.Empty;
+        return default(T)!;
     }
 }
 
@@ -587,3 +584,42 @@ public class User
     public int start_vip_time { get; set; }
     public int end_vip_time { get; set; }
 }
+
+// public int GetFeatureIntValue(CCSPlayerController player, string feature)
+// {
+//     return IsClientFeature(player, feature) ? int.Parse(GetFeatureValue(player, feature)) : int.MinValue;
+// }
+//
+// public float GetFeatureFloatValue(CCSPlayerController player, string feature)
+// {
+//     return IsClientFeature(player, feature) ? float.Parse(GetFeatureValue(player, feature)) : float.MinValue;
+// }
+//
+// public string GetFeatureStringValue(CCSPlayerController player, string feature)
+// {
+//     return IsClientFeature(player, feature) ? GetFeatureValue(player, feature) : string.Empty;
+// }
+//
+// public bool GetFeatureBoolValue(CCSPlayerController player, string feature)
+// {
+//     return IsClientFeature(player, feature) && int.Parse(GetFeatureValue(player, feature)) == 1;
+// }
+
+// private string GetFeatureValue(CCSPlayerController player, string feature)
+// {
+//     var user = _vipCore.Users[player.EntityIndex!.Value.Value];
+//
+//     if (user == null || string.IsNullOrEmpty(user.vip_group)) return string.Empty;
+//
+//     if (_vipCore.Config?.Groups.TryGetValue(user.vip_group, out var vipGroup) == true)
+//     {
+//         if (vipGroup.Values.TryGetValue(feature, out var value))
+//         {
+//             Console.WriteLine($"Checking feature: {feature} - {value}");
+//             return value;
+//         }
+//     }
+//
+//     Console.WriteLine($"Feature not found, returning default value: {string.Empty}");
+//     return string.Empty;
+// }
