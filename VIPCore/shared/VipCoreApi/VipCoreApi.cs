@@ -17,5 +17,5 @@ public interface IVipCoreApi
     public void GiveClientVip(CCSPlayerController player, string group, int time);
     public void RemoveClientVip(CCSPlayerController player);
     public void PrintToChat(CCSPlayerController player, string message);
-    public bool VipCoreLoad();
+    public event Action? OnCoreReady;
 }

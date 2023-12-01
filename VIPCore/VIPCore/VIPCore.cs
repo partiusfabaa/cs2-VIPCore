@@ -1,4 +1,9 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
@@ -29,20 +34,23 @@ public class VipCore : BasePlugin
     public Config? Config;
     public readonly User?[] Users = new User[Server.MaxPlayers];
     public readonly Dictionary<string, Action<CCSPlayerController>> UserSettings = new();
-    public bool IsCoreLoad;
+    private readonly VipCoreApi _vipApi;
 
     public VipCore()
     {
-        AddApi<IVipCoreApi>(new VipCoreApi(this));
+        _vipApi = new VipCoreApi(this);
+        AddApi<IVipCoreApi>(_vipApi);
     }
 
     public override void Load(bool hotReload)
     {
-        IsCoreLoad = true;
+        Server.NextFrame(Startup);
+        
         _cfg = new Cfg(this);
         Config = _cfg!.LoadConfig();
         _dbConnectionString = BuildConnectionString();
         Task.Run(() => CreateTable(_dbConnectionString));
+        
 
         RegisterListener<Listeners.OnClientConnected>(slot =>
         {
@@ -59,6 +67,11 @@ public class VipCore : BasePlugin
         CreateMenu();
 
         AddTimer(300, () => Task.Run(RemoveExpiredUsers), TimerFlags.REPEAT);
+    }
+
+    private void Startup()
+    {
+        _vipApi.Startup();
     }
 
     // [ConsoleCommand("Test")]
@@ -429,6 +442,7 @@ public static class GetUnixTime
 public class VipCoreApi : IVipCoreApi
 {
     private readonly VipCore _vipCore;
+    public event Action? OnCoreReady;
 
     public VipCoreApi(VipCore vipCore)
     {
@@ -451,7 +465,9 @@ public class VipCoreApi : IVipCoreApi
             }
         }
 
+        Console.ForegroundColor = ConsoleColor.DarkMagenta;
         Console.WriteLine($"Feature '{feature}' registered successfully");
+        Console.ResetColor();
     }
 
     public void UnRegisterFeature(string feature)
@@ -465,7 +481,9 @@ public class VipCoreApi : IVipCoreApi
             }
         }
 
+        Console.ForegroundColor = ConsoleColor.DarkMagenta;
         Console.WriteLine($"Feature '{feature}' unregistered successfully");
+        Console.ResetColor();
     }
 
     public bool IsClientVip(CCSPlayerController player)
@@ -511,9 +529,9 @@ public class VipCoreApi : IVipCoreApi
         _vipCore.PrintToChat(player, message);
     }
 
-    public bool VipCoreLoad()
+    public void Startup()
     {
-        return _vipCore.IsCoreLoad;
+        OnCoreReady?.Invoke();
     }
 
     private async Task GiveClientVipAsync(CCSPlayerController player, string group, int timeSeconds)
@@ -552,7 +570,7 @@ public class VipCoreApi : IVipCoreApi
         var user = _vipCore.Users[player.EntityIndex!.Value.Value];
 
         if (user == null || string.IsNullOrEmpty(user.vip_group))
-            return default(T)!;
+            return default!;
 
         if (_vipCore.Config?.Groups.TryGetValue(user.vip_group, out var vipGroup) == true)
         {
@@ -561,8 +579,7 @@ public class VipCoreApi : IVipCoreApi
                 Console.WriteLine($"Checking feature: {feature} - {value}");
                 try
                 {
-                    var stringValue = value.ToString();
-                    var deserializedValue = JsonSerializer.Deserialize<T>(stringValue!);
+                    var deserializedValue = JsonSerializer.Deserialize<T>(value.ToString()!);
                     return deserializedValue!;
                 }
                 catch (JsonException)
@@ -573,7 +590,7 @@ public class VipCoreApi : IVipCoreApi
         }
 
         Console.WriteLine($"Feature not found, returning default value: {string.Empty}");
-        return default(T)!;
+        return default!;
     }
 }
 
