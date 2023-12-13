@@ -477,6 +477,8 @@ public class VipCoreApi : IVipCoreApi
                                 "/configs/plugins/VIPCore/";
     }
 
+    public string GetTranslatedText(string feature) => _vipCore.Localizer[feature];
+
     public string CoreConfigDirectory => _pathToVipCoreConfigs;
     public string ModulesConfigDirectory => Path.Combine(_pathToVipCoreConfigs, "Modules/");
 
