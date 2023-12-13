@@ -1,5 +1,4 @@
 using System.Text.Json;
-using CounterStrikeSharp.API.Core;
 
 namespace VIPCore;
 
@@ -27,7 +26,6 @@ public class Cfg
     {
         var config = new Config
         {
-            Delay = 2.0f,
             Groups = new Dictionary<string, VipGroup>
             {
                 {
@@ -59,7 +57,6 @@ public class Cfg
 
 public class Config
 {
-    public float Delay { get; set; }
     public Dictionary<string, VipGroup> Groups { get; set; } = null!;
     public VipDb Connection { get; set; } = null!;
 }

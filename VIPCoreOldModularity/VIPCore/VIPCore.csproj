@@ -10,9 +10,6 @@
     <Reference Include="CounterStrikeSharp.API">
       <HintPath>..\CounterStrikeSharp.API.dll</HintPath>
     </Reference>
-    <Reference Include="ModularityPlugin">
-      <HintPath>..\Modularity.dll</HintPath>
-    </Reference>
     <Reference Include="VipCoreApi">
       <HintPath>..\VipCoreApi.dll</HintPath>
     </Reference>
@@ -20,7 +17,6 @@
 
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.1.21" />
-    <PackageReference Include="Microsoft.Extensions.Localization" Version="8.0.0" />
     <PackageReference Include="MySqlConnector" Version="2.3.0" />
   </ItemGroup>
 
