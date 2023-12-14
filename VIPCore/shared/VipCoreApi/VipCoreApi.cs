@@ -6,7 +6,10 @@ public interface IVipCoreApi
 {
     public string CoreConfigDirectory { get; }
     public string ModulesConfigDirectory { get; }
-    public void RegisterFeature(string feature, Action<CCSPlayerController> selectItem);
+
+    public void RegisterFeature(string feature, bool showMenuItem = true,
+        Action<CCSPlayerController>? selectItem = null);
+
     public void UnRegisterFeature(string feature);
     public bool IsClientVip(CCSPlayerController player);
     public bool IsClientFeature(CCSPlayerController player, string feature);
@@ -18,6 +21,7 @@ public interface IVipCoreApi
     public T GetPlayerCookie<T>(ulong steamId64, string featureName);
     public void PrintToChat(CCSPlayerController player, string message);
     public string GetTranslatedText(string feature);
+
     public event Action<CCSPlayerController>? OnPlayerSpawn;
     //public event Action? OnCoreReady;
 }

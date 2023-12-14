@@ -1,5 +1,6 @@
 using System.Text.Json;
 using CounterStrikeSharp.API.Core;
+using Microsoft.Extensions.Logging;
 
 namespace VIPCore;
 
@@ -11,10 +12,34 @@ public class Cfg
     {
         _vipCore = vipCore;
     }
+    
+    public ConfigVipCoreSettings LoadVipSettingsConfig()
+    {
+        var configPath = Path.Combine(_vipCore.VipApi.CoreConfigDirectory, "vip_core.json");
+
+        ConfigVipCoreSettings config;
+        if (!File.Exists(configPath))
+        {
+            config = new ConfigVipCoreSettings
+            {
+                TimeMode = 0,
+                VipLogging = true
+            };
+            
+            File.WriteAllText(configPath, JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true }));
+            _vipCore.Logger.LogInformation("The configuration was successfully saved to a file: {path}", configPath);
+
+            return config;
+        }
+
+        config = JsonSerializer.Deserialize<ConfigVipCoreSettings>(File.ReadAllText(configPath))!;
+
+        return config;
+    }
 
     public Config LoadConfig()
     {
-        var configPath = Path.Combine(_vipCore.ModuleDirectory, "vip.json");
+        var configPath = Path.Combine(_vipCore.VipApi.CoreConfigDirectory, "vip.json");
 
         if (!File.Exists(configPath)) return CreateConfig(configPath);
 
@@ -49,9 +74,7 @@ public class Cfg
         File.WriteAllText(configPath,
             JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true }));
 
-        Console.ForegroundColor = ConsoleColor.DarkGreen;
-        Console.WriteLine("[VIPCore] The configuration was successfully saved to a file: " + configPath);
-        Console.ResetColor();
+        _vipCore.Logger.LogInformation("The configuration was successfully saved to a file: {path}", configPath);
 
         return config;
     }
@@ -75,4 +98,10 @@ public class VipDb
     public required string Database { get; init; }
     public required string User { get; init; }
     public required string Password { get; init; }
+}
+
+public class ConfigVipCoreSettings
+{
+    public int TimeMode { get; set; }
+    public bool VipLogging { get; set; }
 }
