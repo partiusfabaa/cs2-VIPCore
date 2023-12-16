@@ -1,4 +1,4 @@
-VIPCore/modules
+VIPCore/ignoremodules/
 VIPCore/VIPCore/.idea
 VIPCore/VIPCore/bin/
 VIPCore/VIPCore/obj/
@@ -13,3 +13,15 @@ VIPCoreOldModularity/
 *.user
 *.xml
 *.editorconfig
+VIPCore/modules/VIP_Gravity/bin
+VIPCore/modules/VIP_Gravity/obj
+VIPCore/modules/VIP_Gravity/.idea
+VIPCore/modules/VIP_Health/bin
+VIPCore/modules/VIP_Health/obj
+VIPCore/modules/VIP_Health/.idea
+VIPCore/modules/VIP_Jumps/bin
+VIPCore/modules/VIP_Jumps/obj
+VIPCore/modules/VIP_Jumps/.idea
+VIPCore/modules/VIP_SmokeColor/bin
+VIPCore/modules/VIP_SmokeColor/obj
+VIPCore/modules/VIP_SmokeColor/.idea
