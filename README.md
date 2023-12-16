@@ -35,6 +35,15 @@ public class VIPMyModule : BasePlugin, IModulePlugin
     {
         _api = provider.Get<IVipCoreApi>();
         _api.RegisterFeature(Feature, selectItem: OnSelectItem);
+        _api.OnPlayerSpawn += OnPlayerSpawn;
+    }
+
+    private void OnPlayerSpawn(CCSPlayerController player)
+    {
+        if (_api.PlayerHasFeature(player, Feature))
+        {
+            _api.PrintToChat(player, $"VIP player - {player.PlayerName} has spawned");
+        }
     }
 
     private void OnSelectItem(CCSPlayerController player, IVipCoreApi.FeatureState state)
