@@ -7,6 +7,43 @@
 3. Download [VIPCore](https://github.com/partiusfabaa/cs2-VIPCore/releases)
 4. Unpack the archive and upload it to the game server (example path: addons/counterstrikesharp/plugins/ModularityPlugin/)
 
+# Commands 
+
+| Command                             | Description                                               |
+|-------------------------------------|-----------------------------------------------------------|
+| `css_vip_reload` or `!vip_reload`    | Reloads the configuration. (`@css/root`) |
+| `css_vip_adduser "steamid" "vipgroup" "time or 0 permanently"` or `!vip_adduser "steamid" "vipgroup" "time or 0 permanently"` | Adds a VIP player (for server console only) |
+| `css_vip_deleteuser "steamid"` or `!vip_deleteuser "steamid"` | Allows you to delete a player by SteamID identifier (for server console only) |
+| `css_vip` or `!vip` | Opens the VIP menu |
+
+# Configs (addons/counterstrikesharp/configs/plugins/VIPCore/)
+
+### Core.json
+```json
+{
+  "TimeMode": 0,         // 0 - seconds | 1 - minutes | 2 - hours | 3 - days)
+  "VipLogging": true     //Whether to log VIPCore | true - yes | false - no
+}
+```
+### vip.json
+```json
+{
+  "Groups": {
+	  "VIP1": {
+        "Values": {
+            "features": values
+        }
+    }
+  },
+  "Connection": {
+    "Host": 	"host",
+    "Database": "database",
+    "User": 	"user",
+    "Password": "password"
+  }
+}
+```
+
 # What you need to write a module
 1. Add the dll from CSSModularity to your project (the dll can be found at this path: `addons/counterstrikesharp/plugins/ModularityPlugin/shared/Modularity/Modularity.dll`)
 2. Add the dll from VipCoreApi to your project (the dll can be found at this path: `addons/counterstrikesharp/plugins/ModularityPlugin/shared/VipCoreApi/VipCoreApi.dll`)
