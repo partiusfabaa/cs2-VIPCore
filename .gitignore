@@ -9,6 +9,7 @@ VIPCoreOldModularity/modules
 VIPCoreOldModularity/shared
 VIPCoreOldModularity/VIPCore/obj/
 VIPCoreOldModularity/VIPCore/bin/
+VIPCoreOldModularity/
 *.user
 *.xml
 *.editorconfig

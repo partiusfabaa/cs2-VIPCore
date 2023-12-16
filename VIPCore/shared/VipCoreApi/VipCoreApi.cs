@@ -4,15 +4,30 @@ namespace VipCoreApi;
 
 public interface IVipCoreApi
 {
+    enum FeatureState
+    {
+        Enabled,
+        Disabled,
+        NoAccess
+    }
+
+    enum FeatureType
+    {
+        Toggle,
+        Selectable,
+        Hide
+    }
+    
     public string CoreConfigDirectory { get; }
     public string ModulesConfigDirectory { get; }
+    public FeatureState GetPlayerFeatureState(CCSPlayerController player, string feature);
 
-    public void RegisterFeature(string feature, bool showMenuItem = true,
-        Action<CCSPlayerController>? selectItem = null);
+    public void RegisterFeature(string feature, FeatureType featureType = FeatureType.Toggle,
+        Action<CCSPlayerController, FeatureState>? selectItem = null);
 
     public void UnRegisterFeature(string feature);
     public bool IsClientVip(CCSPlayerController player);
-    public bool IsClientFeature(CCSPlayerController player, string feature);
+    public bool PlayerHasFeature(CCSPlayerController player, string feature);
     public T GetFeatureValue<T>(CCSPlayerController player, string feature);
     public string GetClientVipGroup(CCSPlayerController player);
     public void GiveClientVip(CCSPlayerController player, string group, int time);
