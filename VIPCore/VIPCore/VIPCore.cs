@@ -1,5 +1,4 @@
-﻿using System.Text.RegularExpressions;
-using CounterStrikeSharp.API;
+﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
@@ -16,6 +15,7 @@ using VipCoreApi;
 using ChatMenu = CounterStrikeSharp.API.Modules.Menu.ChatMenu;
 using JsonException = System.Text.Json.JsonException;
 using JsonSerializer = System.Text.Json.JsonSerializer;
+using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
 namespace VIPCore;
 
@@ -29,11 +29,12 @@ public class VipCore : BasePlugin, ICorePlugin
 
     private Cfg? _cfg;
     public Config Config = null!;
-    public ConfigVipCoreSettings CoreSetting = null!;
-
+    private ConfigVipCoreSettings _coreSetting = null!;
     public VipCoreApi VipApi = null!;
 
-    public readonly User?[] Users = new User[Server.MaxPlayers + 1];
+
+    private readonly bool?[] _vipStatusExpired = new bool?[65];
+    public readonly User?[] Users = new User[65];
     public readonly Dictionary<string, Feature> Features = new();
 
     public override void Load(bool hotReload)
@@ -47,16 +48,17 @@ public class VipCore : BasePlugin, ICorePlugin
                 "Hot reload completed. Be aware of potential issues. Consider {restart} for a clean state",
                 "restarting");
             Config = _cfg.LoadConfig();
-            CoreSetting = _cfg.LoadVipSettingsConfig();
+            _coreSetting = _cfg.LoadVipSettingsConfig();
         }
 
+        RegisterListener<Listeners.OnClientConnected>(slot => _vipStatusExpired[slot + 1] = false);
         RegisterListener<Listeners.OnClientAuthorized>((slot, id) =>
         {
             var player = Utilities.GetPlayerFromSlot(slot);
             Task.Run(() => OnClientAuthorizedAsync(player, slot, id));
         });
 
-        RegisterEventHandler<EventPlayerDisconnect>((@event, info) =>
+        RegisterEventHandler<EventPlayerDisconnect>((@event, _) =>
         {
             var player = @event.Userid;
 
@@ -76,7 +78,7 @@ public class VipCore : BasePlugin, ICorePlugin
 
         CreateMenu();
 
-        AddTimer(300, () => Task.Run(RemoveExpiredUsers), TimerFlags.REPEAT);
+        AddTimer(300.0f, () => Task.Run(RemoveExpiredUsers), TimerFlags.REPEAT);
     }
 
     private HookResult EventPlayerSpawn(EventPlayerSpawn @event, GameEventInfo info)
@@ -129,6 +131,8 @@ public class VipCore : BasePlugin, ICorePlugin
                 return;
             }
 
+            //if (user.sid != _coreSetting.ServerId) return;
+
             Users[playerSlot + 1] = new User
             {
                 account_id = user.account_id,
@@ -173,25 +177,15 @@ public class VipCore : BasePlugin, ICorePlugin
     {
         if (controller != null) return;
 
-        var splitCmdArgs = ParseCommandArguments(command.ArgString);
-
-        var formatTime = CoreSetting.TimeMode switch
+        if (command.ArgCount is > 4 or < 4)
         {
-            0 => "second",
-            1 => "minute",
-            2 => "hours",
-            3 => "days",
-            _ => throw new KeyNotFoundException("No such number was found!")
-        };
-        if (splitCmdArgs.Length is > 3 or < 3)
-        {
-            PrintLogInfo("Usage: css_vip_adduser {usage}", $"<steamid> <vipgroup> <time_{formatTime}>");
+            PrintLogInfo("Usage: css_vip_adduser {usage}", $"<steamid or accountid> <vipgroup> <time_{GetTimeUnitName}>");
             return;
         }
 
-        var steamId = ExtractValueInQuotes(splitCmdArgs[0]);
-        var vipGroup = ExtractValueInQuotes(splitCmdArgs[1]);
-        var endVipTime = Convert.ToInt32(ExtractValueInQuotes(splitCmdArgs[2]));
+        var steamId = command.GetArg(1);
+        var vipGroup = command.GetArg(2);
+        var endVipTime = Convert.ToInt32(command.GetArg(3));
 
         if (!Config.Groups.ContainsKey(vipGroup))
         {
@@ -199,21 +193,13 @@ public class VipCore : BasePlugin, ICorePlugin
             return;
         }
 
-        var player = GetPlayerFromSteamId(steamId);
+        var target = GetPlayerFromSteamId(steamId);
 
-        if (player == null)
+        if (target == null)
         {
             PrintLogError("Player not found");
             return;
         }
-
-        var endTime = DateTime.UtcNow.AddSeconds(CoreSetting.TimeMode switch
-        {
-            1 => endVipTime * 60,
-            2 => endVipTime * 3600,
-            3 => endVipTime * 86400,
-            _ => endVipTime
-        }).GetUnixEpoch();
 
         Task.Run(() =>
         {
@@ -222,11 +208,11 @@ public class VipCore : BasePlugin, ICorePlugin
                 AddUserToDb(new User
                 {
                     account_id = new SteamID(steamId).AccountId,
-                    name = string.IsNullOrWhiteSpace(player.PlayerName) ? "unknown" : player.PlayerName,
+                    name = string.IsNullOrWhiteSpace(target.PlayerName) ? "unknown" : target.PlayerName,
                     lastvisit = DateTime.UtcNow.GetUnixEpoch(),
-                    sid = 0,
+                    sid = 0, //_coreSetting.ServerId,
                     group = vipGroup,
-                    expires = endVipTime == 0 ? 0 : endTime
+                    expires = endVipTime == 0 ? 0 : CalculateEndTimeInSeconds(endVipTime)
                 });
             });
         });
@@ -237,17 +223,13 @@ public class VipCore : BasePlugin, ICorePlugin
     {
         if (controller != null) return;
 
-        var splitCmdArgs = ParseCommandArguments(command.ArgString);
-
-        if (splitCmdArgs.Length is < 1 or > 1)
+        if (command.ArgCount is < 2 or > 2)
         {
             ReplyToCommand(controller, "Using: css_vip_deleteuser <steamid>");
             return;
         }
 
-        var steamId = ExtractValueInQuotes(splitCmdArgs[0]);
-
-        var player = GetPlayerFromSteamId(steamId);
+        var player = GetPlayerFromSteamId(command.GetArg(1));
         if (player == null)
         {
             PrintLogError("Player not found");
@@ -262,9 +244,27 @@ public class VipCore : BasePlugin, ICorePlugin
             return;
         }
 
+        Users[player.Index] = null;
         var accId = authorizedSteamId.AccountId;
         Task.Run(() => RemoveUserFromDb(accId));
     }
+
+    private string GetTimeUnitName => _coreSetting.TimeMode switch
+    {
+        0 => "second",
+        1 => "minute",
+        2 => "hours",
+        3 => "days",
+        _ => throw new KeyNotFoundException("No such number was found!")
+    };
+
+    private int CalculateEndTimeInSeconds(int time) => DateTime.UtcNow.AddSeconds(_coreSetting.TimeMode switch
+    {
+        1 => time * 60,
+        2 => time * 3600,
+        3 => time * 86400,
+        _ => time
+    }).GetUnixEpoch();
 
     [RequiresPermissions("@css/root", "@vip/vip")]
     [ConsoleCommand("css_vip_reload")]
@@ -336,22 +336,6 @@ public class VipCore : BasePlugin, ICorePlugin
 
             ChatMenus.OpenMenu(player, user.Menu);
         });
-    }
-
-    private string[] ParseCommandArguments(string argString)
-    {
-        var parse = Regex.Matches(argString, @"[\""].+?[\""]|[^ ]+")
-            .Select(m => m.Value.Trim('"'))
-            .ToArray();
-
-        return parse;
-    }
-
-    private string ExtractValueInQuotes(string input)
-    {
-        var match = Regex.Match(input, @"""([^""]*)""");
-
-        return match.Success ? match.Groups[1].Value : input;
     }
 
     private string BuildConnectionString()
@@ -482,6 +466,15 @@ public class VipCore : BasePlugin, ICorePlugin
                 await connection.ExecuteAsync("DELETE FROM vip_users WHERE account_id = @AccId",
                     new { AccId = user.account_id });
 
+                Server.NextFrame(() =>
+                {
+                    foreach (var player in Utilities.GetPlayers().Where(u =>
+                                 u.AuthorizedSteamID != null && u.AuthorizedSteamID.AccountId == user.account_id))
+                    {
+                        PrintToChat(player, Localizer["vip.Expired"]);
+                    }
+                });
+
                 PrintLogInfo("User '{name} [{accId}]' has been removed due to expired VIP status.", user.name,
                     user.account_id);
             }
@@ -543,27 +536,27 @@ public class VipCore : BasePlugin, ICorePlugin
 
     public void PrintToChat(CCSPlayerController player, string msg)
     {
-        player.PrintToChat($"\x08[ \x0CVIPCore \x08] {msg}");
+        player.PrintToChat($"{Localizer["vip.Prefix"]} {msg}");
     }
 
 
     public void PrintLogError(string? message, params object?[] args)
     {
-        if (!CoreSetting.VipLogging) return;
+        if (!_coreSetting.VipLogging) return;
 
         Logger.LogError($"{message}", args);
     }
 
     public void PrintLogInfo(string? message, params object?[] args)
     {
-        if (!CoreSetting.VipLogging) return;
+        if (!_coreSetting.VipLogging) return;
 
         Logger.LogInformation($"{message}", args);
     }
 
     public void PrintLogWarning(string? message, params object?[] args)
     {
-        if (!CoreSetting.VipLogging) return;
+        if (!_coreSetting.VipLogging) return;
 
         Logger.LogWarning($"{message}", args);
     }
@@ -575,7 +568,7 @@ public class VipCore : BasePlugin, ICorePlugin
         if (_cfg != null)
         {
             Config = _cfg.LoadConfig();
-            CoreSetting = _cfg.LoadVipSettingsConfig();
+            _coreSetting = _cfg.LoadVipSettingsConfig();
         }
 
         _dbConnectionString = BuildConnectionString();
@@ -608,7 +601,7 @@ public class VipCoreApi : IVipCoreApi
     //public event Action? OnCoreReady;
     public event Action<CCSPlayerController>? OnPlayerSpawn;
     private readonly string _pathToVipCoreConfigs;
-    
+
     public string GetTranslatedText(string feature) => _vipCore.Localizer[feature];
     public string CoreConfigDirectory => _pathToVipCoreConfigs;
     public string ModulesConfigDirectory => Path.Combine(_pathToVipCoreConfigs, "Modules/");
