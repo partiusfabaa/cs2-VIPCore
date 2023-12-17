@@ -12,8 +12,8 @@
 | Command                             | Description                                               |
 |-------------------------------------|-----------------------------------------------------------|
 | `css_vip_reload` or `!vip_reload`    | Reloads the configuration. (`@css/root`) |
-| `css_vip_adduser "steamid" "vipgroup" "time or 0 permanently"` or `!vip_adduser "steamid" "vipgroup" "time or 0 permanently"` | Adds a VIP player (for server console only) |
-| `css_vip_deleteuser "steamid"` or `!vip_deleteuser "steamid"` | Allows you to delete a player by SteamID identifier (for server console only) |
+| `css_vip_adduser "steamid" "vipgroup" "time or 0 permanently"` | Adds a VIP player (for server console only) |
+| `css_vip_deleteuser "steamid"` | Allows you to delete a player by SteamID identifier (for server console only) |
 | `css_vip` or `!vip` | Opens the VIP menu |
 
 # Configs (addons/counterstrikesharp/configs/plugins/VIPCore/)
