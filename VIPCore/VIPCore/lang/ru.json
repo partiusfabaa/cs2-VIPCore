@@ -1,0 +1,11 @@
+{
+	"vip.Prefix": "[{blue} VIP{default} ]",
+	"vip.WelcomeToTheServer": "Здравствуйте, {blue}{0}{default}! Вы являетесь VIP-игроком. ",
+	"vip.Expires": "Ваш {blue}VIP{default} статус истекает {blue}{0}",
+	"vip.Expired": "Ваш {blue}VIP{default} статус истек.",
+	"vip.NoAccess": "У вас нет доступа к этой команде!",
+	"Health": "Здоровье",
+	"Gravity": "Гравитация",
+	"SmokeColor": "Цветной дым",
+	"Jumps": "Дополнительные прыжки"
+}
