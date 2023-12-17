@@ -24,7 +24,7 @@ public class VipGravity : BasePlugin, IModulePlugin
 
     private void OnPlayerSpawn(CCSPlayerController controller)
     {
-        if (!_api.PlayerHasFeature(controller, Feature) &&
+        if (!_api.PlayerHasFeature(controller, Feature) ||
             _api.GetPlayerFeatureState(controller, Feature) is IVipCoreApi.FeatureState.Disabled
                 or IVipCoreApi.FeatureState.NoAccess) return;
 
