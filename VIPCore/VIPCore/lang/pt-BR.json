@@ -1,0 +1,11 @@
+{
+	"vip.Prefix": "[{blue} VIP{default} ]",
+	"vip.WelcomeToTheServer": "Olá, {blue}{0}{default}! Você é um jogador VIP. ",
+	"vip.Expires": "Seu status {blue}VIP{default} expira {blue}{0}",
+	"vip.Expired": "Seu status {blue}VIP{default} expirou.",
+	"vip.NoAccess": "Você não tem acesso a este comando!",
+	"Health": "Health",
+	"Gravity": "Gravity",
+	"SmokeColor": "Smoke Color",
+	"Jumps": "Jumps"
+}
