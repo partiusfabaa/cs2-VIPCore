@@ -179,7 +179,7 @@ public class VipCore : BasePlugin, ICorePlugin
 
         if (command.ArgCount is > 4 or < 4)
         {
-            PrintLogInfo("Usage: css_vip_adduser {usage}", $"<steamid or accountid> <vipgroup> <time_{GetTimeUnitName}>");
+            PrintLogInfo("Usage: css_vip_adduser {usage}", $"<steamid> <vipgroup> <time_{GetTimeUnitName}>");
             return;
         }
 
