@@ -7,6 +7,9 @@
 3. Download [VIPCore](https://github.com/partiusfabaa/cs2-VIPCore/releases)
 4. Unpack the archive and upload it to the game server (example path: addons/counterstrikesharp/plugins/ModularityPlugin/)
 
+### Put the modules in this path
+`addons/counterstrikesharp/plugins/ModularityPlugin/plugins`
+
 # Commands 
 
 | Command                             | Description                                               |
