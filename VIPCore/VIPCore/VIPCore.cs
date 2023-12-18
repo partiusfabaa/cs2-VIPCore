@@ -602,7 +602,7 @@ public class VipCoreApi : IVipCoreApi
     public event Action<CCSPlayerController>? OnPlayerSpawn;
     private readonly string _pathToVipCoreConfigs;
 
-    public string GetTranslatedText(string feature) => _vipCore.Localizer[feature];
+    public string GetTranslatedText(string name, params object[] args) => _vipCore.Localizer[name, args];
     public string CoreConfigDirectory => _pathToVipCoreConfigs;
     public string ModulesConfigDirectory => Path.Combine(_pathToVipCoreConfigs, "Modules/");
 

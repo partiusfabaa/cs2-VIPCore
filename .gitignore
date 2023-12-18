@@ -25,3 +25,8 @@ VIPCore/modules/VIP_Jumps/.idea
 VIPCore/modules/VIP_SmokeColor/bin
 VIPCore/modules/VIP_SmokeColor/obj
 VIPCore/modules/VIP_SmokeColor/.idea
+VIPCore/modules/VIP_Bhop/bin
+VIPCore/modules/VIP_Bhop/obj
+VIPCore/modules/VIP_Bhop/VIP_Bhop.cs
+VIPCore/modules/VIP_Bhop/VIP_Bhop.csproj
+VIPCore/modules/VIP_Bhop/.idea
