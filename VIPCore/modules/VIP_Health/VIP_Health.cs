@@ -17,7 +17,7 @@ public class VipHealth : BasePlugin, IModulePlugin
     public void LoadModule(IApiProvider provider)
     {
         _api = provider.Get<IVipCoreApi>();
-        _api.RegisterFeature(Feature, selectItem: OnSelectItem);
+        _api.RegisterFeature(Feature);
         _api.OnPlayerSpawn += OnPlayerSpawn;
     }
 
@@ -35,17 +35,6 @@ public class VipHealth : BasePlugin, IModulePlugin
         
         playerPawnValue.Health = healthValue;
         playerPawnValue.MaxHealth = healthValue;
-    }
-    
-    private void OnSelectItem(CCSPlayerController player, IVipCoreApi.FeatureState state)
-    {
-        if (state == IVipCoreApi.FeatureState.Disabled)
-        {
-            _api.PrintToChat(player, $"{_api.GetTranslatedText(Feature)}:\x02 Off");
-            return;
-        }
-
-        _api.PrintToChat(player, $"{_api.GetTranslatedText(Feature)}:\x06 On");
     }
 
     public override void Unload(bool hotReload)

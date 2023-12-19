@@ -41,13 +41,11 @@ public class VipGravity : BasePlugin, IModulePlugin
         
         if (state == IVipCoreApi.FeatureState.Disabled)
         {
-            _api.PrintToChat(player, $"{_api.GetTranslatedText(Feature)}:\x02 Off");
             if (playerPawnValue != null)
                 playerPawnValue.GravityScale = 1.0f;
             return;
         }
 
-        _api.PrintToChat(player, $"{_api.GetTranslatedText(Feature)}:\x06 On");
         if (playerPawnValue != null)
             playerPawnValue.GravityScale = _api.GetFeatureValue<float>(player, Feature);
     }

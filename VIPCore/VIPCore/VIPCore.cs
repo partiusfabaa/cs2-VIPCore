@@ -1,4 +1,5 @@
-﻿using CounterStrikeSharp.API;
+﻿using System.Text.Json;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
@@ -15,7 +16,6 @@ using VipCoreApi;
 using ChatMenu = CounterStrikeSharp.API.Modules.Menu.ChatMenu;
 using JsonException = System.Text.Json.JsonException;
 using JsonSerializer = System.Text.Json.JsonSerializer;
-using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
 namespace VIPCore;
 
@@ -51,7 +51,11 @@ public class VipCore : BasePlugin, ICorePlugin
             _coreSetting = _cfg.LoadVipSettingsConfig();
         }
 
-        RegisterListener<Listeners.OnClientConnected>(slot => _vipStatusExpired[slot + 1] = false);
+        RegisterListener<Listeners.OnClientConnected>(slot =>
+        {
+            Config = _cfg.LoadConfig();
+            _vipStatusExpired[slot + 1] = false;
+        });
         RegisterListener<Listeners.OnClientAuthorized>((slot, id) =>
         {
             var player = Utilities.GetPlayerFromSlot(slot);
@@ -148,7 +152,11 @@ public class VipCore : BasePlugin, ICorePlugin
             {
                 if (Config.Groups.TryGetValue(user.group, out var group))
                 {
-                    if (!group.Values.ContainsKey(feature.Key)) continue;
+                    if (!group.Values.ContainsKey(feature.Key))
+                    {
+                        //Users[playerSlot + 1]!.FeatureState[feature.Key] = IVipCoreApi.FeatureState.NoAccess;
+                        continue;
+                    }
 
                     var cookieValue = VipApi.GetPlayerCookie<int>(steamId.SteamId64, feature.Key);
                     Users[playerSlot + 1]!.FeatureState[feature.Key] = (IVipCoreApi.FeatureState)cookieValue;
@@ -309,9 +317,9 @@ public class VipCore : BasePlugin, ICorePlugin
 
                     var value = featureState switch
                     {
-                        IVipCoreApi.FeatureState.Enabled => $"{featureValue}",
-                        IVipCoreApi.FeatureState.Disabled => "Disabled",
-                        IVipCoreApi.FeatureState.NoAccess => "No access",
+                        IVipCoreApi.FeatureState.Enabled => $"{Localizer["chat.Enabled"]}",
+                        IVipCoreApi.FeatureState.Disabled => $"{Localizer["chat.Disabled"]}",
+                        IVipCoreApi.FeatureState.NoAccess => $"{Localizer["chat.NoAccess"]}",
                         _ => throw new ArgumentOutOfRangeException()
                     };
 
@@ -325,6 +333,9 @@ public class VipCore : BasePlugin, ICorePlugin
                                 returnState = featureState == IVipCoreApi.FeatureState.Enabled
                                     ? IVipCoreApi.FeatureState.Disabled
                                     : IVipCoreApi.FeatureState.Enabled;
+
+                                VipApi.PrintToChat(player,
+                                    $"{Localizer[setting.Key]}: {(returnState == IVipCoreApi.FeatureState.Enabled ? $"{Localizer["chat.Enabled"]}" : $"{Localizer["chat.Disabled"]}")}");
                             }
 
                             user.FeatureState[setting.Key] = returnState;
@@ -469,7 +480,8 @@ public class VipCore : BasePlugin, ICorePlugin
                 Server.NextFrame(() =>
                 {
                     foreach (var player in Utilities.GetPlayers().Where(u =>
-                                 u.AuthorizedSteamID != null && u.AuthorizedSteamID.AccountId == user.account_id))
+                                 u.AuthorizedSteamID != null &&
+                                 u.AuthorizedSteamID.AccountId == user.account_id))
                     {
                         PrintToChat(player, Localizer["vip.Expired"]);
                     }
@@ -489,27 +501,27 @@ public class VipCore : BasePlugin, ICorePlugin
         return string.Empty;
     }
 
-    public async Task<string> GetVipGroupFromDatabase(string steamId)
-    {
-        try
-        {
-            await using var connection = new MySqlConnection(_dbConnectionString);
-
-            var user = await connection.QueryFirstOrDefaultAsync<User>(
-                "SELECT group FROM vip_users WHERE account_id = @SteamId",
-                new { SteamId = steamId });
-
-            if (user != null) return user.group;
-
-            PrintLogError("User not found");
-            return string.Empty;
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-    }
+    // public async Task<string> GetVipGroupFromDatabase(string steamId)
+    // {
+    //     try
+    //     {
+    //         await using var connection = new MySqlConnection(_dbConnectionString);
+    //
+    //         var user = await connection.QueryFirstOrDefaultAsync<User>(
+    //             "SELECT group FROM vip_users WHERE account_id = @SteamId",
+    //             new { SteamId = steamId });
+    //
+    //         if (user != null) return user.group;
+    //
+    //         PrintLogError("User not found");
+    //         return string.Empty;
+    //     }
+    //     catch (Exception e)
+    //     {
+    //         Console.WriteLine(e);
+    //         throw;
+    //     }
+    // }
 
     public bool IsUserActiveVip(CCSPlayerController player)
     {
@@ -622,7 +634,8 @@ public class VipCoreApi : IVipCoreApi
             : user.FeatureState.GetValueOrDefault(feature, IVipCoreApi.FeatureState.NoAccess);
     }
 
-    public void RegisterFeature(string feature, IVipCoreApi.FeatureType featureType = IVipCoreApi.FeatureType.Toggle,
+    public void RegisterFeature(string feature,
+        IVipCoreApi.FeatureType featureType = IVipCoreApi.FeatureType.Toggle,
         Action<CCSPlayerController, IVipCoreApi.FeatureState>? selectItem = null)
     {
         foreach (var config in _vipCore.Config!.Groups)
@@ -790,8 +803,7 @@ public class VipCoreApi : IVipCoreApi
                     "Checking feature: {feature} - {value}", feature, value);
                 try
                 {
-                    var deserializedValue = JsonSerializer.Deserialize<T>(value.ToString()!);
-                    return deserializedValue!;
+                    return ((JsonElement)value).Deserialize<T>()!;
                 }
                 catch (JsonException)
                 {

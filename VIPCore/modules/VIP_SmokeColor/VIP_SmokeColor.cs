@@ -24,7 +24,7 @@ public class VipSmokeColor : BasePlugin, IModulePlugin
     public void LoadModule(IApiProvider provider)
     {
         _api = provider.Get<IVipCoreApi>();
-        _api.RegisterFeature(Feature, selectItem: OnSelectItem);
+        _api.RegisterFeature(Feature);
     }
     
     private void OnEntitySpawned(CEntityInstance entity)
@@ -53,17 +53,6 @@ public class VipSmokeColor : BasePlugin, IModulePlugin
             smokeGrenade.SmokeColor.Y = smokeColor[1] == -1 ? Random.Shared.NextSingle() * 255.0f : smokeColor[1];
             smokeGrenade.SmokeColor.Z = smokeColor[2] == -1 ? Random.Shared.NextSingle() * 255.0f : smokeColor[2];
         });
-    }
-
-    private void OnSelectItem(CCSPlayerController player, IVipCoreApi.FeatureState state)
-    {
-        if (state == IVipCoreApi.FeatureState.Disabled)
-        {
-            _api.PrintToChat(player, $"{_api.GetTranslatedText(Feature)}:\x02 Off");
-            return;
-        }
-
-        _api.PrintToChat(player, $"{_api.GetTranslatedText(Feature)}:\x06 On");
     }
 
     public override void Unload(bool hotReload)

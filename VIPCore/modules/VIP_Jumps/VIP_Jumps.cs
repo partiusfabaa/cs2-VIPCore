@@ -37,17 +37,6 @@ public class VipJumps : BasePlugin, IModulePlugin
         });
     }
 
-    private void OnSelectItem(CCSPlayerController player, IVipCoreApi.FeatureState state)
-    {
-        if (state == IVipCoreApi.FeatureState.Disabled)
-        {
-            _api.PrintToChat(player, $"{_api.GetTranslatedText(Feature)}:\x02 Off");
-            return;
-        }
-
-        _api.PrintToChat(player, $"{_api.GetTranslatedText(Feature)}:\x06 On");
-    }
-
     private void OnTick(CCSPlayerController player)
     {
         var client = player.Index;
@@ -91,13 +80,15 @@ public class VipJumps : BasePlugin, IModulePlugin
     public void LoadModule(IApiProvider provider)
     {
         _api = provider.Get<IVipCoreApi>();
-        _api.RegisterFeature(Feature, selectItem: OnSelectItem);
+        _api.RegisterFeature(Feature);
         _api.OnPlayerSpawn += OnPlayerSpawn;
     }
 
     private void OnPlayerSpawn(CCSPlayerController player)
     {
         if (UserSettings[player.Index] == null) return;
+        if(!_api.PlayerHasFeature(player, Feature)) return;
+        
         UserSettings[player.Index]!.NumberOfJumps = _api.GetFeatureValue<int>(player, Feature);
     }
 }
