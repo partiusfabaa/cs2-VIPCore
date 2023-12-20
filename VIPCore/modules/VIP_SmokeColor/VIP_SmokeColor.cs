@@ -20,13 +20,13 @@ public class VipSmokeColor : BasePlugin, IModulePlugin
     {
         RegisterListener<Listeners.OnEntitySpawned>(OnEntitySpawned);
     }
-    
+
     public void LoadModule(IApiProvider provider)
     {
         _api = provider.Get<IVipCoreApi>();
         _api.RegisterFeature(Feature);
     }
-    
+
     private void OnEntitySpawned(CEntityInstance entity)
     {
         if (entity.DesignerName != "smokegrenade_projectile") return;
@@ -34,19 +34,20 @@ public class VipSmokeColor : BasePlugin, IModulePlugin
         var smokeGrenade = new CSmokeGrenadeProjectile(entity.Handle);
         if (smokeGrenade.Handle == IntPtr.Zero) return;
 
+
         Server.NextFrame(() =>
         {
             var throwerValue = smokeGrenade.Thrower.Value;
             if (throwerValue == null) return;
-            if (throwerValue.Controller.Value == null) return;
             var throwerValueController = throwerValue.Controller.Value;
+            if (throwerValueController == null) return;
             var controller = new CCSPlayerController(throwerValueController.Handle);
-            
-            if (_api.GetPlayerFeatureState(controller, Feature) is IVipCoreApi.FeatureState.Disabled
-                or IVipCoreApi.FeatureState.NoAccess) return;
 
+            if (!_api.IsClientVip(controller)) return;
             if (!_api.PlayerHasFeature(controller, Feature)) return;
-
+            if (_api.GetPlayerFeatureState(controller, Feature) is IVipCoreApi.FeatureState.Disabled
+                or IVipCoreApi.FeatureState.NoAccess)
+                return;
             var smokeColor = _api.GetFeatureValue<int[]>(controller, Feature);
 
             smokeGrenade.SmokeColor.X = smokeColor[0] == -1 ? Random.Shared.NextSingle() * 255.0f : smokeColor[0];
