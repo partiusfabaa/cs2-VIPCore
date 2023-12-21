@@ -4,8 +4,12 @@
 	"vip.Expires": "Ваш {blue}VIP{default} статус истекает {blue}{0}",
 	"vip.Expired": "Ваш {blue}VIP{default} статус истек.",
 	"vip.NoAccess": "У вас нет доступа к этой команде!",
+	"chat.Enabled": "{green}Включено{default} ",
+	"chat.Disabled": "{red}Выключено{default} ",
+	"chat.NoAccess": "Нет доступа",
 	"Health": "Здоровье",
 	"Gravity": "Гравитация",
 	"SmokeColor": "Цветной дым",
-	"Jumps": "Дополнительные прыжки"
+	"Jumps": "Дополнительные прыжки",
+	"Healthshot": "Мед-Шприц"
 }

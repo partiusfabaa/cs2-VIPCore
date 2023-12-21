@@ -4,8 +4,12 @@
 	"vip.Expires": "Seu status {blue}VIP{default} expira {blue}{0}",
 	"vip.Expired": "Seu status {blue}VIP{default} expirou.",
 	"vip.NoAccess": "Você não tem acesso a este comando!",
+	"chat.Enabled": "{green}Enabled{default} ",
+	"chat.Disabled": "{red}Disabled{default} ",
+	"chat.NoAccess": "No access",
 	"Health": "Health",
 	"Gravity": "Gravity",
 	"SmokeColor": "Smoke Color",
-	"Jumps": "Jumps"
+	"Jumps": "Jumps",
+	"Healthshot": "Healthshot"
 }
