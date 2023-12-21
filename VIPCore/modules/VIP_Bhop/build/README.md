@@ -15,11 +15,11 @@ EN: `"Bhop": "Bunnyhop"`
 
 ### Chat:
 
-RU: `"bhop.TimeToActivation": "Банихоп будет активен через {red}{0}{default} секунд"`
+RU: 
+```"bhop.TimeToActivation": "Банихоп будет активен через {red}{0}{default} секунд"
+"bhop.Activated": "Банихоп активирован!"```
 
-	`"bhop.Activated": "Банихоп активирован!"`
 
-
-EN: `"bhop.TimeToActivation": "Bunnyhop will be active in {red}{0}{default} seconds"`
-
-	`"bhop.Activated": "Bunnyhop activated!"`
+EN: 
+```"bhop.TimeToActivation": "Bunnyhop will be active in {red}{0}{default} seconds"
+"bhop.Activated": "Bunnyhop activated!"```
