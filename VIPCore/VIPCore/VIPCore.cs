@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Xml;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
@@ -839,6 +840,31 @@ public class VipCoreApi : IVipCoreApi
 
         _vipCore.PrintLogError("Feature not found, returning default value: {empty}", "Empty");
         throw new KeyNotFoundException($"Feature '{feature}' not found.");
+    }
+    
+    public T LoadConfig<T>(string name, string path)
+    {
+        var configFilePath = Path.Combine(path, $"{name}.json");
+
+        if (!File.Exists(configFilePath))
+        {
+            var defaultConfig = Activator.CreateInstance<T>();
+            var defaultJson = JsonSerializer.Serialize(defaultConfig, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(configFilePath, defaultJson);
+        }
+
+        var configJson = File.ReadAllText(configFilePath);
+        var config = JsonSerializer.Deserialize<T>(configJson);
+
+        if (config == null)
+            throw new FileNotFoundException($"File {name}.json not found or cannot be deserialized");
+
+        return config;
+    }
+    
+    public T LoadConfig<T>(string name)
+    {
+        return LoadConfig<T>(name, ModulesConfigDirectory);
     }
 
     public void SetPlayerCookie<T>(ulong steamId64, string featureName, T value)

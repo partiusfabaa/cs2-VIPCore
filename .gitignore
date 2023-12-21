@@ -60,6 +60,12 @@ VIPCore/modules/VIP_Test/.idea
 VIPCore/modules/VIP_Test/bin
 VIPCore/modules/VIP_Test/obj
 
+VIPCore/modules/VIP_TestM/.idea
+VIPCore/modules/VIP_TestM/bin
+VIPCore/modules/VIP_TestM/obj
+VIPCore/modules/VIP_TestM/VIP_TestM.csproj
+VIPCore/modules/VIP_TestM/Class1.cs
+
 VIPCore/modules/VIP_ResetDeaths/.idea
 VIPCore/modules/VIP_ResetDeaths/bin
 VIPCore/modules/VIP_ResetDeaths/obj

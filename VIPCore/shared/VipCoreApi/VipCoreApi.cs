@@ -39,7 +39,8 @@ public interface IVipCoreApi
     public void PrintToChatAll(string message);
     public string GetTranslatedText(string name, params object[] args);
     public bool IsPistolRound();
-
+    public T LoadConfig<T>(string name, string path);
+    public T LoadConfig<T>(string name);
     public event Action<CCSPlayerController>? OnPlayerSpawn;
     //public event Action? OnCoreReady;
 }
