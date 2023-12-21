@@ -38,8 +38,6 @@ VIPCore/modules/VIP_Healthshot/.idea
 VIPCore/modules/VIP_Healthshot/bin
 VIPCore/modules/VIP_Healthshot/obj
 
-VIPCore/modules/VIP_Armor/VIP_Armor.cs
-VIPCore/modules/VIP_Armor/VIP_Armor.csproj
 VIPCore/modules/VIP_Armor/.idea
 VIPCore/modules/VIP_Armor/bin
 VIPCore/modules/VIP_Armor/obj
@@ -51,11 +49,10 @@ VIPCore/modules/VIP_Hook/.idea
 VIPCore/modules/VIP_Hook/bin
 VIPCore/modules/VIP_Hook/obj
 
-VIPCore/modules/VIP_Money/VIP_Money.cs
-VIPCore/modules/VIP_Money/VIP_Money.csproj
 VIPCore/modules/VIP_Money/.idea
 VIPCore/modules/VIP_Money/bin
 VIPCore/modules/VIP_Money/obj
 
 VIPCore/modules/VIP_Tracers/VIP_Tracers.cs
 VIPCore/modules/VIP_Tracers/VIP_Tracers.csproj
+VIPCore/modules/VIP_Money/build/addons/counterstrikesharp/plugins/ModularityPlugin/plugins/VIP_Money/VIP_Money.deps.json
