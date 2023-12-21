@@ -7,22 +7,17 @@
 
 # in lang (not necessarily)
 
-### MENU: 
-
-RU: `"Bhop": "Банихоп"`
-
-EN: `"Bhop": "Bunnyhop"`
-
-### Chat:
-
 RU: 
+
+`"Bhop": "Банихоп"`
 
 `"bhop.TimeToActivation": "Банихоп будет активен через {red}{0}{default} секунд"`
 
 `"bhop.Activated": "Банихоп активирован!"`
 
-
 EN: 
+
+`"Bhop": "Bunnyhop"`
 
 `"bhop.TimeToActivation": "Bunnyhop will be active in {red}{0}{default} seconds"`
 
