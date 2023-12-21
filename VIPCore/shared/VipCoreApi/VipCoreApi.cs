@@ -20,6 +20,7 @@ public interface IVipCoreApi
     
     public string CoreConfigDirectory { get; }
     public string ModulesConfigDirectory { get; }
+    public string GetDatabaseConnection { get; }
     public FeatureState GetPlayerFeatureState(CCSPlayerController player, string feature);
 
     public void RegisterFeature(string feature, FeatureType featureType = FeatureType.Toggle,

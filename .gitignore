@@ -56,3 +56,11 @@ VIPCore/modules/VIP_Money/obj
 VIPCore/modules/VIP_Tracers/VIP_Tracers.cs
 VIPCore/modules/VIP_Tracers/VIP_Tracers.csproj
 VIPCore/modules/VIP_Money/build/addons/counterstrikesharp/plugins/ModularityPlugin/plugins/VIP_Money/VIP_Money.deps.json
+
+VIPCore/modules/VIP_Test/.idea
+VIPCore/modules/VIP_Test/bin
+VIPCore/modules/VIP_Test/obj
+
+VIPCore/modules/VIP_ResetDeaths/.idea
+VIPCore/modules/VIP_ResetDeaths/bin
+VIPCore/modules/VIP_ResetDeaths/obj

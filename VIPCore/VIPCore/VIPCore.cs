@@ -26,7 +26,7 @@ public class VipCore : BasePlugin, ICorePlugin
     public override string ModuleName => "[VIP] Core";
     public override string ModuleVersion => "v1.0.0";
 
-    private string _dbConnectionString = string.Empty;
+    public string DbConnectionString = string.Empty;
 
     private Cfg? _cfg;
     public Config Config = null!;
@@ -394,7 +394,7 @@ public class VipCore : BasePlugin, ICorePlugin
     {
         try
         {
-            await using var connection = new MySqlConnection(_dbConnectionString);
+            await using var connection = new MySqlConnection(DbConnectionString);
 
             var existingUser = await connection.QuerySingleOrDefaultAsync<User>(
                 @"SELECT * FROM vip_users WHERE account_id = @AccId", new { AccId = user.account_id });
@@ -421,7 +421,7 @@ public class VipCore : BasePlugin, ICorePlugin
     {
         try
         {
-            await using var connection = new MySqlConnection(_dbConnectionString);
+            await using var connection = new MySqlConnection(DbConnectionString);
 
             var existingUser = await connection.QuerySingleOrDefaultAsync<User>(
                 @"SELECT * FROM vip_users WHERE account_id = @AccId", new { AccId = accId });
@@ -448,7 +448,7 @@ public class VipCore : BasePlugin, ICorePlugin
     {
         try
         {
-            await using var connection = new MySqlConnection(_dbConnectionString);
+            await using var connection = new MySqlConnection(DbConnectionString);
             await connection.OpenAsync();
             var user = await connection.QueryFirstOrDefaultAsync<User>(
                 "SELECT * FROM `vip_users` WHERE `account_id` = @AccId", new { AccId = accId });
@@ -467,7 +467,7 @@ public class VipCore : BasePlugin, ICorePlugin
     {
         try
         {
-            await using var connection = new MySqlConnection(_dbConnectionString);
+            await using var connection = new MySqlConnection(DbConnectionString);
 
             var expiredUsers = await connection.QueryAsync<User>(
                 "SELECT * FROM vip_users WHERE expires < @CurrentTime AND expires > 0",
@@ -551,7 +551,7 @@ public class VipCore : BasePlugin, ICorePlugin
     {
         player.PrintToChat($"{Localizer["vip.Prefix"]} {msg}");
     }
-    
+
     public void PrintToChatAll(string msg)
     {
         Server.PrintToChatAll($"{Localizer["vip.Prefix"]} {msg}");
@@ -589,8 +589,8 @@ public class VipCore : BasePlugin, ICorePlugin
             _coreSetting = _cfg.LoadVipSettingsConfig();
         }
 
-        _dbConnectionString = BuildConnectionString();
-        Task.Run(() => CreateTable(_dbConnectionString));
+        DbConnectionString = BuildConnectionString();
+        Task.Run(() => CreateTable(DbConnectionString));
     }
 
     private CCSPlayerController? GetPlayerFromSteamId(string steamId)
@@ -618,18 +618,18 @@ public class VipCoreApi : IVipCoreApi
 
     //public event Action? OnCoreReady;
     public event Action<CCSPlayerController>? OnPlayerSpawn;
-    private readonly string _pathToVipCoreConfigs;
-    
+
     public string GetTranslatedText(string name, params object[] args) => _vipCore.Localizer[name, args];
 
-    public string CoreConfigDirectory => _pathToVipCoreConfigs;
-    public string ModulesConfigDirectory => Path.Combine(_pathToVipCoreConfigs, "Modules/");
+    public string CoreConfigDirectory { get; }
+    public string ModulesConfigDirectory => Path.Combine(CoreConfigDirectory, "Modules/");
+    public string GetDatabaseConnection => _vipCore.DbConnectionString;
 
     public VipCoreApi(VipCore vipCore, string moduleDirectory)
     {
         _vipCore = vipCore;
-        _pathToVipCoreConfigs = new DirectoryInfo(moduleDirectory).Parent?.Parent?.Parent?.Parent?.FullName +
-                                "/configs/plugins/VIPCore/";
+        CoreConfigDirectory = new DirectoryInfo(moduleDirectory).Parent?.Parent?.Parent?.Parent?.FullName +
+                              "/configs/plugins/VIPCore/";
     }
 
     public IVipCoreApi.FeatureState GetPlayerFeatureState(CCSPlayerController player, string feature)
@@ -733,12 +733,12 @@ public class VipCoreApi : IVipCoreApi
     {
         _vipCore.PrintToChat(player, message);
     }
-    
+
     public void PrintToChatAll(string message)
     {
         _vipCore.PrintToChatAll(message);
     }
-    
+
     public bool IsPistolRound()
     {
         var gamerules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules;
@@ -746,7 +746,8 @@ public class VipCoreApi : IVipCoreApi
         var maxrounds = ConVar.Find("mp_maxrounds")!.GetPrimitiveValue<int>();
 
         if (gamerules == null) return false;
-        return gamerules.TotalRoundsPlayed == 0 || (halftime && maxrounds / 2 == gamerules.TotalRoundsPlayed) || gamerules.GameRestart;
+        return gamerules.TotalRoundsPlayed == 0 || (halftime && maxrounds / 2 == gamerules.TotalRoundsPlayed) ||
+               gamerules.GameRestart;
     }
 
     // public void Startup()
@@ -889,7 +890,7 @@ public class VipCoreApi : IVipCoreApi
 
     private string GetCookiesFilePath()
     {
-        return Path.Combine(_pathToVipCoreConfigs, "vip_core_cookie.json");
+        return Path.Combine(CoreConfigDirectory, "vip_core_cookie.json");
     }
 
     private List<PlayerCookie> LoadCookies()
