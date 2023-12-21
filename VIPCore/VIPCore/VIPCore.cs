@@ -4,6 +4,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Timers;
@@ -154,7 +155,7 @@ public class VipCore : BasePlugin, ICorePlugin
                 {
                     if (!group.Values.ContainsKey(feature.Key))
                     {
-                        //Users[playerSlot + 1]!.FeatureState[feature.Key] = IVipCoreApi.FeatureState.NoAccess;
+                        Users[playerSlot + 1]!.FeatureState[feature.Key] = IVipCoreApi.FeatureState.NoAccess;
                         continue;
                     }
 
@@ -296,7 +297,7 @@ public class VipCore : BasePlugin, ICorePlugin
 
             if (!IsUserActiveVip(player))
             {
-                PrintToChat(player, "You do not have access to this command!");
+                PrintToChat(player, Localizer["vip.NoAccess"]);
                 return;
             }
 
@@ -550,6 +551,11 @@ public class VipCore : BasePlugin, ICorePlugin
     {
         player.PrintToChat($"{Localizer["vip.Prefix"]} {msg}");
     }
+    
+    public void PrintToChatAll(string msg)
+    {
+        Server.PrintToChatAll($"{Localizer["vip.Prefix"]} {msg}");
+    }
 
 
     public void PrintLogError(string? message, params object?[] args)
@@ -613,8 +619,9 @@ public class VipCoreApi : IVipCoreApi
     //public event Action? OnCoreReady;
     public event Action<CCSPlayerController>? OnPlayerSpawn;
     private readonly string _pathToVipCoreConfigs;
-
+    
     public string GetTranslatedText(string name, params object[] args) => _vipCore.Localizer[name, args];
+
     public string CoreConfigDirectory => _pathToVipCoreConfigs;
     public string ModulesConfigDirectory => Path.Combine(_pathToVipCoreConfigs, "Modules/");
 
@@ -725,6 +732,21 @@ public class VipCoreApi : IVipCoreApi
     public void PrintToChat(CCSPlayerController player, string message)
     {
         _vipCore.PrintToChat(player, message);
+    }
+    
+    public void PrintToChatAll(string message)
+    {
+        _vipCore.PrintToChatAll(message);
+    }
+    
+    public bool IsPistolRound()
+    {
+        var gamerules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules;
+        var halftime = ConVar.Find("mp_halftime")!.GetPrimitiveValue<bool>();
+        var maxrounds = ConVar.Find("mp_maxrounds")!.GetPrimitiveValue<int>();
+
+        if (gamerules == null) return false;
+        return gamerules.TotalRoundsPlayed == 0 || (halftime && maxrounds / 2 == gamerules.TotalRoundsPlayed) || gamerules.GameRestart;
     }
 
     // public void Startup()

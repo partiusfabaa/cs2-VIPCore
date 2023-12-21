@@ -35,7 +35,9 @@ public interface IVipCoreApi
     public void SetPlayerCookie<T>(ulong steamId64, string featureName, T value);
     public T GetPlayerCookie<T>(ulong steamId64, string featureName);
     public void PrintToChat(CCSPlayerController player, string message);
+    public void PrintToChatAll(string message);
     public string GetTranslatedText(string name, params object[] args);
+    public bool IsPistolRound();
 
     public event Action<CCSPlayerController>? OnPlayerSpawn;
     //public event Action? OnCoreReady;
