@@ -70,12 +70,14 @@ public class VIPMyModule : BasePlugin, IModulePlugin
 
     private static readonly string Feature = "MyFeature";
     private IVipCoreApi _api = null!;
+    private TestConfig _config = null!;
 
     public void LoadModule(IApiProvider provider)
     {
         _api = provider.Get<IVipCoreApi>();
         _api.RegisterFeature(Feature, selectItem: OnSelectItem);
         _api.OnPlayerSpawn += OnPlayerSpawn;
+	config = _api.LoadConfig<TestConfig>("VIPMyModule");
     }
 
     private void OnPlayerSpawn(CCSPlayerController player)
@@ -116,5 +118,13 @@ public class VIPMyModule : BasePlugin, IModulePlugin
     {
         _api.UnRegisterFeature(Feature);
     }
+}
+
+public class TestConfig
+{
+    public int Test1 { get; set; } = 50;
+    public bool Test2 { get; set; } = true;
+    public string Test3 { get; set; } = "TEST";
+    public float Test4 { get; set; } = 30.0f;
 }
 ```
