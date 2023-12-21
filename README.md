@@ -77,7 +77,7 @@ public class VIPMyModule : BasePlugin, IModulePlugin
         _api = provider.Get<IVipCoreApi>();
         _api.RegisterFeature(Feature, selectItem: OnSelectItem);
         _api.OnPlayerSpawn += OnPlayerSpawn;
-	config = _api.LoadConfig<TestConfig>("VIPMyModule");
+	_config = _api.LoadConfig<TestConfig>("VIPMyModule");
     }
 
     private void OnPlayerSpawn(CCSPlayerController player)
