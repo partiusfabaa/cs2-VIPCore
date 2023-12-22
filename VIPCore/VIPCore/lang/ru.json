@@ -1,4 +1,5 @@
 {
+	"menu.Title": "[{blue}VIP Menu - {0}{default}]",
 	"vip.Prefix": "[{blue} VIP{default} ]",
 	"vip.WelcomeToTheServer": "Здравствуйте, {blue}{0}{default}! Вы являетесь VIP-игроком. ",
 	"vip.Expires": "Ваш {blue}VIP{default} статус истекает {blue}{0}",

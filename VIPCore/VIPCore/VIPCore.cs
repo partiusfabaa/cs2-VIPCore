@@ -78,6 +78,11 @@ public class VipCore : BasePlugin, ICorePlugin
 
             Users[player.Index] = null;
 
+            var playerName = player.PlayerName;
+            if (player.AuthorizedSteamID == null) return HookResult.Continue;
+            var authAccId = player.AuthorizedSteamID.AccountId;
+            Task.Run(() => UpdateUserNameInDb(authAccId, playerName));
+
             return HookResult.Continue;
         });
         RegisterEventHandler<EventPlayerSpawn>(EventPlayerSpawn);
@@ -147,7 +152,7 @@ public class VipCore : BasePlugin, ICorePlugin
                 sid = user.sid,
                 group = user.group,
                 expires = user.expires,
-                Menu = new ChatMenu("[\x0CVIP Menu\x01]")
+                Menu = new ChatMenu(Localizer["menu.Title", user.group])
             };
 
             foreach (var feature in Features)
@@ -277,20 +282,31 @@ public class VipCore : BasePlugin, ICorePlugin
 
         if (command.ArgCount is > 3 or < 3)
         {
-            PrintLogInfo("Usage: css_vip_updatetime {usage}", "<steamid or accountid> <group>");
+            PrintLogInfo("Usage: css_vip_updategroup {usage}", "<steamid or accountid> <group>");
             return;
         }
 
-        var steamId = GetSteamIdFromCommand(command, out _);
+        var steamId = GetSteamIdFromCommand(command, out var player);
         if (steamId == -1)
             return;
-
+        
         var vipGroup = command.GetArg(2);
 
         if (!Config.Groups.ContainsKey(vipGroup))
         {
             PrintLogError("This {VIP} group was not found!", "VIP");
             return;
+        }
+        
+        if (player != null)
+        {
+            if (Users[player.Index] != null)
+            {
+                Users[player.Index]!.group = vipGroup;
+                var chatMenu = Users[player.Index]!.Menu;
+                if (chatMenu != null)
+                    chatMenu.Title = Localizer["menu.Title", vipGroup];
+            }
         }
         
         Task.Run(() => UpdateUserGroupInDb(steamId, vipGroup));
@@ -307,13 +323,22 @@ public class VipCore : BasePlugin, ICorePlugin
             return;
         }
         
-        var steamId = GetSteamIdFromCommand(command, out _);
+        var steamId = GetSteamIdFromCommand(command, out var player);
         if (steamId == -1)
             return;
 
         var time = int.Parse(command.GetArg(2));
+        var calculateTime = CalculateEndTimeInSeconds(time);
         
-        Task.Run(() => UpdateUserTimeInDb(steamId, time == 0 ? 0 : CalculateEndTimeInSeconds(time)));
+        if (player != null)
+        {
+            if (Users[player.Index] != null)
+            {
+                Users[player.Index]!.expires = calculateTime;
+            }
+        }
+        
+        Task.Run(() => UpdateUserTimeInDb(steamId, time == 0 ? 0 : calculateTime));
     }
 
     private string GetTimeUnitName => _coreSetting.TimeMode switch
@@ -531,6 +556,24 @@ public class VipCore : BasePlugin, ICorePlugin
             await connection.ExecuteAsync(" UPDATE vip_users SET `group` = @group WHERE account_id = @account_id;", existingUser);
 
             PrintLogInfo("Player '{name} [{accId}]' group has been updated to {group}", existingUser.name, existingUser.account_id, newGroup);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
+    private async Task UpdateUserNameInDb(int accountId, string newName)
+    {
+        var existingUser = await GetExistingUserFromDb(accountId);
+        if (existingUser == null)
+            return;
+        try
+        {
+            await using var connection = new MySqlConnection(DbConnectionString);
+
+            existingUser.name = newName;
+            await connection.ExecuteAsync("UPDATE vip_users SET name = @name WHERE account_id = @account_id;", existingUser);
         }
         catch (Exception e)
         {
