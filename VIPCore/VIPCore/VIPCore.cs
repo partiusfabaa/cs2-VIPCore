@@ -160,7 +160,9 @@ public class VipCore : BasePlugin, ICorePlugin
                         continue;
                     }
 
-                    var cookieValue = VipApi.GetPlayerCookie<int>(steamId.SteamId64, feature.Key);
+                    var cookie = VipApi.GetPlayerCookie<int>(steamId.SteamId64, feature.Key);
+
+                    var cookieValue = cookie == 2 ? 0 : cookie;
                     Users[playerSlot + 1]!.FeatureState[feature.Key] = (IVipCoreApi.FeatureState)cookieValue;
                 }
             }
@@ -182,6 +184,35 @@ public class VipCore : BasePlugin, ICorePlugin
         }
     }
 
+    private int GetSteamIdFromCommand(CommandInfo command, out CCSPlayerController? player)
+    {
+        player = null;
+        var steamId = command.GetArg(1);
+
+        if (steamId.Contains("STEAM_"))
+        {
+            player = GetPlayerFromSteamId(steamId);
+
+            if (player == null)
+            {
+                PrintLogError("Player not found");
+                return -1;
+            }
+
+            var authorizedSteamId = player.AuthorizedSteamID;
+
+            if (authorizedSteamId == null)
+            {
+                PrintLogError("AuthorizedSteamId is null");
+                return -1;
+            }
+
+            steamId = authorizedSteamId.AccountId.ToString();
+        }
+
+        return int.Parse(steamId);
+    }
+
     [ConsoleCommand("css_vip_adduser")]
     public void OnCmdAddUser(CCSPlayerController? controller, CommandInfo command)
     {
@@ -189,11 +220,14 @@ public class VipCore : BasePlugin, ICorePlugin
 
         if (command.ArgCount is > 4 or < 4)
         {
-            PrintLogInfo("Usage: css_vip_adduser {usage}", $"<steamid> <vipgroup> <time_{GetTimeUnitName}>");
+            PrintLogInfo("Usage: css_vip_adduser {usage}", $"<steamid or accountid> <group> <time_{GetTimeUnitName}>");
             return;
         }
 
-        var steamId = command.GetArg(1);
+        var steamId = GetSteamIdFromCommand(command, out var player);
+        if (steamId == -1)
+            return;
+
         var vipGroup = command.GetArg(2);
         var endVipTime = Convert.ToInt32(command.GetArg(3));
 
@@ -203,29 +237,16 @@ public class VipCore : BasePlugin, ICorePlugin
             return;
         }
 
-        var target = GetPlayerFromSteamId(steamId);
-
-        if (target == null)
+        var username = player == null ? "unknown" : player.PlayerName;
+        Task.Run(() => AddUserToDb(new User
         {
-            PrintLogError("Player not found");
-            return;
-        }
-
-        Task.Run(() =>
-        {
-            Server.NextFrame(() =>
-            {
-                AddUserToDb(new User
-                {
-                    account_id = new SteamID(steamId).AccountId,
-                    name = string.IsNullOrWhiteSpace(target.PlayerName) ? "unknown" : target.PlayerName,
-                    lastvisit = DateTime.UtcNow.GetUnixEpoch(),
-                    sid = 0, //_coreSetting.ServerId,
-                    group = vipGroup,
-                    expires = endVipTime == 0 ? 0 : CalculateEndTimeInSeconds(endVipTime)
-                });
-            });
-        });
+            account_id = steamId,
+            name = username,
+            lastvisit = DateTime.UtcNow.GetUnixEpoch(),
+            sid = 0, //_coreSetting.ServerId,
+            group = vipGroup,
+            expires = endVipTime == 0 ? 0 : CalculateEndTimeInSeconds(endVipTime)
+        }));
     }
 
     [ConsoleCommand("css_vip_deleteuser")]
@@ -235,28 +256,64 @@ public class VipCore : BasePlugin, ICorePlugin
 
         if (command.ArgCount is < 2 or > 2)
         {
-            ReplyToCommand(controller, "Using: css_vip_deleteuser <steamid>");
+            ReplyToCommand(controller, "Using: css_vip_deleteuser <steamid or accountid>");
             return;
         }
 
-        var player = GetPlayerFromSteamId(command.GetArg(1));
-        if (player == null)
+        var steamId = GetSteamIdFromCommand(command, out var player);
+        if (steamId == -1)
+            return;
+
+        if(player != null)
+            Users[player.Index] = null;
+
+        Task.Run(() => RemoveUserFromDb(steamId));
+    }
+
+    [ConsoleCommand("css_vip_updategroup")]
+    public void OnCmdUpdateUserGroup(CCSPlayerController? controller, CommandInfo command)
+    {
+        if (controller != null) return;
+
+        if (command.ArgCount is > 3 or < 3)
         {
-            PrintLogError("Player not found");
+            PrintLogInfo("Usage: css_vip_updatetime {usage}", "<steamid or accountid> <group>");
             return;
         }
 
-        var authorizedSteamId = player.AuthorizedSteamID;
+        var steamId = GetSteamIdFromCommand(command, out _);
+        if (steamId == -1)
+            return;
 
-        if (authorizedSteamId == null)
+        var vipGroup = command.GetArg(2);
+
+        if (!Config.Groups.ContainsKey(vipGroup))
         {
-            PrintLogError("AuthorizedSteamId is null");
+            PrintLogError("This {VIP} group was not found!", "VIP");
             return;
         }
+        
+        Task.Run(() => UpdateUserGroupInDb(steamId, vipGroup));
+    }
+    
+    [ConsoleCommand("css_vip_updatetime")]
+    public void OnCmdUpdateUserTime(CCSPlayerController? controller, CommandInfo command)
+    {
+        if (controller != null) return;
 
-        Users[player.Index] = null;
-        var accId = authorizedSteamId.AccountId;
-        Task.Run(() => RemoveUserFromDb(accId));
+        if (command.ArgCount is > 3 or < 3)
+        {
+            PrintLogInfo("Usage: css_vip_updatetime {usage}", $"<steamid or accountid> <time_{GetTimeUnitName}>");
+            return;
+        }
+        
+        var steamId = GetSteamIdFromCommand(command, out _);
+        if (steamId == -1)
+            return;
+
+        var time = int.Parse(command.GetArg(2));
+        
+        Task.Run(() => UpdateUserTimeInDb(steamId, time == 0 ? 0 : CalculateEndTimeInSeconds(time)));
     }
 
     private string GetTimeUnitName => _coreSetting.TimeMode switch
@@ -390,22 +447,44 @@ public class VipCore : BasePlugin, ICorePlugin
             Console.WriteLine(e);
         }
     }
-
-    public async Task AddUserToDb(User user)
+    
+    private async Task<User?> GetExistingUserFromDb(int accountId)
     {
         try
         {
             await using var connection = new MySqlConnection(DbConnectionString);
 
             var existingUser = await connection.QuerySingleOrDefaultAsync<User>(
-                @"SELECT * FROM vip_users WHERE account_id = @AccId", new { AccId = user.account_id });
+                @"SELECT * FROM vip_users WHERE account_id = @AccId", new { AccId = accountId });
 
+            if (existingUser != null) return existingUser;
+            
+            PrintLogError("User not found");
+            return null;
+
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            return null;
+        }
+    }
+
+    public async Task AddUserToDb(User user)
+    {
+        try
+        {
+            await using var connection = new MySqlConnection(DbConnectionString);
+            
+            var existingUser = await connection.QuerySingleOrDefaultAsync<User>(
+                @"SELECT * FROM vip_users WHERE account_id = @AccId", new { AccId = user.account_id });
+            
             if (existingUser != null)
             {
                 PrintLogWarning("User already exists");
                 return;
             }
-
+            
             await connection.ExecuteAsync(@"
                 INSERT INTO vip_users (account_id, name, lastvisit, sid, `group`, expires)
                 VALUES (@account_id, @name, @lastvisit, @sid, @group, @expires);", user);
@@ -418,20 +497,57 @@ public class VipCore : BasePlugin, ICorePlugin
         }
     }
 
+    private async Task UpdateUserTimeInDb(int accountId, int newExpires)
+    {
+        var existingUser = await GetExistingUserFromDb(accountId);
+
+        if (existingUser == null)
+            return;
+
+        try
+        {
+            existingUser.expires = newExpires;
+            await using var connection = new MySqlConnection(DbConnectionString);
+            await connection.ExecuteAsync("UPDATE vip_users SET expires = @expires WHERE account_id = @account_id;", existingUser);
+            PrintLogInfo("Player '{name} [{accId}]' expiration time has been updated to {expires}", existingUser.name, existingUser.account_id, newExpires);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
+    private async Task UpdateUserGroupInDb(int accountId, string newGroup)
+    {
+        var existingUser = await GetExistingUserFromDb(accountId);
+
+        if (existingUser == null)
+            return;
+
+        try
+        {
+            existingUser.group = newGroup;
+            await using var connection = new MySqlConnection(DbConnectionString);
+            await connection.ExecuteAsync(" UPDATE vip_users SET `group` = @group WHERE account_id = @account_id;", existingUser);
+
+            PrintLogInfo("Player '{name} [{accId}]' group has been updated to {group}", existingUser.name, existingUser.account_id, newGroup);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
     public async Task RemoveUserFromDb(int accId)
     {
+        var existingUser = await GetExistingUserFromDb(accId);
+
+        if (existingUser == null)
+            return;
+        
         try
         {
             await using var connection = new MySqlConnection(DbConnectionString);
-
-            var existingUser = await connection.QuerySingleOrDefaultAsync<User>(
-                @"SELECT * FROM vip_users WHERE account_id = @AccId", new { AccId = accId });
-
-            if (existingUser == null)
-            {
-                PrintLogError("User does not exist");
-                return;
-            }
 
             await connection.ExecuteAsync(@"
             DELETE FROM vip_users
@@ -841,7 +957,7 @@ public class VipCoreApi : IVipCoreApi
         _vipCore.PrintLogError("Feature not found, returning default value: {empty}", "Empty");
         throw new KeyNotFoundException($"Feature '{feature}' not found.");
     }
-    
+
     public T LoadConfig<T>(string name, string path)
     {
         var configFilePath = Path.Combine(path, $"{name}.json");
@@ -849,7 +965,8 @@ public class VipCoreApi : IVipCoreApi
         if (!File.Exists(configFilePath))
         {
             var defaultConfig = Activator.CreateInstance<T>();
-            var defaultJson = JsonSerializer.Serialize(defaultConfig, new JsonSerializerOptions { WriteIndented = true });
+            var defaultJson =
+                JsonSerializer.Serialize(defaultConfig, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(configFilePath, defaultJson);
         }
 
@@ -861,7 +978,7 @@ public class VipCoreApi : IVipCoreApi
 
         return config;
     }
-    
+
     public T LoadConfig<T>(string name)
     {
         return LoadConfig<T>(name, ModulesConfigDirectory);
