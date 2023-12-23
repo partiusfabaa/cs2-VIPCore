@@ -12,7 +12,7 @@ public class VipRainbowModel : BasePlugin, IModulePlugin
 {
     public override string ModuleAuthor => "WodiX";
     public override string ModuleName => "[VIP] RainbowModel";
-    public override string ModuleVersion => "v1.0.1";
+    public override string ModuleVersion => "v1.0.2";
 
     private IVipCoreApi _api = null!;
     private static readonly string Feature = "RainbowModel";
@@ -21,7 +21,12 @@ public class VipRainbowModel : BasePlugin, IModulePlugin
     public override void Load(bool hotReload)
     {
         RegisterListener<Listeners.OnClientConnected>(slot => RainbowTimer[slot + 1] = null);
-        RegisterListener<Listeners.OnClientDisconnectPost>(slot => RainbowTimer[slot + 1] = null);
+        RegisterListener<Listeners.OnClientDisconnectPost>(slot => {
+            if (RainbowTimer[slot + 1] != null)
+                RainbowTimer[slot + 1]?.Kill();
+
+            RainbowTimer[slot + 1] = null;
+        });
     }
 
     public void LoadModule(IApiProvider provider)
@@ -69,7 +74,8 @@ public class VipRainbowModel : BasePlugin, IModulePlugin
             SetRainbowModel(playerPawnValue, 255, 255, 255);
             return;
         }
-        else if (state == IVipCoreApi.FeatureState.Enabled && playerPawnValue != null)
+        
+        if (playerPawnValue != null)
         {
             RainbowTimer[player.Index] = AddTimer(1.4f,
             () => SetRainbowModel(playerPawnValue, Random.Shared.Next(0, 255),
