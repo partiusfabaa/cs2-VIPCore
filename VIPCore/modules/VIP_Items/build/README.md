@@ -3,7 +3,7 @@
 # Config
 
 ### in vip.json
-`"Items": [ "item1", "item2" ]` // Writing without any parentheses, etc
+`"Items": [ "item1", "item2" ]`
 
 # in lang (not necessarily)
 
