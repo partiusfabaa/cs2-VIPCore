@@ -18,7 +18,7 @@
 | `css_vip_adduser "steamid or accountid" "vipgroup" "time or 0 permanently"` | Adds a VIP player (for server console only) |
 | `css_vip_updategroup "steamid or accountid" "vipgroup"` | Updates the player's VIP Group (for server console only) |
 | `css_vip_updatetime "steamid or accountid" "time or 0 permanently"` | Updates the player's time (for server console only) |
-| `css_vip_deleteuser "steamid"` | Allows you to delete a player by SteamID identifier (for server console only) |
+| `css_vip_deleteuser "steamid or accountid"` | Allows you to delete a player by SteamID identifier (for server console only) |
 | `css_vip` or `!vip` | Opens the VIP menu |
 
 # Configs (addons/counterstrikesharp/configs/plugins/VIPCore/)
