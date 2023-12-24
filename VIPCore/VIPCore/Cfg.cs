@@ -24,7 +24,14 @@ public class Cfg
             {
                 TimeMode = 0,
                 //ServerId = 0,
-                VipLogging = true
+                VipLogging = true,
+                Connection = new VipDb
+                {
+                    Host = "HOST",
+                    Database = "DATABASENAME",
+                    User = "USER",
+                    Password = "PASSWORD"
+                }
             };
             
             File.WriteAllText(configPath, JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true }));
@@ -62,13 +69,6 @@ public class Cfg
                         Values = new Dictionary<string, object>()
                     }
                 }
-            },
-            Connection = new VipDb
-            {
-                Host = "HOST",
-                Database = "DATABASENAME",
-                User = "USER",
-                Password = "PASSWORD"
             }
         };
 
@@ -85,7 +85,6 @@ public class Config
 {
     public float Delay { get; set; }
     public Dictionary<string, VipGroup> Groups { get; set; } = null!;
-    public VipDb Connection { get; set; } = null!;
 }
 
 public class VipGroup
@@ -107,4 +106,5 @@ public class ConfigVipCoreSettings
     //public int ServerId { get; init; }
     
     public bool VipLogging { get; init; }
+    public VipDb Connection { get; set; } = null!;
 }

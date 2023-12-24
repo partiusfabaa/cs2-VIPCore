@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using System.Xml;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
@@ -25,7 +24,7 @@ public class VipCore : BasePlugin, ICorePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Core";
-    public override string ModuleVersion => "v1.0.0";
+    public override string ModuleVersion => "v1.1.0";
 
     public string DbConnectionString = string.Empty;
 
@@ -33,7 +32,6 @@ public class VipCore : BasePlugin, ICorePlugin
     public Config Config = null!;
     private ConfigVipCoreSettings _coreSetting = null!;
     public VipCoreApi VipApi = null!;
-
 
     private readonly bool?[] _vipStatusExpired = new bool?[65];
     public readonly User?[] Users = new User[65];
@@ -143,7 +141,7 @@ public class VipCore : BasePlugin, ICorePlugin
             }
 
             //if (user.sid != _coreSetting.ServerId) return;
-            
+
             AddClientToUsers((uint)(playerSlot + 1), user);
             SetClientFeature(steamId.SteamId64, user.group, (uint)(playerSlot + 1));
 
@@ -151,9 +149,10 @@ public class VipCore : BasePlugin, ICorePlugin
 
             Server.NextFrame(() =>
             {
-                PrintToChat(player,
-                    Localizer["vip.WelcomeToTheServer", user.name] +
-                    Localizer["vip.Expires", timeRemaining.ToString("G")]);
+                AddTimer(5.0f, () => PrintToChat(player,
+                    Localizer["vip.WelcomeToTheServer", user.name] + (user.expires == 0
+                        ? string.Empty
+                        : Localizer["vip.Expires", user.group, timeRemaining.ToString("G")])));
             });
 
             Console.WriteLine("ADD USER TO USERS");
@@ -164,7 +163,7 @@ public class VipCore : BasePlugin, ICorePlugin
         }
     }
 
-    private void AddClientToUsers(uint index, User user)
+    public void AddClientToUsers(uint index, User user)
     {
         Users[index] = new User
         {
@@ -268,7 +267,7 @@ public class VipCore : BasePlugin, ICorePlugin
             group = vipGroup,
             expires = endVipTime == 0 ? 0 : CalculateEndTimeInSeconds(endVipTime)
         };
-        
+
         Task.Run(() => AddUserToDb(user));
 
         if (player != null)
@@ -415,6 +414,7 @@ public class VipCore : BasePlugin, ICorePlugin
                 Console.WriteLine("user?.Menu == null");
                 return;
             }
+
             user.Menu.MenuOptions.Clear();
 
             if (Config.Groups.TryGetValue(user.group, out var vipGroup))
@@ -466,10 +466,10 @@ public class VipCore : BasePlugin, ICorePlugin
     {
         var builder = new MySqlConnectionStringBuilder
         {
-            Database = Config.Connection.Database,
-            UserID = Config.Connection.User,
-            Password = Config.Connection.Password,
-            Server = Config.Connection.Host,
+            Database = _coreSetting.Connection.Database,
+            UserID = _coreSetting.Connection.User,
+            Password = _coreSetting.Connection.Password,
+            Server = _coreSetting.Connection.Host,
             Port = 3306
         };
 
@@ -677,7 +677,7 @@ public class VipCore : BasePlugin, ICorePlugin
                                  u.AuthorizedSteamID != null &&
                                  u.AuthorizedSteamID.AccountId == user.account_id))
                     {
-                        PrintToChat(player, Localizer["vip.Expired"]);
+                        PrintToChat(player, Localizer["vip.Expired", user.group]);
                     }
                 });
 
@@ -839,7 +839,7 @@ public class VipCoreApi : IVipCoreApi
         IVipCoreApi.FeatureType featureType = IVipCoreApi.FeatureType.Toggle,
         Action<CCSPlayerController, IVipCoreApi.FeatureState>? selectItem = null)
     {
-        foreach (var config in _vipCore.Config!.Groups)
+        foreach (var config in _vipCore.Config.Groups)
         {
             if (feature != null)
             {
@@ -862,7 +862,7 @@ public class VipCoreApi : IVipCoreApi
 
     public void UnRegisterFeature(string feature)
     {
-        foreach (var config in _vipCore.Config!.Groups)
+        foreach (var config in _vipCore.Config.Groups)
         {
             if (feature != null)
             {
@@ -922,7 +922,9 @@ public class VipCoreApi : IVipCoreApi
 
     public void RemoveClientVip(CCSPlayerController player)
     {
-        Task.Run(() => RemoveClientVipAsync(player));
+        var index = player.Index;
+        var steamId = new SteamID(player.SteamID);
+        Task.Run(() => RemoveClientVipAsync(index, steamId));
     }
 
     public void PrintToChat(CCSPlayerController player, string message)
@@ -997,12 +999,12 @@ public class VipCoreApi : IVipCoreApi
         }
     }
 
-    private async Task RemoveClientVipAsync(CCSPlayerController player)
+    private async Task RemoveClientVipAsync(uint index, SteamID steamId)
     {
         try
         {
-            Server.NextFrame(() => _vipCore.RemoveUserFromDb(new SteamID(player.SteamID).AccountId));
-            _vipCore.Users[player.Index] = null;
+            await _vipCore.RemoveUserFromDb(steamId.AccountId);
+            _vipCore.Users[index] = null;
         }
         catch (Exception e)
         {
@@ -1017,7 +1019,7 @@ public class VipCoreApi : IVipCoreApi
         if (user == null || string.IsNullOrEmpty(user.group))
             throw new InvalidOperationException("User or user's group not found.");
 
-        if (_vipCore.Config?.Groups.TryGetValue(user.group, out var vipGroup) == true)
+        if (_vipCore.Config.Groups.TryGetValue(user.group, out var vipGroup))
         {
             if (vipGroup.Values.TryGetValue(feature, out var value))
             {
@@ -1102,7 +1104,7 @@ public class VipCoreApi : IVipCoreApi
             {
                 var stringValue = jsonElement.ToString();
                 var deserializedValue = (T)Convert.ChangeType(stringValue, typeof(T))!;
-                return deserializedValue!;
+                return deserializedValue;
             }
             catch (Exception)
             {
