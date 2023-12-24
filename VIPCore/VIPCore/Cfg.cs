@@ -105,5 +105,6 @@ public class ConfigVipCoreSettings
 {
     public int TimeMode { get; init; }
     //public int ServerId { get; init; }
+    
     public bool VipLogging { get; init; }
 }
