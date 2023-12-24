@@ -34,11 +34,11 @@
 ```json
 {
   "Groups": {
-	  "VIP1": {
+     "VIP1": {
         "Values": {
             "features": values
         }
-    }
+     }
   },
   "Connection": {
     "Host": 	"host",
