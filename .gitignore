@@ -73,3 +73,11 @@ VIPCore/modules/VIP_ResetDeaths/obj
 VIPCore/modules/VIP_Items/.idea
 VIPCore/modules/VIP_Items/bin
 VIPCore/modules/VIP_Items/obj
+
+VIPCore/modules/VIP_Antiflash/.idea
+VIPCore/modules/VIP_Antiflash/bin
+VIPCore/modules/VIP_Antiflash/obj
+
+VIPCore/modules/VIP_DecoyTeleport/.idea
+VIPCore/modules/VIP_DecoyTeleport/bin
+VIPCore/modules/VIP_DecoyTeleport/obj
