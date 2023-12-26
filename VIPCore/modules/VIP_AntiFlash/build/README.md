@@ -16,4 +16,4 @@
 # in lang (not necessarily)
 
 RU: `"Antiflash": "Анти-Флеш"`
-EN: `"Armor": "Anti-Flash"`
+EN: `"Antiflash": "Anti-Flash"`
