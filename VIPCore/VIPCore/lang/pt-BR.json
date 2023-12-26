@@ -16,5 +16,10 @@
 	"Gravity": "Gravity",
 	"SmokeColor": "Smoke Color",
 	"Jumps": "Jumps",
-	"Healthshot": "Healthshot"
+	"Healthshot": "Healthshot",
+	"Respawn": "Renascimento",
+	"respawn.Limit": "Limite de renascimento atingido!",
+	"respawn.InCommand": "Você deve estar em um time!",
+	"respawn.IsAlive": "Você deve estar morto!",
+	"respawn.Success": "Renascimento bem-sucedido!"
 }

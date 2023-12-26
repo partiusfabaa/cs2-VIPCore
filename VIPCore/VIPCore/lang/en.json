@@ -16,5 +16,10 @@
 	"Gravity": "Gravity",
 	"SmokeColor": "Smoke Color",
 	"Jumps": "Jumps",
-	"Healthshot": "Healthshot"
+	"Healthshot": "Healthshot",
+	"Respawn": "Respawn",
+	"respawn.Limit": "Respawn limit reached!",
+	"respawn.InCommand": "You must be in a team!",
+	"respawn.IsAlive": "You must be dead!",
+	"respawn.Success": "Respawn successful!"
 }
