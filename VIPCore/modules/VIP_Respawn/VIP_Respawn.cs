@@ -63,19 +63,19 @@ public class VipRespawn : BasePlugin, IModulePlugin
 
         if (_api.GetFeatureValue<int>(player, Feature) <= _usedRespawns[player.Index])
         {
-            _api.PrintToChat(player, Localizer["respawn.Limit"]);
+            _api.PrintToChat(player, _api.GetTranslatedText("respawn.Limit"));
             return;
         }
 
         if (player.TeamNum is (int)CsTeam.None or (int)CsTeam.Spectator)
         {
-            _api.PrintToChat(player, Localizer["respawn.InCommand"]);
+            _api.PrintToChat(player, _api.GetTranslatedText("respawn.InCommand"));
             return;
         }
 
         if (player.PawnIsAlive)
         {
-            _api.PrintToChat(player, Localizer["respawn.IsAlive"]);
+            _api.PrintToChat(player, _api.GetTranslatedText("respawn.IsAlive"));
             return;
         }
 
@@ -87,7 +87,7 @@ public class VipRespawn : BasePlugin, IModulePlugin
         VirtualFunction.CreateVoid<CCSPlayerController>(player.Handle,
             GameData.GetOffset("CCSPlayerController_Respawn"))(player);
         _usedRespawns[player.Index] ++;
-        _api.PrintToChat(player, Localizer["respawn.Success"]);
+        _api.PrintToChat(player, _api.GetTranslatedText("respawn.Success"));
     }
 
     private static string GetSignature()
