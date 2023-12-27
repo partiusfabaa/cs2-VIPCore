@@ -23,7 +23,7 @@ public class Cfg
             config = new ConfigVipCoreSettings
             {
                 TimeMode = 0,
-                //ServerId = 0,
+                ServerId = 0,
                 VipLogging = true,
                 Connection = new VipDb
                 {
@@ -103,7 +103,7 @@ public class VipDb
 public class ConfigVipCoreSettings
 {
     public int TimeMode { get; init; }
-    //public int ServerId { get; init; }
+    public int ServerId { get; init; }
     
     public bool VipLogging { get; init; }
     public VipDb Connection { get; set; } = null!;
