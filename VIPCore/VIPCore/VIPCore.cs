@@ -32,8 +32,7 @@ public class VipCore : BasePlugin, ICorePlugin
     public Config Config = null!;
     public ConfigVipCoreSettings CoreSetting = null!;
     public VipCoreApi VipApi = null!;
-
-    private readonly bool?[] _vipStatusExpired = new bool?[65];
+    
     public readonly User?[] Users = new User[65];
     public readonly Dictionary<string, Feature> Features = new();
 
@@ -50,12 +49,7 @@ public class VipCore : BasePlugin, ICorePlugin
             Config = _cfg.LoadConfig();
             CoreSetting = _cfg.LoadVipSettingsConfig();
         }
-
-        RegisterListener<Listeners.OnClientConnected>(slot =>
-        {
-            Config = _cfg.LoadConfig();
-            _vipStatusExpired[slot + 1] = false;
-        });
+        
         RegisterListener<Listeners.OnClientAuthorized>((slot, id) =>
         {
             var player = Utilities.GetPlayerFromSlot(slot);
@@ -93,7 +87,9 @@ public class VipCore : BasePlugin, ICorePlugin
             {
                 foreach (var player in Utilities.GetPlayers())
                 {
-                    RemoveExpiredUsers(player);
+                    if(player.AuthorizedSteamID == null) continue;
+                    
+                    RemoveExpiredUsers(player, player.AuthorizedSteamID);
                 }
             });
         }), TimerFlags.REPEAT);
@@ -137,7 +133,7 @@ public class VipCore : BasePlugin, ICorePlugin
     {
         try
         {
-            Server.NextFrame(() => { RemoveExpiredUsers(player); });
+            Server.NextFrame(() => { RemoveExpiredUsers(player, steamId); });
 
             //var user = await GetUserFromDb(steamId.AccountId);
 
@@ -648,7 +644,7 @@ public class VipCore : BasePlugin, ICorePlugin
 
             await connection.ExecuteAsync(@"
             DELETE FROM vip_users
-            WHERE account_id = @AccId AND sid = @sid;", new { AccId = accId, sid = CoreSetting.ServerId });
+        WHERE account_id = @AccId AND sid = @sid;", new { AccId = accId, sid = CoreSetting.ServerId });
 
             PrintLogInfo("Player '{accId}' has been successfully removed", accId);
         }
@@ -679,7 +675,7 @@ public class VipCore : BasePlugin, ICorePlugin
         return null;
     }
 
-    private async Task RemoveExpiredUsers(CCSPlayerController player)
+    private async Task RemoveExpiredUsers(CCSPlayerController player, SteamID steamId)
     {
         try
         {
@@ -689,7 +685,7 @@ public class VipCore : BasePlugin, ICorePlugin
                 "SELECT * FROM vip_users WHERE account_id = @AccId AND sid = @sid AND expires < @CurrentTime AND expires > 0",
                 new
                 {
-                    AccId = new SteamID(player.SteamID).AccountId,
+                    AccId = steamId.AccountId,
                     sid = CoreSetting.ServerId,
                     CurrentTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
                 });

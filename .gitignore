@@ -89,3 +89,7 @@ VIPCore/modules/VIP_Respawn/obj
 VIPCore/modules/VIP_KillScreen/.idea
 VIPCore/modules/VIP_KillScreen/bin
 VIPCore/modules/VIP_KillScreen/obj
+
+VIPCore/modules/VIP_RainbowModel/.idea
+VIPCore/modules/VIP_RainbowModel/bin
+VIPCore/modules/VIP_RainbowModel/obj

@@ -12,11 +12,11 @@ public class VipRainbowModel : BasePlugin, IModulePlugin
 {
     public override string ModuleAuthor => "WodiX";
     public override string ModuleName => "[VIP] RainbowModel";
-    public override string ModuleVersion => "v1.0.2";
+    public override string ModuleVersion => "v1.0.3";
 
     private IVipCoreApi _api = null!;
     private static readonly string Feature = "RainbowModel";
-    private Timer?[] RainbowTimer = new Timer?[Server.MaxPlayers + 1];
+    private Timer?[] RainbowTimer = new Timer?[65];
 
     public override void Load(bool hotReload)
     {
@@ -34,11 +34,6 @@ public class VipRainbowModel : BasePlugin, IModulePlugin
         _api = provider.Get<IVipCoreApi>();
         _api.RegisterFeature(Feature, selectItem: OnSelectItem);
         _api.OnPlayerSpawn += OnPlayerSpawn;
-    }
-
-    private void SetRainbowModel(CCSPlayerPawn pawn, int R = 255, int G = 255, int B = 255)
-    {
-        pawn.Render = Color.FromArgb(255, R, G, B);
     }
 
     private void OnPlayerSpawn(CCSPlayerController controller)
@@ -71,7 +66,7 @@ public class VipRainbowModel : BasePlugin, IModulePlugin
         if (state == IVipCoreApi.FeatureState.Disabled && playerPawnValue != null)
         {
             RainbowTimer[player.Index]?.Kill();
-            SetRainbowModel(playerPawnValue, 255, 255, 255);
+            SetRainbowModel(playerPawnValue);
             return;
         }
         
@@ -82,6 +77,12 @@ public class VipRainbowModel : BasePlugin, IModulePlugin
                 Random.Shared.Next(0, 255), Random.Shared.Next(0, 255)),
             TimerFlags.REPEAT);
         }
+    }
+    
+    private void SetRainbowModel(CCSPlayerPawn pawn, int R = 255, int G = 255, int B = 255)
+    {
+        pawn.Render = Color.FromArgb(255, R, G, B);
+        Utilities.SetStateChanged(pawn, "CBaseModelEntity", "m_clrRender");
     }
 
     public override void Unload(bool hotReload)
