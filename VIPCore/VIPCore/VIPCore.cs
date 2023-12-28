@@ -648,7 +648,7 @@ public class VipCore : BasePlugin, ICorePlugin
 
             await connection.ExecuteAsync(@"
             DELETE FROM vip_users
-            WHERE account_id = @AccId AND sid = @sid;", new { AccId = accId, existingUser.sid });
+            WHERE account_id = @AccId AND sid = @sid;", new { AccId = accId, sid = CoreSetting.ServerId });
 
             PrintLogInfo("Player '{accId}' has been successfully removed", accId);
         }
