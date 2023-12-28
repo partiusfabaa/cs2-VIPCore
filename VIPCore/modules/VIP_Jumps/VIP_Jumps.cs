@@ -16,7 +16,7 @@ public class VipJumps : BasePlugin, IModulePlugin
 
     private IVipCoreApi _api = null!;
     private static readonly string Feature = "Jumps";
-    private static readonly UserSettings?[] UserSettings = new UserSettings?[Server.MaxPlayers + 1];
+    private static readonly UserSettings?[] UserSettings = new UserSettings?[65];
 
     public override void Load(bool hotReload)
     {
