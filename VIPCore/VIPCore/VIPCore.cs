@@ -8,7 +8,6 @@ using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Timers;
-using CounterStrikeSharp.API.Modules.Utils;
 using Dapper;
 using Microsoft.Extensions.Logging;
 using Modularity;
@@ -24,7 +23,7 @@ public class VipCore : BasePlugin, ICorePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Core";
-    public override string ModuleVersion => "v1.1.3";
+    public override string ModuleVersion => "v1.1.4";
 
     public string DbConnectionString = string.Empty;
 
@@ -207,7 +206,7 @@ public class VipCore : BasePlugin, ICorePlugin
     private int GetSteamIdFromCommand(string steamId, out CCSPlayerController? player)
     {
         player = null;
-
+        
         if (steamId.Contains("STEAM_1"))
         {
             PrintLogError("please change the first digit in your {steamid}. example: {steam1} to {steam0}",
@@ -908,12 +907,13 @@ public class VipCoreApi : IVipCoreApi
 
         if (user is null or { group: null }) return false;
 
-        if (_vipCore.Config.Groups.TryGetValue(user.group, out var vipGroup))
+        if (!_vipCore.Config.Groups.TryGetValue(user.group, out var vipGroup)) return false;
+        
+        foreach (var vipGroupValue in vipGroup.Values.Where(vipGroupValue => vipGroupValue.Key == feature))
         {
-            return vipGroup.Values.ContainsKey(feature);
+            return !string.IsNullOrEmpty(vipGroupValue.Value.ToString());
         }
 
-        Console.WriteLine("Couldn't find VipGroup in Config.Groups.");
         return false;
     }
 
