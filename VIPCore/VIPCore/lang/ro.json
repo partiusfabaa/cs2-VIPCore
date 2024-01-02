@@ -1,0 +1,20 @@
+{
+	"menu.Title": "[{blue}VIP Menu - {0}{default}]",
+	"vip.Prefix": "[{blue} VIP{default} ]",
+	"vip.WelcomeToTheServer": "Salut, {blue}{0}{default}! Esti un jucator VIP! ",
+	"vip.Expires": "{blue}{0}-ul{default} tau expira in {blue}{1}",
+	"vip.Expired": "{blue}{0}-ul{default} a expirat.",
+	"vip.NoAccess": "Nu ai acces la aceasta comanda!",
+	"vip.AlreadyVipPrivileges": "Ai deja beneficiile de VIP.",
+	"chat.Enabled": "{green}Activat{default} ",
+	"chat.Disabled": "{red}Dezactivat{default} ",
+	"chat.NoAccess": "Nu ai acces",
+	"viptest.YouCanNoLongerTakeTheVip": "Nu mai poti avea VIP Test.",
+	"viptest.RetakenThrough": "VIP Test poate fi reluat doar prin: {0}",
+	"viptest.SuccessfullyPassed": "Ai primit cu succes 'VIP Test'! Expira in: {0}",
+	"Health": "Viata",
+	"Gravity": "Gravitate",
+	"SmokeColor": "Culoare Smoke",
+	"Jumps": "Jumps",
+	"Healthshot": "Healthshot"
+}

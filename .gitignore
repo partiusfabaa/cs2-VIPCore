@@ -93,3 +93,7 @@ VIPCore/modules/VIP_KillScreen/obj
 VIPCore/modules/VIP_RainbowModel/.idea
 VIPCore/modules/VIP_RainbowModel/bin
 VIPCore/modules/VIP_RainbowModel/obj
+
+VIPCore/modules/VIP_Fov/.idea
+VIPCore/modules/VIP_Fov/bin
+VIPCore/modules/VIP_Fov/obj
