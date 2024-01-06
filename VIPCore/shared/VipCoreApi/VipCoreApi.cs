@@ -42,5 +42,7 @@ public interface IVipCoreApi
     public T LoadConfig<T>(string name, string path);
     public T LoadConfig<T>(string name);
     public event Action<CCSPlayerController>? OnPlayerSpawn;
+    public event Action<CCSPlayerController, string>? PlayerLoaded;
+    public event Action<CCSPlayerController, string>? PlayerRemoved;
     //public event Action? OnCoreReady;
 }

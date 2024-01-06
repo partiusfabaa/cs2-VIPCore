@@ -98,17 +98,14 @@ public class VipCore : BasePlugin, ICorePlugin
     {
         if (@event.Userid.Handle == IntPtr.Zero || @event.Userid.UserId == null) return HookResult.Continue;
         var player = @event.Userid;
-        if (player.IsBot || !player.IsValid) return HookResult.Continue;
+        if (player.IsBot) return HookResult.Continue;
         var user = Users[player.Index];
         if (user == null) return HookResult.Continue;
         if (!VipApi.IsClientVip(player)) return HookResult.Continue;
 
         AddTimer(Config.Delay, () =>
         {
-            var playerPawn = player.PlayerPawn.Value;
             if (player.Connected != PlayerConnectedState.PlayerConnected) return;
-            if (playerPawn == null) return;
-            if (!playerPawn.IsValid) return;
 
             try
             {
@@ -148,6 +145,8 @@ public class VipCore : BasePlugin, ICorePlugin
 
                 AddClientToUsers((uint)(playerSlot + 1), user);
                 SetClientFeature(steamId.SteamId64, user.group, (uint)(playerSlot + 1));
+                
+                Server.NextFrame(() => VipApi.PlayerIsLoaded(player, user.group));
 
                 var timeRemaining = DateTimeOffset.FromUnixTimeSeconds(user.expires);
 
@@ -280,6 +279,7 @@ public class VipCore : BasePlugin, ICorePlugin
         {
             AddClientToUsers(player.Index, user);
             SetClientFeature(player.SteamID, user.group, player.Index);
+            VipApi.PlayerIsLoaded(player, user.group);
         }
     }
 
@@ -299,7 +299,10 @@ public class VipCore : BasePlugin, ICorePlugin
             return;
 
         if (player != null)
+        {
+            VipApi.PlayerIsRemoved(player, Users[player.Index]!.group);
             Users[player.Index] = null;
+        }
 
         Task.Run(() => RemoveUserFromDb(steamId));
     }
@@ -703,6 +706,8 @@ public class VipCore : BasePlugin, ICorePlugin
                     var authSteamId = player.AuthorizedSteamID;
                     if (authSteamId != null && authSteamId.AccountId == user.account_id)
                         PrintToChat(player, Localizer["vip.Expired", user.group]);
+                    
+                    VipApi.PlayerIsRemoved(player, user.group);
                 });
 
                 PrintLogInfo("User '{name} [{accId}]' has been removed due to expired VIP status.", user.name,
@@ -832,6 +837,8 @@ public class VipCoreApi : IVipCoreApi
 
     //public event Action? OnCoreReady;
     public event Action<CCSPlayerController>? OnPlayerSpawn;
+    public event Action<CCSPlayerController, string>? PlayerLoaded;
+    public event Action<CCSPlayerController, string>? PlayerRemoved;
 
     public string GetTranslatedText(string name, params object[] args) => _vipCore.Localizer[name, args];
 
@@ -938,6 +945,7 @@ public class VipCoreApi : IVipCoreApi
         var accountId = authSteamId.AccountId;
         var steamId64 = authSteamId.SteamId64;
 
+        PlayerIsLoaded(player, group);
         Task.Run(() => GiveClientVipAsync(name, accountId, index, group, time, steamId64));
     }
 
@@ -945,6 +953,7 @@ public class VipCoreApi : IVipCoreApi
     {
         var index = player.Index;
         var steamId = new SteamID(player.SteamID);
+        PlayerIsRemoved(player, _vipCore.Users[index]!.group);
         Task.Run(() => RemoveClientVipAsync(index, steamId));
     }
 
@@ -977,6 +986,16 @@ public class VipCoreApi : IVipCoreApi
     public void PlayerSpawn(CCSPlayerController player)
     {
         OnPlayerSpawn?.Invoke(player);
+    }
+    
+    public void PlayerIsLoaded(CCSPlayerController player, string group)
+    {
+        PlayerLoaded?.Invoke(player, group);
+    }
+
+    public void PlayerIsRemoved(CCSPlayerController player, string group)
+    {
+        PlayerRemoved?.Invoke(player, group);
     }
 
     private async Task GiveClientVipAsync(string username, int accountId, uint index, string group, int timeSeconds,
