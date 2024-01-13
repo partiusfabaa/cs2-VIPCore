@@ -147,7 +147,7 @@ public class VipCore : BasePlugin, ICorePlugin
             if (user == null) return;
                 
             if (user.sid != CoreSetting.ServerId) continue;
-
+    
             AddClientToUsers((uint)(slot + 1), user);
             SetClientFeature(steamId.SteamId64, user.group, (uint)(slot + 1));
                 
@@ -399,6 +399,22 @@ public class VipCore : BasePlugin, ICorePlugin
         }
 
         const string msg = "VIP players have been successfully reloaded";
+
+        ReplyToCommand(player, msg);
+    }
+    
+    [RequiresPermissions("@css/root")]
+    [CommandHelper(1, "<steamid or account id>")]
+    [ConsoleCommand("css_refresh_vip_player")]
+    public void OnCommandVipReloadInfractions(CCSPlayerController? player, CommandInfo command)
+    {
+        var target = GetPlayerFromSteamId(command.GetArg(1));
+        
+        if (target == null) return;
+        
+        Server.NextFrame(() => ProcessUserInformationAsync(target, target.AuthorizedSteamID, target.Slot));
+        
+        const string msg = "VIP player have been successfully reloaded";
 
         ReplyToCommand(player, msg);
     }
@@ -825,12 +841,13 @@ public class VipCore : BasePlugin, ICorePlugin
         Task.Run(() => CreateTable(DbConnectionString));
     }
 
-    private CCSPlayerController? GetPlayerFromSteamId(string steamId)
+    private static CCSPlayerController? GetPlayerFromSteamId(string steamId)
     {
         return Utilities.GetPlayers().FirstOrDefault(u =>
             u.AuthorizedSteamID != null &&
             (u.AuthorizedSteamID.SteamId2.ToString().Equals(steamId, StringComparison.OrdinalIgnoreCase) ||
-             u.AuthorizedSteamID.SteamId64.ToString().Equals(steamId, StringComparison.OrdinalIgnoreCase)));
+             u.AuthorizedSteamID.SteamId64.ToString().Equals(steamId, StringComparison.OrdinalIgnoreCase) ||
+             u.AuthorizedSteamID.AccountId.ToString().Equals(steamId, StringComparison.OrdinalIgnoreCase)));
     }
 }
 
