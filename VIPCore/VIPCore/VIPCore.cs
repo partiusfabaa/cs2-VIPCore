@@ -131,40 +131,39 @@ public class VipCore : BasePlugin, ICorePlugin
         {
             Server.NextFrame(() => { RemoveExpiredUsers(player, steamId); });
 
+            await ProcessUserInformationAsync(player, steamId, playerSlot);
             //var user = await GetUserFromDb(steamId.AccountId);
-
-            foreach (var user in await GetUserFromDb(steamId.AccountId))
-            {
-                if (user == null)
-                {
-                    Console.WriteLine("USER == NULL");
-                    return;
-                }
-                
-                if (user.sid != CoreSetting.ServerId) continue;
-
-                AddClientToUsers((uint)(playerSlot + 1), user);
-                SetClientFeature(steamId.SteamId64, user.group, (uint)(playerSlot + 1));
-                
-                Server.NextFrame(() => VipApi.PlayerIsLoaded(player, user.group));
-
-                var timeRemaining = DateTimeOffset.FromUnixTimeSeconds(user.expires);
-
-                Server.NextFrame(() =>
-                {
-                    AddTimer(5.0f, () => PrintToChat(player,
-                        Localizer["vip.WelcomeToTheServer", user.name] + (user.expires == 0
-                            ? string.Empty
-                            : Localizer["vip.Expires", user.group, timeRemaining.ToString("G")])));
-                });
-
-                Console.WriteLine("ADD USER TO USERS");
-                return;
-            }
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
+        }
+    }
+    
+    private async Task ProcessUserInformationAsync(CCSPlayerController player, SteamID steamId, int slot)
+    {
+        foreach (var user in await GetUserFromDb(steamId.AccountId))
+        {
+            if (user == null) return;
+                
+            if (user.sid != CoreSetting.ServerId) continue;
+
+            AddClientToUsers((uint)(slot + 1), user);
+            SetClientFeature(steamId.SteamId64, user.group, (uint)(slot + 1));
+                
+            Server.NextFrame(() => VipApi.PlayerIsLoaded(player, user.group));
+
+            var timeRemaining = DateTimeOffset.FromUnixTimeSeconds(user.expires);
+
+            Server.NextFrame(() =>
+            {
+                AddTimer(5.0f, () => PrintToChat(player,
+                    Localizer["vip.WelcomeToTheServer", user.name] + (user.expires == 0
+                        ? string.Empty
+                        : Localizer["vip.Expires", user.group, timeRemaining.ToString("G")])));
+            });
+            
+            return;
         }
     }
 
@@ -390,7 +389,21 @@ public class VipCore : BasePlugin, ICorePlugin
         _ => time
     }).GetUnixEpoch();
 
-    [RequiresPermissions("@css/root", "@vip/vip")]
+    [RequiresPermissions("@css/root")]
+    [ConsoleCommand("css_refresh_vips")]
+    public void OnCommandRefreshVips(CCSPlayerController? player, CommandInfo command)
+    {
+        foreach (var players in Utilities.GetPlayers().Where(u => u.AuthorizedSteamID != null && u.PlayerPawn.Value != null))
+        {
+            Task.Run(() => Server.NextFrame(() => ProcessUserInformationAsync(players, players.AuthorizedSteamID, players.Slot)));
+        }
+
+        const string msg = "VIP players have been successfully reloaded";
+
+        ReplyToCommand(player, msg);
+    }
+    
+    [RequiresPermissions("@css/root")]
     [ConsoleCommand("css_vip_reload")]
     public void OnCommandReloadConfig(CCSPlayerController? controller, CommandInfo command)
     {
@@ -801,6 +814,7 @@ public class VipCore : BasePlugin, ICorePlugin
     {
         VipApi = new VipCoreApi(this, ModuleDirectory);
         apiRegisterer.Register<IVipCoreApi>(VipApi);
+        _cfg = new Cfg(this);
         if (_cfg != null)
         {
             Config = _cfg.LoadConfig();
