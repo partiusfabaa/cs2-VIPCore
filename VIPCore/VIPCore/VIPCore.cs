@@ -387,21 +387,21 @@ public class VipCore : BasePlugin, ICorePlugin
         _ => time
     }).GetUnixEpoch();
 
-    [RequiresPermissions("@css/root")]
-    [ConsoleCommand("css_refresh_vips")]
-    public void OnCommandRefreshVips(CCSPlayerController? player, CommandInfo command)
-    {
-        foreach (var players in Utilities.GetPlayers()
-                     .Where(u => u.AuthorizedSteamID != null && u.PlayerPawn.Value != null))
-        {
-            Task.Run(() =>
-                Server.NextFrame(() => ProcessUserInformationAsync(players, players.AuthorizedSteamID, players.Slot)));
-        }
-
-        const string msg = "VIP players have been successfully reloaded";
-
-        ReplyToCommand(player, msg);
-    }
+    // [RequiresPermissions("@css/root")]
+    // [ConsoleCommand("css_refresh_vips")]
+    // public void OnCommandRefreshVips(CCSPlayerController? player, CommandInfo command)
+    // {
+    //     foreach (var players in Utilities.GetPlayers()
+    //                  .Where(u => u.AuthorizedSteamID != null && u.PlayerPawn.Value != null))
+    //     {
+    //         Task.Run(() =>
+    //             Server.NextFrame(() => ProcessUserInformationAsync(players, players.AuthorizedSteamID, players.Slot)));
+    //     }
+    //
+    //     const string msg = "VIP players have been successfully reloaded";
+    //
+    //     ReplyToCommand(player, msg);
+    // }
     
     [CommandHelper(1, "<steamid>")]
     [ConsoleCommand("css_reload_vip_player")]
