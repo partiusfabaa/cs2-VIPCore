@@ -31,7 +31,7 @@ public class VipCore : BasePlugin, ICorePlugin
     public Config Config = null!;
     public ConfigVipCoreSettings CoreSetting = null!;
     public VipCoreApi VipApi = null!;
-    
+
     public readonly User?[] Users = new User[65];
     public readonly Dictionary<string, Feature> Features = new();
 
@@ -48,7 +48,7 @@ public class VipCore : BasePlugin, ICorePlugin
             Config = _cfg.LoadConfig();
             CoreSetting = _cfg.LoadVipSettingsConfig();
         }
-        
+
         RegisterListener<Listeners.OnClientAuthorized>((slot, id) =>
         {
             var player = Utilities.GetPlayerFromSlot(slot);
@@ -86,8 +86,8 @@ public class VipCore : BasePlugin, ICorePlugin
             {
                 foreach (var player in Utilities.GetPlayers())
                 {
-                    if(player.AuthorizedSteamID == null) continue;
-                    
+                    if (player.AuthorizedSteamID == null) continue;
+
                     RemoveExpiredUsers(player, player.AuthorizedSteamID);
                 }
             });
@@ -139,18 +139,17 @@ public class VipCore : BasePlugin, ICorePlugin
             Console.WriteLine(e);
         }
     }
-    
+
     private async Task ProcessUserInformationAsync(CCSPlayerController player, SteamID steamId, int slot)
     {
-        foreach (var user in await GetUserFromDb(steamId.AccountId))
+        var userFromDb = await GetUserFromDb(steamId.AccountId);
+
+        Users[slot + 1] = null;
+        foreach (var user in userFromDb.OfType<User>().Where(user => user.sid == CoreSetting.ServerId))
         {
-            if (user == null) return;
-                
-            if (user.sid != CoreSetting.ServerId) continue;
-    
             AddClientToUsers((uint)(slot + 1), user);
             SetClientFeature(steamId.SteamId64, user.group, (uint)(slot + 1));
-                
+
             Server.NextFrame(() => VipApi.PlayerIsLoaded(player, user.group));
 
             var timeRemaining = DateTimeOffset.FromUnixTimeSeconds(user.expires);
@@ -162,12 +161,11 @@ public class VipCore : BasePlugin, ICorePlugin
                         ? string.Empty
                         : Localizer["vip.Expires", user.group, timeRemaining.ToString("G")])));
             });
-            
             return;
         }
     }
 
-    public void AddClientToUsers(uint index, User user)
+    private void AddClientToUsers(uint index, User user)
     {
         Users[index] = new User
         {
@@ -204,7 +202,7 @@ public class VipCore : BasePlugin, ICorePlugin
     private int GetSteamIdFromCommand(string steamId, out CCSPlayerController? player)
     {
         player = null;
-        
+
         if (steamId.Contains("STEAM_1"))
         {
             PrintLogError("please change the first digit in your {steamid}. example: {steam1} to {steam0}",
@@ -393,9 +391,11 @@ public class VipCore : BasePlugin, ICorePlugin
     [ConsoleCommand("css_refresh_vips")]
     public void OnCommandRefreshVips(CCSPlayerController? player, CommandInfo command)
     {
-        foreach (var players in Utilities.GetPlayers().Where(u => u.AuthorizedSteamID != null && u.PlayerPawn.Value != null))
+        foreach (var players in Utilities.GetPlayers()
+                     .Where(u => u.AuthorizedSteamID != null && u.PlayerPawn.Value != null))
         {
-            Task.Run(() => Server.NextFrame(() => ProcessUserInformationAsync(players, players.AuthorizedSteamID, players.Slot)));
+            Task.Run(() =>
+                Server.NextFrame(() => ProcessUserInformationAsync(players, players.AuthorizedSteamID, players.Slot)));
         }
 
         const string msg = "VIP players have been successfully reloaded";
@@ -403,22 +403,18 @@ public class VipCore : BasePlugin, ICorePlugin
         ReplyToCommand(player, msg);
     }
     
-    [RequiresPermissions("@css/root")]
-    [CommandHelper(1, "<steamid or account id>")]
-    [ConsoleCommand("css_refresh_vip_player")]
+    [CommandHelper(1, "<steamid>")]
+    [ConsoleCommand("css_reload_vip_player")]
     public void OnCommandVipReloadInfractions(CCSPlayerController? player, CommandInfo command)
     {
+        if (player != null) return;
         var target = GetPlayerFromSteamId(command.GetArg(1));
-        
-        if (target == null) return;
-        
-        Server.NextFrame(() => ProcessUserInformationAsync(target, target.AuthorizedSteamID, target.Slot));
-        
-        const string msg = "VIP player have been successfully reloaded";
 
-        ReplyToCommand(player, msg);
+        if (target == null) return;
+
+        ProcessUserInformationAsync(target, target.AuthorizedSteamID, target.Slot);
     }
-    
+
     [RequiresPermissions("@css/root")]
     [ConsoleCommand("css_vip_reload")]
     public void OnCommandReloadConfig(CCSPlayerController? controller, CommandInfo command)
@@ -551,7 +547,8 @@ public class VipCore : BasePlugin, ICorePlugin
             await using var connection = new MySqlConnection(DbConnectionString);
 
             var existingUser = await connection.QuerySingleOrDefaultAsync<User>(
-                @"SELECT * FROM vip_users WHERE account_id = @AccId AND sid = @sid", new { AccId = accountId, sid = CoreSetting.ServerId });
+                @"SELECT * FROM vip_users WHERE account_id = @AccId AND sid = @sid",
+                new { AccId = accountId, sid = CoreSetting.ServerId });
 
             if (existingUser != null) return existingUser;
 
@@ -735,7 +732,7 @@ public class VipCore : BasePlugin, ICorePlugin
                     var authSteamId = player.AuthorizedSteamID;
                     if (authSteamId != null && authSteamId.AccountId == user.account_id)
                         PrintToChat(player, Localizer["vip.Expired", user.group]);
-                    
+
                     VipApi.PlayerIsRemoved(player, user.group);
                 });
 
@@ -946,7 +943,7 @@ public class VipCoreApi : IVipCoreApi
         if (user is null or { group: null }) return false;
 
         if (!_vipCore.Config.Groups.TryGetValue(user.group, out var vipGroup)) return false;
-        
+
         foreach (var vipGroupValue in vipGroup.Values.Where(vipGroupValue => vipGroupValue.Key == feature))
         {
             return !string.IsNullOrEmpty(vipGroupValue.Value.ToString());
@@ -1018,7 +1015,7 @@ public class VipCoreApi : IVipCoreApi
     {
         OnPlayerSpawn?.Invoke(player);
     }
-    
+
     public void PlayerIsLoaded(CCSPlayerController player, string group)
     {
         PlayerLoaded?.Invoke(player, group);
@@ -1049,7 +1046,7 @@ public class VipCoreApi : IVipCoreApi
                 if (user != null)
                 {
                     if (user.sid != _vipCore.CoreSetting.ServerId) continue;
-                    
+
                     _vipCore.Users[index] = new User
                     {
                         account_id = accountId,
