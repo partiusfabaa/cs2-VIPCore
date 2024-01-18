@@ -22,12 +22,19 @@ public class VipFov : BasePlugin, IModulePlugin
         {
             var cookie = _api.GetPlayerCookie<int>(Utilities.GetPlayerFromSlot(slot).SteamID, "player_fov");
 
-            _userSettings[slot + 1] = new UserSettings()
-            {
-                Fov = cookie == 0 ? 90 : cookie
-            };
+            _userSettings[slot + 1] = new UserSettings { Fov = cookie == 0 ? 90 : cookie };
         });
         RegisterListener<Listeners.OnClientDisconnectPost>(slot => _userSettings[slot + 1] = null);
+        RegisterEventHandler<EventPlayerDisconnect>((@event, info) =>
+        {
+            var player = @event.Userid;
+
+            if (_api.IsClientVip(player)) return HookResult.Continue;
+            
+            if(_api.GetPlayerCookie<int>(player.SteamID, "player_fov") is not 90)
+                _api.SetPlayerCookie(player.SteamID, "player_fov", 90);
+            return HookResult.Continue;
+        });
     }
 
     public void LoadModule(IApiProvider provider)
@@ -40,7 +47,11 @@ public class VipFov : BasePlugin, IModulePlugin
     private void OnPlayerSpawn(CCSPlayerController player)
     {
         if (_userSettings[player.Index] == null) return;
-        if (!_api.PlayerHasFeature(player, Feature)) return;
+        if (!_api.PlayerHasFeature(player, Feature))
+        {
+            _userSettings[player.Index]!.Fov = 90;
+            return;
+        }
 
         ChangeFov(player);
     }
@@ -52,16 +63,19 @@ public class VipFov : BasePlugin, IModulePlugin
         var userFov = _api.GetFeatureValue<List<int>>(player, Feature);
 
         _userSettings[player.Index]!.Menu.MenuOptions.Clear();
-        _userSettings[player.Index]!.Menu.AddMenuOption(Localizer["fov.Disable"], (controller, option) =>
+        _userSettings[player.Index]!.Menu.AddMenuOption(_api.GetTranslatedText("fov.Disable"), (controller, option) =>
         {
             _userSettings[player.Index]!.Fov = 90;
+
+            _api.PrintToChat(player, _api.GetTranslatedText("fov.Off"));
             ChangeFov(controller);
-        }, _userSettings[player.Index]!.Fov == -1);
+        }, _userSettings[player.Index]!.Fov == 90);
         foreach (var i in userFov)
         {
             _userSettings[player.Index]!.Menu.AddMenuOption(i.ToString(), (controller, option) =>
             {
                 _userSettings[player.Index]!.Fov = i;
+                _api.PrintToChat(player, _api.GetTranslatedText("fov.On", i));
                 ChangeFov(controller);
             }, _userSettings[player.Index]!.Fov == i);
         }
