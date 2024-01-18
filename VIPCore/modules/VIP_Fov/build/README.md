@@ -8,11 +8,17 @@
 # in translations
 
 RU: 
+
 `"fov.Disable": "Выключить"`
+
 `"fov.On": "Вы установили значение {blue}FOV {default}на {red}{0}"`
+
 `"fov.Off": "Вы вырубили {blue}FOV"`
 
 EN: 
+
 `"fov.Disable": "Disable"`
+
 `"fov.On": "You have set {blue}FOV {default} to {red}{0}"`
+
 `"fov.Off": "You've disabled the {blue}FOV"`
