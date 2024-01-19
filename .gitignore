@@ -101,3 +101,7 @@ VIPCore/modules/VIP_Fov/obj
 VIPCore/modules/VIP_Flags/.idea
 VIPCore/modules/VIP_Flags/bin
 VIPCore/modules/VIP_Flags/obj
+
+VIPCore/modules/VIP_Vampirism/.idea
+VIPCore/modules/VIP_Vampirism/bin
+VIPCore/modules/VIP_Vampirism/obj
