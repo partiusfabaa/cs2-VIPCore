@@ -105,3 +105,11 @@ VIPCore/modules/VIP_Flags/obj
 VIPCore/modules/VIP_Vampirism/.idea
 VIPCore/modules/VIP_Vampirism/bin
 VIPCore/modules/VIP_Vampirism/obj
+
+VIPCore/modules/VIP_RegenHealth/.idea
+VIPCore/modules/VIP_RegenHealth/bin
+VIPCore/modules/VIP_RegenHealth/obj
+
+VIPCore/modules/VIP_RegenArmor/.idea
+VIPCore/modules/VIP_RegenArmor/bin
+VIPCore/modules/VIP_RegenArmor/obj
