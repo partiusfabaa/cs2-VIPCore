@@ -8,11 +8,28 @@ public class VipItems : BasePlugin, IModulePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Items";
-    public override string ModuleVersion => "1.0.0";
+    public override string ModuleVersion => "1.0.1";
 
-    private static readonly string Feature = "Items";
+    private Items _items;
     private IVipCoreApi _api = null!;
 
+    public void LoadModule(IApiProvider provider)
+    {
+        _api = provider.Get<IVipCoreApi>();
+        _items = new Items(_api);
+        _api.RegisterFeature(_items);
+    }
+
+    public override void Unload(bool hotReload)
+    {
+        _api.UnRegisterFeature(_items);
+    }
+}
+
+public class Items : VipFeatureBase
+{
+    public override string Feature => "Items";
+    
     private readonly Dictionary<string, int> _grenadeIndex = new()
     {
         ["flashbang"] = 14, 
@@ -22,25 +39,22 @@ public class VipItems : BasePlugin, IModulePlugin
         ["molotov"] = 16,
         ["hegrenade"] = 13
     };
-
-    public void LoadModule(IApiProvider provider)
+    
+    public Items(IVipCoreApi api) : base(api)
     {
-        _api = provider.Get<IVipCoreApi>();
-        _api.RegisterFeature(Feature);
-        _api.OnPlayerSpawn += OnPlayerSpawn;
     }
 
-    private void OnPlayerSpawn(CCSPlayerController controller)
+    public override void OnPlayerSpawn(CCSPlayerController player)
     {
-        if (_api.IsPistolRound()) return;
+        if (IsPistolRound()) return;
         
-        if (!_api.PlayerHasFeature(controller, Feature)) return;
-        if (_api.GetPlayerFeatureState(controller, Feature) is IVipCoreApi.FeatureState.Disabled
+        if (!PlayerHasFeature(player)) return;
+        if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
             or IVipCoreApi.FeatureState.NoAccess) return;
 
-        var items = _api.GetFeatureValue<List<string>?>(controller, Feature);
+        var items = GetFeatureValue<List<string>?>(player);
 
-        var playerPawnValue = controller.PlayerPawn.Value;
+        var playerPawnValue = player.PlayerPawn.Value;
         if (playerPawnValue == null) return;
 
         var weaponService = playerPawnValue.WeaponServices;
@@ -52,17 +66,12 @@ public class VipItems : BasePlugin, IModulePlugin
             var ammoIndex = itemName != null ? _grenadeIndex[item] : -1;
 
             if (itemName != null && weaponService.Ammo[ammoIndex] == 0)
-                controller.GiveNamedItem(item);
+                player.GiveNamedItem(item);
             else
             {
                 if (weaponService.MyWeapons.ToList().Find(m => m.Value != null && m.Value.DesignerName == item) == null)
-                    controller.GiveNamedItem(item);
+                    player.GiveNamedItem(item);
             }
         }
-    }
-
-    public override void Unload(bool hotReload)
-    {
-        _api.UnRegisterFeature(Feature);
     }
 }

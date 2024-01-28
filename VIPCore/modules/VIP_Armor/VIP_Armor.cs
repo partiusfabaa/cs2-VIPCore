@@ -1,6 +1,12 @@
-﻿using CounterStrikeSharp.API.Core;
+﻿using System.Runtime.InteropServices;
+using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Attributes.Registration;
+using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Memory;
+using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using Modularity;
 using VipCoreApi;
+using static VipCoreApi.IVipCoreApi;
 
 namespace VIP_Armor;
 
@@ -11,35 +17,42 @@ public class VipArmor : BasePlugin, IModulePlugin
     public override string ModuleVersion => "v1.0.1";
 
     private IVipCoreApi _api = null!;
-    private static readonly string Feature = "Armor";
+    private Armor _armor;
 
     public void LoadModule(IApiProvider provider)
     {
         _api = provider.Get<IVipCoreApi>();
-        _api.RegisterFeature(Feature);
-        _api.OnPlayerSpawn += OnPlayerSpawn;
-    }
-
-    private void OnPlayerSpawn(CCSPlayerController controller)
-    {
-        if (!_api.PlayerHasFeature(controller, Feature)) return;
-        if (_api.GetPlayerFeatureState(controller, Feature) is IVipCoreApi.FeatureState.Disabled
-            or IVipCoreApi.FeatureState.NoAccess) return;
-
-        var playerPawnValue = controller.PlayerPawn.Value;
-
-        var armorValue = _api.GetFeatureValue<int>(controller, Feature);
-
-        if (armorValue <= 0 || playerPawnValue == null) return;
-
-        if (playerPawnValue.ItemServices != null)
-            new CCSPlayer_ItemServices(playerPawnValue.ItemServices.Handle).HasHelmet = true;
-
-        playerPawnValue.ArmorValue = armorValue;
+        _armor = new Armor(_api);
+        _api.RegisterFeature(_armor);
     }
 
     public override void Unload(bool hotReload)
     {
-        _api.UnRegisterFeature(Feature);
+        _api.UnRegisterFeature(_armor);
+    }
+}
+
+public class Armor : VipFeatureBase
+{
+    public override string Feature => "Armor";
+    public Armor(IVipCoreApi api) : base(api)
+    {
+    }
+
+    public override void OnPlayerSpawn(CCSPlayerController player)
+    {
+        if (!PlayerHasFeature(player)) return;
+        if (GetPlayerFeatureState(player) is not FeatureState.Enabled) return;
+
+        var playerPawn = player.PlayerPawn.Value;
+
+        var armorValue = GetFeatureValue<int>(player);
+
+        if (armorValue <= 0 || playerPawn == null) return;
+
+        if (playerPawn.ItemServices != null)
+            new CCSPlayer_ItemServices(playerPawn.ItemServices.Handle).HasHelmet = true;
+
+        playerPawn.ArmorValue = armorValue;
     }
 }

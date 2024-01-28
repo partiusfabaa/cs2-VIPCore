@@ -103,7 +103,7 @@ public class VipTest : BasePlugin, IModulePlugin
     {
         try
         {
-            await using var dbConnection = new MySqlConnection(_api.GetDatabaseConnection);
+            await using var dbConnection = new MySqlConnection(_api.GetDatabaseConnectionString);
             dbConnection.Open();
 
             var insertUserQuery = @"
@@ -123,7 +123,7 @@ public class VipTest : BasePlugin, IModulePlugin
     {
         try
         {
-            await using var dbConnection = new MySqlConnection(_api.GetDatabaseConnection);
+            await using var dbConnection = new MySqlConnection(_api.GetDatabaseConnectionString);
             dbConnection.Open();
 
             var updateCountQuery = @"
@@ -144,7 +144,7 @@ public class VipTest : BasePlugin, IModulePlugin
     {
         try
         {
-            await using var dbConnection = new MySqlConnection(_api.GetDatabaseConnection);
+            await using var dbConnection = new MySqlConnection(_api.GetDatabaseConnectionString);
             dbConnection.Open();
     
             var result = await dbConnection.QuerySingleOrDefaultAsync<long>(@"
@@ -164,7 +164,7 @@ public class VipTest : BasePlugin, IModulePlugin
     {
         try
         {
-            await using var dbConnection = new MySqlConnection(_api.GetDatabaseConnection);
+            await using var dbConnection = new MySqlConnection(_api.GetDatabaseConnectionString);
             dbConnection.Open();
 
             var checkUserQuery = @"
@@ -187,7 +187,7 @@ public class VipTest : BasePlugin, IModulePlugin
     {
         try
         {
-            await using var dbConnection = new MySqlConnection(_api.GetDatabaseConnection);
+            await using var dbConnection = new MySqlConnection(_api.GetDatabaseConnectionString);
             dbConnection.Open();
 
             var createKeysTable = @"

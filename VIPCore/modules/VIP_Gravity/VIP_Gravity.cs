@@ -3,6 +3,7 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using Modularity;
 using VipCoreApi;
+using static VipCoreApi.IVipCoreApi;
 
 namespace VIP_Gravity;
 
@@ -10,36 +11,49 @@ public class VipGravity : BasePlugin, IModulePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Gravity";
-    public override string ModuleVersion => "1.0.0";
+    public override string ModuleVersion => "1.0.1";
 
     private IVipCoreApi _api = null!;
-    private static readonly string Feature = "Gravity";
+    private Gravity _gravity;
 
     public void LoadModule(IApiProvider provider)
     {
         _api = provider.Get<IVipCoreApi>();
-        _api.RegisterFeature(Feature, selectItem: OnSelectItem);
-        _api.OnPlayerSpawn += OnPlayerSpawn;
+        _gravity = new Gravity(this, _api);
+        _api.RegisterFeature(_gravity, selectItem: _gravity.OnSelectItem);
     }
 
-    private void OnPlayerSpawn(CCSPlayerController controller)
+    public override void Unload(bool hotReload)
     {
-        if (!_api.PlayerHasFeature(controller, Feature) ||
-            _api.GetPlayerFeatureState(controller, Feature) is IVipCoreApi.FeatureState.Disabled
-                or IVipCoreApi.FeatureState.NoAccess) return;
+        _api.UnRegisterFeature(_gravity);
+    }
+}
 
-        var playerPawnValue = controller.PlayerPawn.Value;
+public class Gravity : VipFeatureBase
+{
+    public override string Feature => "Gravity";
+    
+    public Gravity(VipGravity vipGravity, IVipCoreApi api) : base(api)
+    {
+    }
+
+    public override void OnPlayerSpawn(CCSPlayerController player)
+    {
+        if (!PlayerHasFeature(player)) return;
+        if (GetPlayerFeatureState(player) is not FeatureState.Enabled) return;
+
+        var playerPawnValue = player.PlayerPawn.Value;
 
         if (playerPawnValue == null) return;
         
-        playerPawnValue.GravityScale = _api.GetFeatureValue<float>(controller, Feature);
+        playerPawnValue.GravityScale = GetFeatureValue<float>(player);
     }
-
-    private void OnSelectItem(CCSPlayerController player, IVipCoreApi.FeatureState state)
+    
+    public void OnSelectItem(CCSPlayerController player, FeatureState state)
     {
         var playerPawnValue = player.PlayerPawn.Value;
         
-        if (state == IVipCoreApi.FeatureState.Disabled)
+        if (state == FeatureState.Disabled)
         {
             if (playerPawnValue != null)
                 playerPawnValue.GravityScale = 1.0f;
@@ -47,11 +61,6 @@ public class VipGravity : BasePlugin, IModulePlugin
         }
 
         if (playerPawnValue != null)
-            playerPawnValue.GravityScale = _api.GetFeatureValue<float>(player, Feature);
-    }
-
-    public override void Unload(bool hotReload)
-    {
-        _api.UnRegisterFeature(Feature);
+            playerPawnValue.GravityScale = GetFeatureValue<float>(player);
     }
 }

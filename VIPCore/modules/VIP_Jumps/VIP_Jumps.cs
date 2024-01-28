@@ -12,18 +12,35 @@ public class VipJumps : BasePlugin, IModulePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Jumps";
-    public override string ModuleVersion => "v1.0.0";
+    public override string ModuleVersion => "v1.0.1";
 
     private IVipCoreApi _api = null!;
-    private static readonly string Feature = "Jumps";
+    private Jumps _jumps;
+
+    public void LoadModule(IApiProvider provider)
+    {
+        _api = provider.Get<IVipCoreApi>();
+        _jumps = new Jumps(this, _api);
+        _api.RegisterFeature(_jumps);
+    }
+
+    public override void Unload(bool hotReload)
+    {
+        _api.UnRegisterFeature(_jumps);
+    }
+}
+
+public class Jumps : VipFeatureBase
+{
+    public override string Feature => "Jumps";
     private static readonly UserSettings?[] UserSettings = new UserSettings?[65];
 
-    public override void Load(bool hotReload)
+    public Jumps(VipJumps vipJumps, IVipCoreApi api) : base(api)
     {
-        RegisterListener<Listeners.OnClientAuthorized>((slot, id) => UserSettings[slot + 1] = new UserSettings());
-        RegisterListener<Listeners.OnClientDisconnectPost>(slot => UserSettings[slot + 1] = null);
-
-        RegisterListener<Listeners.OnTick>(() =>
+        vipJumps.RegisterListener<Listeners.OnClientAuthorized>((slot, id) =>
+            UserSettings[slot + 1] = new UserSettings());
+        vipJumps.RegisterListener<Listeners.OnClientDisconnectPost>(slot => UserSettings[slot + 1] = null);
+        vipJumps.RegisterListener<Listeners.OnTick>(() =>
         {
             foreach (var player in Utilities.GetPlayers()
                          .Where(player => player is { IsValid: true, IsBot: false, PawnIsAlive: true }))
@@ -31,7 +48,8 @@ public class VipJumps : BasePlugin, IModulePlugin
                 if (UserSettings[player.Index] == null ||
                     player.TeamNum is not ((int)CsTeam.Terrorist or (int)CsTeam.CounterTerrorist)) continue;
 
-                if (_api.IsClientVip(player) && _api.PlayerHasFeature(player, Feature))
+                if (IsClientVip(player) && PlayerHasFeature(player) &&
+                    GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Enabled)
                     OnTick(player);
             }
         });
@@ -40,11 +58,8 @@ public class VipJumps : BasePlugin, IModulePlugin
     private void OnTick(CCSPlayerController player)
     {
         var client = player.Index;
-
-        if (_api.GetPlayerFeatureState(player, Feature) is IVipCoreApi.FeatureState.Disabled
-            or IVipCoreApi.FeatureState.NoAccess) return;
-
         var playerPawn = player.PlayerPawn.Value;
+        
         if (playerPawn != null)
         {
             var flags = (PlayerFlags)playerPawn.Flags;
@@ -71,25 +86,12 @@ public class VipJumps : BasePlugin, IModulePlugin
         }
     }
 
-
-    public override void Unload(bool hotReload)
-    {
-        _api?.UnRegisterFeature(Feature);
-    }
-
-    public void LoadModule(IApiProvider provider)
-    {
-        _api = provider.Get<IVipCoreApi>();
-        _api.RegisterFeature(Feature);
-        _api.OnPlayerSpawn += OnPlayerSpawn;
-    }
-
-    private void OnPlayerSpawn(CCSPlayerController player)
+    public override void OnPlayerSpawn(CCSPlayerController player)
     {
         if (UserSettings[player.Index] == null) return;
-        if(!_api.PlayerHasFeature(player, Feature)) return;
-        
-        UserSettings[player.Index]!.NumberOfJumps = _api.GetFeatureValue<int>(player, Feature);
+        if (!PlayerHasFeature(player)) return;
+
+        UserSettings[player.Index]!.NumberOfJumps = GetFeatureValue<int>(player);
     }
 }
 

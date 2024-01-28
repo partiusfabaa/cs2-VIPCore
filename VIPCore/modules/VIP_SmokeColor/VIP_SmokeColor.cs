@@ -1,7 +1,5 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Modules.Commands;
 using Modularity;
 using VipCoreApi;
 
@@ -14,19 +12,30 @@ public class VipSmokeColor : BasePlugin, IModulePlugin
     public override string ModuleVersion => "v1.0.0";
 
     private IVipCoreApi _api = null!;
-    private static readonly string Feature = "SmokeColor";
-
-    public override void Load(bool hotReload)
-    {
-        RegisterListener<Listeners.OnEntitySpawned>(OnEntitySpawned);
-    }
+    private SmokeColor _smokeColor;
 
     public void LoadModule(IApiProvider provider)
     {
         _api = provider.Get<IVipCoreApi>();
-        _api.RegisterFeature(Feature);
+        _smokeColor = new SmokeColor(this, _api);
+        _api.RegisterFeature(_smokeColor);
     }
 
+    public override void Unload(bool hotReload)
+    {
+        _api.UnRegisterFeature(_smokeColor);
+    }
+}
+
+public class SmokeColor : VipFeatureBase
+{
+    public override string Feature => "SmokeColor";
+
+    public SmokeColor(VipSmokeColor smokeColor, IVipCoreApi api) : base(api)
+    {
+        smokeColor.RegisterListener<Listeners.OnEntitySpawned>(OnEntitySpawned);
+    }
+    
     private void OnEntitySpawned(CEntityInstance entity)
     {
         if (entity.DesignerName != "smokegrenade_projectile") return;
@@ -43,21 +52,16 @@ public class VipSmokeColor : BasePlugin, IModulePlugin
             if (throwerValueController == null) return;
             var controller = new CCSPlayerController(throwerValueController.Handle);
 
-            if (!_api.IsClientVip(controller)) return;
-            if (!_api.PlayerHasFeature(controller, Feature)) return;
-            if (_api.GetPlayerFeatureState(controller, Feature) is IVipCoreApi.FeatureState.Disabled
-                or IVipCoreApi.FeatureState.NoAccess)
+            if (!IsClientVip(controller)) return;
+            if (!PlayerHasFeature(controller)) return;
+            if (GetPlayerFeatureState(controller) is not IVipCoreApi.FeatureState.Enabled)
                 return;
-            var smokeColor = _api.GetFeatureValue<int[]>(controller, Feature);
+            
+            var smokeColor = GetFeatureValue<int[]>(controller);
 
             smokeGrenade.SmokeColor.X = smokeColor[0] == -1 ? Random.Shared.NextSingle() * 255.0f : smokeColor[0];
             smokeGrenade.SmokeColor.Y = smokeColor[1] == -1 ? Random.Shared.NextSingle() * 255.0f : smokeColor[1];
             smokeGrenade.SmokeColor.Z = smokeColor[2] == -1 ? Random.Shared.NextSingle() * 255.0f : smokeColor[2];
         });
-    }
-
-    public override void Unload(bool hotReload)
-    {
-        _api.UnRegisterFeature(Feature);
     }
 }

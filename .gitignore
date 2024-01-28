@@ -2,9 +2,9 @@ VIPCore/ignoremodules/
 VIPCore/VIPCore/.idea
 VIPCore/VIPCore/bin/
 VIPCore/VIPCore/obj/
-VIPCore/shared/VipCoreApi/.idea
-VIPCore/shared/VipCoreApi/bin
-VIPCore/shared/VipCoreApi/obj
+VIPCore/VipCoreApi/.idea
+VIPCore/VipCoreApi/bin
+VIPCore/VipCoreApi/obj
 VIPCoreOldModularity/modules
 VIPCoreOldModularity/shared
 VIPCoreOldModularity/VIPCore/obj/

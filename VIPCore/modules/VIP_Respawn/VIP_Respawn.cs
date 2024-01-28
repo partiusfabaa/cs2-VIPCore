@@ -8,6 +8,7 @@ using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using CounterStrikeSharp.API.Modules.Utils;
 using Modularity;
 using VipCoreApi;
+using static VipCoreApi.IVipCoreApi;
 
 namespace VIP_Respawn;
 
@@ -17,77 +18,17 @@ public class VipRespawn : BasePlugin, IModulePlugin
     public override string ModuleName => "[VIP] Respawn";
     public override string ModuleVersion => "1.0.1";
 
-    private MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool> CBasePlayerController_SetPawnFunc;
+    public MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool> CBasePlayerControllerSetPawnFunc =
+        new(GetSignature());
 
-    private static readonly string Feature = "Respawn";
+    private Respawn _respawn;
     private IVipCoreApi _api = null!;
-    private readonly int?[] _usedRespawns = new int?[65];
-
-    public override void Load(bool hotReload)
-    {
-        RegisterListener<Listeners.OnClientConnected>(slot => _usedRespawns[slot + 1] = 0);
-        RegisterListener<Listeners.OnClientDisconnectPost>(slot => _usedRespawns[slot + 1] = null);
-        RegisterEventHandler<EventRoundStart>((@event, info) =>
-        {
-            for (var i = 0; i < _usedRespawns.Length; i ++)
-                _usedRespawns[i] = 0;
-
-            return HookResult.Continue;
-        });
-        CBasePlayerController_SetPawnFunc =
-            new MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool>(GetSignature());
-    }
 
     public void LoadModule(IApiProvider provider)
     {
         _api = provider.Get<IVipCoreApi>();
-        _api.RegisterFeature(Feature, IVipCoreApi.FeatureType.Selectable, OnSelectItem);
-    }
-
-    private void OnSelectItem(CCSPlayerController player, IVipCoreApi.FeatureState state)
-    {
-        Respawn(player);
-    }
-
-    [ConsoleCommand("css_respawn")]
-    public void OnCmdVipCommand(CCSPlayerController? player, CommandInfo info)
-    {
-        if (player == null) return;
-        Respawn(player);
-    }
-
-    private void Respawn(CCSPlayerController player)
-    {
-        if (!_api.IsClientVip(player)) return;
-        if (!_api.PlayerHasFeature(player, Feature)) return;
-
-        if (_api.GetFeatureValue<int>(player, Feature) <= _usedRespawns[player.Index])
-        {
-            _api.PrintToChat(player, _api.GetTranslatedText("respawn.Limit"));
-            return;
-        }
-
-        if (player.TeamNum is (int)CsTeam.None or (int)CsTeam.Spectator)
-        {
-            _api.PrintToChat(player, _api.GetTranslatedText("respawn.InCommand"));
-            return;
-        }
-
-        if (player.PawnIsAlive)
-        {
-            _api.PrintToChat(player, _api.GetTranslatedText("respawn.IsAlive"));
-            return;
-        }
-
-        var playerPawn = player.PlayerPawn.Value;
-
-        if (playerPawn == null) return;
-
-        CBasePlayerController_SetPawnFunc.Invoke(player, playerPawn, true, false);
-        VirtualFunction.CreateVoid<CCSPlayerController>(player.Handle,
-            GameData.GetOffset("CCSPlayerController_Respawn"))(player);
-        _usedRespawns[player.Index] ++;
-        _api.PrintToChat(player, _api.GetTranslatedText("respawn.Success"));
+        _respawn = new Respawn(this, _api);
+        _api.RegisterFeature(_respawn, FeatureType.Selectable, _respawn.OnSelectItem);
     }
 
     private static string GetSignature()
@@ -99,6 +40,75 @@ public class VipRespawn : BasePlugin, IModulePlugin
 
     public override void Unload(bool hotReload)
     {
-        _api.UnRegisterFeature(Feature);
+        _api.UnRegisterFeature(_respawn);
+    }
+}
+
+public class Respawn : VipFeatureBase
+{
+    public override string Feature => "Respawn";
+
+    private readonly VipRespawn _vipRespawn;
+    private readonly int?[] _usedRespawns = new int?[65];
+
+    public Respawn(VipRespawn vipRespawn, IVipCoreApi api) : base(api)
+    {
+        _vipRespawn = vipRespawn;
+        
+        vipRespawn.RegisterListener<Listeners.OnClientConnected>(slot => _usedRespawns[slot + 1] = 0);
+        vipRespawn. RegisterListener<Listeners.OnClientDisconnectPost>(slot => _usedRespawns[slot + 1] = null);
+        vipRespawn.RegisterEventHandler<EventRoundStart>((@event, info) =>
+        {
+            for (var i = 0; i < _usedRespawns.Length; i ++)
+                _usedRespawns[i] = 0;
+
+            return HookResult.Continue;
+        });
+    }
+
+    public void OnSelectItem(CCSPlayerController player, FeatureState state)
+    {
+        PlayerRespawn(player);
+    }
+
+    [ConsoleCommand("css_respawn")]
+    public void OnCmdVipCommand(CCSPlayerController? player, CommandInfo info)
+    {
+        if (player == null) return;
+        PlayerRespawn(player);
+    }
+
+    private void PlayerRespawn(CCSPlayerController player)
+    {
+        if (!IsClientVip(player)) return;
+        if (!PlayerHasFeature(player)) return;
+        
+        if (GetFeatureValue<int>(player) <= _usedRespawns[player.Index])
+        {
+            PrintToChat(player, GetTranslatedText("respawn.Limit"));
+            return;
+        }
+
+        if (player.TeamNum is (int)CsTeam.None or (int)CsTeam.Spectator)
+        {
+            PrintToChat(player, GetTranslatedText("respawn.InTeam"));
+            return;
+        }
+
+        if (player.PawnIsAlive)
+        {
+            PrintToChat(player, GetTranslatedText("respawn.IsAlive"));
+            return;
+        }
+
+        var playerPawn = player.PlayerPawn.Value;
+
+        if (playerPawn == null) return;
+
+        _vipRespawn.CBasePlayerControllerSetPawnFunc.Invoke(player, playerPawn, true, false);
+        VirtualFunction.CreateVoid<CCSPlayerController>(player.Handle,
+            GameData.GetOffset("CCSPlayerController_Respawn"))(player);
+        _usedRespawns[player.Index] ++;
+        PrintToChat(player, GetTranslatedText("respawn.Success"));
     }
 }

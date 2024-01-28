@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Entities;
 using Modularity;
 using VipCoreApi;
+using static VipCoreApi.IVipCoreApi;
 
 namespace VIP_Flags;
 
@@ -11,27 +12,49 @@ public class VipFlags : BasePlugin, IModulePlugin
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Flags";
     public override string ModuleVersion => "v1.0.0";
-
-    private static readonly string Feature = "flags";
+    
     private IVipCoreApi _api = null!;
-    private readonly Dictionary<ulong, List<string>> _flags = new();
+    private Flags _flags;
 
     public void LoadModule(IApiProvider provider)
     {
         _api = provider.Get<IVipCoreApi>();
-        _api.RegisterFeature(Feature, IVipCoreApi.FeatureType.Hide);
-        _api.PlayerLoaded += PlayerLoaded;
-        _api.PlayerRemoved += PlayerRemoved;
+        _flags = new Flags(this, _api);
+        _api.RegisterFeature(_flags, FeatureType.Hide);
+    }
+    
+    public override void Unload(bool hotReload)
+    {
+        _api.UnRegisterFeature(_flags);
+    }
+}
+
+public class Flags : VipFeatureBase
+{
+    public override string Feature => "flags";
+    private readonly Dictionary<ulong, List<string>> _flags = new();
+    
+    public Flags(VipFlags vipFlags, IVipCoreApi api) : base(api)
+    {
+        vipFlags.RegisterEventHandler<EventPlayerDisconnect>((@event, _) =>
+        {
+            var player = @event.Userid;
+
+            if (IsClientVip(player) && PlayerHasFeature(player))
+                RemovePlayerPermissions(player);
+            
+            return HookResult.Continue;
+        });
     }
 
-    private void PlayerLoaded(CCSPlayerController player, string group)
+    public override void OnPlayerLoaded(CCSPlayerController player, string group)
     {
-        if (!_api.PlayerHasFeature(player, Feature)) return;
+        if (!PlayerHasFeature(player)) return;
         
         if (!_flags.ContainsKey(player.SteamID))
-            _flags[player.SteamID] = new List<string>();
+            _flags.Add(player.SteamID, new List<string>());
         
-        var flagsOrGroups = _api.GetFeatureValue<List<string>>(player, Feature);
+        var flagsOrGroups = GetFeatureValue<List<string>>(player);
 
         var steamId = new SteamID(player.SteamID);
         foreach (var flagOrGroup in flagsOrGroups)
@@ -44,29 +67,16 @@ public class VipFlags : BasePlugin, IModulePlugin
         }
     }
 
-    private void PlayerRemoved(CCSPlayerController player, string group)
+    public override void OnPlayerRemoved(CCSPlayerController player, string group)
     {
         RemovePlayerPermissions(player);
     }
 
-    public override void Load(bool hotReload)
-    {
-        RegisterEventHandler<EventPlayerDisconnect>((@event, _) =>
-        {
-            var player = @event.Userid;
-
-            if (_api.IsClientVip(player) && _api.PlayerHasFeature(player, Feature))
-                RemovePlayerPermissions(player);
-            
-            return HookResult.Continue;
-        });
-    }
-
     private void RemovePlayerPermissions(CCSPlayerController player)
     {
-        if (!_flags.ContainsKey(player.SteamID)) return;
+        if (!_flags.TryGetValue(player.SteamID, out var value)) return;
         
-        var playerFlagsOrGroups = new List<string>(_flags[player.SteamID]);
+        var playerFlagsOrGroups = new List<string>(value);
 
         var steamId = new SteamID(player.SteamID);
         foreach (var flagOrGroups in playerFlagsOrGroups)
@@ -75,13 +85,7 @@ public class VipFlags : BasePlugin, IModulePlugin
                 AdminManager.RemovePlayerPermissions(steamId, flagOrGroups);
             else
                 AdminManager.RemovePlayerFromGroup(steamId, groups: flagOrGroups);
-
-            _flags[player.SteamID].Remove(flagOrGroups);
+            value.Remove(flagOrGroups);
         }
-    }
-
-    public override void Unload(bool hotReload)
-    {
-        _api.UnRegisterFeature(Feature);
     }
 }

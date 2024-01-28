@@ -8,28 +8,38 @@ public class VipAntiFlash : BasePlugin, IModulePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Anti Flash";
-    public override string ModuleVersion => "v1.0.0";
-
-    private static readonly string Feature = "Antiflash";
+    public override string ModuleVersion => "v1.0.1";
+    
     private IVipCoreApi _api = null!;
+    private AntiFlash _antiFlash;
 
     public void LoadModule(IApiProvider provider)
     {
         _api = provider.Get<IVipCoreApi>();
-        _api.RegisterFeature(Feature);
+        _antiFlash = new AntiFlash(this, _api);
+        _api.RegisterFeature(_antiFlash);
     }
 
-    public override void Load(bool hotReload)
+    public override void Unload(bool hotReload)
     {
-        RegisterEventHandler<EventPlayerBlind>((@event, info) =>
+        _api.UnRegisterFeature(_antiFlash);
+    }
+}
+
+public class AntiFlash : VipFeatureBase
+{
+    public override string Feature => "Antiflash";
+
+    public AntiFlash(VipAntiFlash vipAntiFlash, IVipCoreApi api) : base(api)
+    {
+        vipAntiFlash.RegisterEventHandler<EventPlayerBlind>((@event, info) =>
         {
             var player = @event.Userid;
-            if (!_api.IsClientVip(player)) return HookResult.Continue;
-            if (!_api.PlayerHasFeature(player, Feature)) return HookResult.Continue;
-            if (_api.GetPlayerFeatureState(player, Feature) is IVipCoreApi.FeatureState.Disabled
-                or IVipCoreApi.FeatureState.NoAccess) return HookResult.Continue;
-            
-            var featureValue = _api.GetFeatureValue<int>(player, Feature);
+            if (!IsClientVip(player)) return HookResult.Continue;
+            if (!PlayerHasFeature(player)) return HookResult.Continue;
+            if (GetPlayerFeatureState(player) is not IVipCoreApi.FeatureState.Enabled) return HookResult.Continue;
+
+            var featureValue = GetFeatureValue<int>(player);
             var attacker = @event.Attacker;
 
             var playerPawn = player.PlayerPawn.Value;

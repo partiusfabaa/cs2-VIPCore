@@ -11,42 +11,61 @@ public class VipRegenHealth : BasePlugin, IModulePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Health Regeneration";
-    public override string ModuleVersion => "v1.0.0";
+    public override string ModuleVersion => "v1.0.1";
 
-    private const string Feature = "HealthRegen";
+    private RegenHealth _regenHealth; 
     private IVipCoreApi _api = null!;
 
+    public void LoadModule(IApiProvider provider)
+    {
+        _api = provider.Get<IVipCoreApi>();
+        _regenHealth = new RegenHealth(this, _api);
+        _api.RegisterFeature(_regenHealth);
+    }
+
+    public override void Unload(bool hotReload)
+    {
+        _api.UnRegisterFeature(_regenHealth);
+    }
+}
+
+public class RegenHealth : VipFeatureBase
+{
+    public override string Feature => "HealthRegen";
+    
     private readonly bool[] _isRegenActive = new bool[65];
     private readonly Regen[] _regen = new Regen[65];
     private readonly float[] _regenInterval = new float[65];
 
-    public override void Load(bool hotReload)
+    public RegenHealth(VipRegenHealth vipRegenHealth, IVipCoreApi api) : base(api)
     {
-        RegisterListener<Listeners.OnMapStart>(name => AddTimer(1.0f, Timer_HealthRegen, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE));
-        RegisterListener<Listeners.OnClientConnected>(slot => _isRegenActive[slot] = false);
-        RegisterListener<Listeners.OnClientDisconnectPost>(slot => _isRegenActive[slot] = false);
-        
-        RegisterEventHandler<EventPlayerHurt>((@event, info) =>
+        vipRegenHealth.RegisterListener<Listeners.OnMapStart>(name =>
+            vipRegenHealth.AddTimer(1.0f, Timer_HealthRegen, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE));
+        vipRegenHealth.RegisterListener<Listeners.OnClientConnected>(slot => _isRegenActive[slot] = false);
+        vipRegenHealth. RegisterListener<Listeners.OnClientDisconnectPost>(slot => _isRegenActive[slot] = false);
+
+        vipRegenHealth.RegisterEventHandler<EventPlayerHurt>((@event, info) =>
         {
             var player = @event.Userid;
 
-            if (_api.IsClientVip(player) && _api.PlayerHasFeature(player, Feature) && @event.DmgHealth > 0)
+            if (IsClientVip(player) && PlayerHasFeature(player) && @event.DmgHealth > 0)
             {
-                if (_api.GetPlayerFeatureState(player, Feature) is not IVipCoreApi.FeatureState.Enabled) return HookResult.Continue;
+                if (GetPlayerFeatureState(player) is not IVipCoreApi.FeatureState.Enabled) return HookResult.Continue;
                 _isRegenActive[player.Slot] = true;
-                _regen[player.Slot] = _api.GetFeatureValue<Regen>(player, Feature);
+                _regen[player.Slot] = GetFeatureValue<Regen>(player);
                 _regenInterval[player.Slot] = _regen[player.Slot].Interval;
             }
-            
+
             return HookResult.Continue;
         });
     }
 
     private void Timer_HealthRegen()
     {
-        foreach (var player in Utilities.GetPlayers().Where(u => u.PlayerPawn.Value != null && u.PlayerPawn.Value.IsValid && u.PawnIsAlive))
+        foreach (var player in Utilities.GetPlayers()
+                     .Where(u => u.PlayerPawn.Value != null && u.PlayerPawn.Value.IsValid && u.PawnIsAlive))
         {
-            if (_isRegenActive[player.Slot] && _api.IsClientVip(player) && _api.PlayerHasFeature(player, Feature))
+            if (_isRegenActive[player.Slot] && IsClientVip(player) && PlayerHasFeature(player))
             {
                 if (_regen[player.Slot].Delay > 0)
                 {
@@ -83,17 +102,6 @@ public class VipRegenHealth : BasePlugin, IModulePlugin
 
         _isRegenActive[player.Slot] = false;
         return false;
-    }
-
-    public void LoadModule(IApiProvider provider)
-    {
-        _api = provider.Get<IVipCoreApi>();
-        _api.RegisterFeature(Feature);
-    }
-
-    public override void Unload(bool hotReload)
-    {
-        _api.UnRegisterFeature(Feature);
     }
 }
 

@@ -12,40 +12,62 @@ public class VipRegenArmor : BasePlugin, IModulePlugin
     public override string ModuleName => "[VIP] Armor Regeneration";
     public override string ModuleVersion => "v1.0.0";
 
-    private const string Feature = "ArmorRegen";
+    private RegenArmor _regenArmor;
     private IVipCoreApi _api = null!;
 
+    public void LoadModule(IApiProvider provider)
+    {
+        _api = provider.Get<IVipCoreApi>();
+        _regenArmor = new RegenArmor(this, _api);
+        _api.RegisterFeature(_regenArmor);
+    }
+
+    public override void Unload(bool hotReload)
+    {
+        _api.UnRegisterFeature(_regenArmor);
+    }
+}
+
+public class RegenArmor : VipFeatureBase
+{
+    public override string Feature => "ArmorRegen";
+
+    private readonly IVipCoreApi _api;
     private readonly bool[] _isRegenActive = new bool[65];
     private readonly Regen[] _regen = new Regen[65];
     private readonly float[] _regenInterval = new float[65];
 
-    public override void Load(bool hotReload)
+    public RegenArmor(VipRegenArmor vipRegenArmor, IVipCoreApi api) : base(api)
     {
-        RegisterListener<Listeners.OnMapStart>(name => AddTimer(1.0f, Timer_ArmorRegen, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE));
-        RegisterListener<Listeners.OnClientConnected>(slot => _isRegenActive[slot] = false);
-        RegisterListener<Listeners.OnClientDisconnectPost>(slot => _isRegenActive[slot] = false);
-        
-        RegisterEventHandler<EventPlayerHurt>((@event, info) =>
+        _api = api;
+        vipRegenArmor.RegisterListener<Listeners.OnMapStart>(name =>
+            vipRegenArmor.AddTimer(1.0f, Timer_ArmorRegen, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE));
+        vipRegenArmor.RegisterListener<Listeners.OnClientConnected>(slot => _isRegenActive[slot] = false);
+        vipRegenArmor.RegisterListener<Listeners.OnClientDisconnectPost>(slot => _isRegenActive[slot] = false);
+
+        vipRegenArmor.RegisterEventHandler<EventPlayerHurt>((@event, info) =>
         {
             var player = @event.Userid;
 
-            if (_api.IsClientVip(player) && _api.PlayerHasFeature(player, Feature) && @event.DmgArmor > 0)
+            if (IsClientVip(player) && PlayerHasFeature(player) && @event.DmgArmor > 0)
             {
-                if (_api.GetPlayerFeatureState(player, Feature) is not IVipCoreApi.FeatureState.Enabled) return HookResult.Continue;
+                if (GetPlayerFeatureState(player) is not IVipCoreApi.FeatureState.Enabled) return HookResult.Continue;
+
                 _isRegenActive[player.Slot] = true;
-                _regen[player.Slot] = _api.GetFeatureValue<Regen>(player, Feature);
+                _regen[player.Slot] = GetFeatureValue<Regen>(player);
                 _regenInterval[player.Slot] = _regen[player.Slot].Interval;
             }
-            
+
             return HookResult.Continue;
         });
     }
 
     private void Timer_ArmorRegen()
     {
-        foreach (var player in Utilities.GetPlayers().Where(u => u.PlayerPawn.Value != null && u.PlayerPawn.Value.IsValid && u.PawnIsAlive))
+        foreach (var player in Utilities.GetPlayers()
+                     .Where(u => u.PlayerPawn.Value != null && u.PlayerPawn.Value.IsValid && u.PawnIsAlive))
         {
-            if (_isRegenActive[player.Slot] && _api.IsClientVip(player) && _api.PlayerHasFeature(player, Feature))
+            if (_isRegenActive[player.Slot] && IsClientVip(player) && PlayerHasFeature(player))
             {
                 if (_regen[player.Slot].Delay > 0)
                 {
@@ -77,7 +99,7 @@ public class VipRegenArmor : BasePlugin, IModulePlugin
         {
             maxArmor = _api.GetFeatureValue<int>(player, armorFeature);
         }
-        
+
         if (playerPawn.ArmorValue < maxArmor)
         {
             playerPawn.ArmorValue += _regen[player.Slot].Armor;
@@ -89,17 +111,6 @@ public class VipRegenArmor : BasePlugin, IModulePlugin
 
         _isRegenActive[player.Slot] = false;
         return false;
-    }
-
-    public void LoadModule(IApiProvider provider)
-    {
-        _api = provider.Get<IVipCoreApi>();
-        _api.RegisterFeature(Feature);
-    }
-
-    public override void Unload(bool hotReload)
-    {
-        _api.UnRegisterFeature(Feature);
     }
 }
 

@@ -1,5 +1,6 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Utils;
 using Modularity;
 using VipCoreApi;
 
@@ -11,24 +12,44 @@ public class VipDecoyTeleport : BasePlugin, IModulePlugin
     public override string ModuleName => "[VIP] Decoy Teleport";
     public override string ModuleVersion => "v1.0.0";
 
-    private static readonly string Feature = "DecoyTp";
+    private DecoyTeleport _decoyTeleport;
     private IVipCoreApi _api = null!;
-    private readonly int?[] _decoyCount = new int?[65];
 
     public void LoadModule(IApiProvider provider)
     {
         _api = provider.Get<IVipCoreApi>();
-        _api.RegisterFeature(Feature);
-        _api.OnPlayerSpawn += OnPlayerSpawn;
+        _decoyTeleport = new DecoyTeleport(this, _api);
+        _api.RegisterFeature(_decoyTeleport);
     }
 
-    private void OnPlayerSpawn(CCSPlayerController player)
+    public override void Unload(bool hotReload)
     {
-        if (!_api.PlayerHasFeature(player, Feature)) return;
-        if (_api.GetPlayerFeatureState(player, Feature) is IVipCoreApi.FeatureState.Disabled
-            or IVipCoreApi.FeatureState.NoAccess) return;
+        _api.UnRegisterFeature(_decoyTeleport);
+    }
+}
 
-        if (_decoyCount[player.Index] == null) return;
+public class DecoyTeleport : VipFeatureBase
+{
+    public override string Feature => "DecoyTp";
+    private readonly int[] _decoyCount = new int[65];
+
+    public DecoyTeleport(VipDecoyTeleport vipDecoyTeleport, IVipCoreApi api) : base(api)
+    {
+        vipDecoyTeleport.RegisterEventHandler<EventDecoyFiring>(EventDecoyFiring);
+
+        vipDecoyTeleport.RegisterEventHandler<EventRoundStart>((@event, info) =>
+        {
+            for (var i = 0; i < _decoyCount.Length; i ++)
+                _decoyCount[i] = 0;
+
+            return HookResult.Continue;
+        });
+    }
+
+    public override void OnPlayerSpawn(CCSPlayerController player)
+    {
+        if (!PlayerHasFeature(player)) return;
+        if (GetPlayerFeatureState(player) is not IVipCoreApi.FeatureState.Enabled) return;
 
         _decoyCount[player.Index] = 0;
 
@@ -38,62 +59,42 @@ public class VipDecoyTeleport : BasePlugin, IModulePlugin
             player.GiveNamedItem("weapon_decoy");
     }
 
-    public override void Load(bool hotReload)
+    private HookResult EventDecoyFiring(EventDecoyFiring @event, GameEventInfo info)
     {
-        RegisterListener<Listeners.OnClientConnected>(slot => _decoyCount[slot + 1] = 0);
-        RegisterListener<Listeners.OnClientDisconnectPost>(slot => _decoyCount[slot + 1] = null);
-        
-        RegisterEventHandler<EventRoundStart>((@event, info) =>
-        {
-            foreach (var players in Utilities.GetPlayers())
-            {
-                if (_decoyCount[players.Index] == null) continue;
-                _decoyCount[players.Index] = 0;
-            }
+        if (@event.Userid == null) return HookResult.Continue;
 
+        var controller = @event.Userid;
+        var entityIndex = controller.Index;
+
+        if (!IsClientVip(controller)) return HookResult.Continue;
+        if (!PlayerHasFeature(controller)) return HookResult.Continue;
+        if (GetPlayerFeatureState(controller) is not IVipCoreApi.FeatureState.Enabled) return HookResult.Continue;
+
+        var pDecoyFiring = @event;
+        //var bodyComponent = controller.PlayerPawn.Value?.CBodyComponent?.SceneNode;
+        var playerPawn = controller.PlayerPawn.Value;
+
+        //if (bodyComponent == null) return HookResult.Continue;
+        if (playerPawn == null) return HookResult.Continue;
+
+        var decoysPerRound = GetFeatureValue<int>(controller);
+        if (_decoyCount[entityIndex] >= decoysPerRound && decoysPerRound > 0)
             return HookResult.Continue;
-        });
 
-        RegisterEventHandler<EventDecoyFiring>((@event, info) =>
-        {
-            if (@event.Userid == null) return HookResult.Continue;
+        //bodyComponent.AbsOrigin.X = pDecoyFiring.X;
+        //bodyComponent.AbsOrigin.Y = pDecoyFiring.Y;
+        //bodyComponent.AbsOrigin.Z = pDecoyFiring.Z;
+        playerPawn.Teleport(new Vector(pDecoyFiring.X, pDecoyFiring.Y, pDecoyFiring.Z), playerPawn.AbsRotation,
+            playerPawn.AbsVelocity);
 
-            var controller = @event.Userid;
-            var entityIndex = controller.Index;
+        _decoyCount[entityIndex] ++;
 
-            if (_decoyCount[entityIndex] == null) return HookResult.Continue;
+        var decoyIndex = NativeAPI.GetEntityFromIndex(pDecoyFiring.Entityid);
 
-            if (!_api.IsClientVip(controller)) return HookResult.Continue;
-            if (!_api.PlayerHasFeature(controller, Feature)) return HookResult.Continue;
-            if (_api.GetPlayerFeatureState(controller, Feature) is IVipCoreApi.FeatureState.Disabled
-                or IVipCoreApi.FeatureState.NoAccess) return HookResult.Continue;
+        if (decoyIndex == IntPtr.Zero) return HookResult.Continue;
 
-            var pDecoyFiring = @event;
-            var bodyComponent = @event.Userid.PlayerPawn.Value?.CBodyComponent?.SceneNode;
+        new CBaseCSGrenadeProjectile(decoyIndex).Remove();
 
-            if (bodyComponent == null) return HookResult.Continue;
-
-            var decoysPerRound = _api.GetFeatureValue<int>(controller, Feature);
-            if (_decoyCount[entityIndex] >= decoysPerRound && decoysPerRound > 0)
-                return HookResult.Continue;
-            
-            bodyComponent.AbsOrigin.X = pDecoyFiring.X;
-            bodyComponent.AbsOrigin.Y = pDecoyFiring.Y;
-            bodyComponent.AbsOrigin.Z = pDecoyFiring.Z;
-            _decoyCount[entityIndex] ++;
-
-            var decoyIndex = NativeAPI.GetEntityFromIndex(pDecoyFiring.Entityid);
-
-            if (decoyIndex == IntPtr.Zero) return HookResult.Continue;
-
-            new CBaseCSGrenadeProjectile(decoyIndex).Remove();
-
-            return HookResult.Continue;
-        });
-    }
-    
-    public override void Unload(bool hotReload)
-    {
-        _api.UnRegisterFeature(Feature);
+        return HookResult.Continue;
     }
 }

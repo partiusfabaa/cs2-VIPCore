@@ -13,9 +13,6 @@
     <Reference Include="ModularityPlugin">
       <HintPath>..\Modularity.dll</HintPath>
     </Reference>
-    <Reference Include="VipCoreApi">
-      <HintPath>..\VipCoreApi.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +20,10 @@
     <PackageReference Include="Microsoft.Extensions.Localization" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="MySqlConnector" Version="2.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VipCoreApi\VipCoreApi.csproj" />
   </ItemGroup>
 
 </Project>
