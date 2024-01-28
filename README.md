@@ -76,55 +76,64 @@ public class VIPMyModule : BasePlugin, IModulePlugin
     public override string ModuleName => "[VIP] My Module";
     public override string ModuleVersion => "1.0.0";
 
-    private static readonly string Feature = "MyFeature";
+    private MyPlugin _myPlugin;
     private IVipCoreApi _api = null!;
-    private TestConfig _config = null!;
 
     public void LoadModule(IApiProvider provider)
     {
         _api = provider.Get<IVipCoreApi>();
-        _api.RegisterFeature(Feature, selectItem: OnSelectItem);
-        _api.OnPlayerSpawn += OnPlayerSpawn;
-	_config = _api.LoadConfig<TestConfig>("VIPMyModule");
-    }
-
-    private void OnPlayerSpawn(CCSPlayerController player)
-    {
-        if (_api.PlayerHasFeature(player, Feature))
-        {
-            _api.PrintToChat(player, $"VIP player - {player.PlayerName} has spawned");
-        }
-    }
-
-    private void OnSelectItem(CCSPlayerController player, IVipCoreApi.FeatureState state)
-    {
-        if (state == IVipCoreApi.FeatureState.Enabled)
-        {
-            _api.PrintToChat(player, "Enabled");
-        }
-        else
-        {
-            _api.PrintToChat(player, "Disabled");
-        }
-    }
-    
-    [ConsoleCommand("css_viptestcommand")]
-    public void OnCmdVipCommand(CCSPlayerController? player, CommandInfo info)
-    {
-        if (player == null) return;
-
-        if (_api.IsClientVip(player) && _api.PlayerHasFeature(player, Feature))
-        {
-            _api.PrintToChat(player, $"{player.PlayerName} is a VIP player");
-            return;
-        }
-        
-        _api.PrintToChat(player, $"{player.PlayerName} not a VIP player");
+        _myPlugin = new MyPlugin(this, _api);
+        _api.RegisterFeature(_myPlugin, selectItem: _myPlugin.OnSelectItem);
     }
 
     public override void Unload(bool hotReload)
     {
-        _api.UnRegisterFeature(Feature);
+        _api.UnRegisterFeature(_myPlugin);
+    }
+}
+
+public class MyPlugin : VipFeatureBase
+{
+    public override string Feature => "MyFeature";
+    private TestConfig _config;
+
+    public MyPlugin(VIPMyModule vipMyModule, IVipCoreApi api) : base(api)
+    {
+        vipMyModule.AddCommand("css_viptestcommand", "", OnCmdVipCommand);
+        _config = LoadConfig<TestConfig>("VIPMyModule");
+    }
+
+    public override void OnPlayerSpawn(CCSPlayerController player)
+    {
+        if (PlayerHasFeature(player))
+        {
+            PrintToChat(player, $"VIP player - {player.PlayerName} has spawned");
+        }
+    }
+
+    public void OnSelectItem(CCSPlayerController player, IVipCoreApi.FeatureState state)
+    {
+        if (state == IVipCoreApi.FeatureState.Enabled)
+        {
+            PrintToChat(player, "Enabled");
+        }
+        else
+        {
+            PrintToChat(player, "Disabled");
+        }
+    }
+    
+    public void OnCmdVipCommand(CCSPlayerController? player, CommandInfo info)
+    {
+        if (player == null) return;
+
+        if (IsClientVip(player) && PlayerHasFeature(player))
+        {
+            PrintToChat(player, $"{player.PlayerName} is a VIP player");
+            return;
+        }
+
+        PrintToChat(player, $"{player.PlayerName} not a VIP player");
     }
 }
 
