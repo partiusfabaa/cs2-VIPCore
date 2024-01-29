@@ -32,7 +32,7 @@ public class VipResetDeaths : BasePlugin, IModulePlugin
 
 public class ResetDeaths : VipFeatureBase
 {
-    public override string Feature { get; }
+    public override string Feature => "ResetDeaths";
 
     public ResetDeaths(VipResetDeaths vipResetDeaths, IVipCoreApi api) : base(api)
     {
