@@ -5,6 +5,7 @@ using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using Modularity;
 using VipCoreApi;
+using static VipCoreApi.IVipCoreApi;
 
 namespace VIP_Bhop;
 
@@ -12,29 +13,48 @@ public class VIP_Bhop : BasePlugin, IModulePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Bhop";
-    public override string ModuleVersion => "v1.0.0";
+    public override string ModuleVersion => "v1.0.1";
 
-    private static readonly string Feature = "Bhop";
-    private bool?[] _isBhopActive = new bool?[65];
+    private Bhop _bhop;
     private IVipCoreApi _api = null!;
-
-    public override void Load(bool hotReload)
+    
+    public void LoadModule(IApiProvider provider)
     {
-        RegisterListener<Listeners.OnClientConnected>(slot => _isBhopActive[slot + 1] = false);
-        RegisterListener<Listeners.OnClientDisconnectPost>(slot => _isBhopActive[slot + 1] = null);
-        RegisterListener<Listeners.OnTick>(() =>
+        _api = provider.Get<IVipCoreApi>();
+        _bhop = new Bhop(this, _api);
+        _api.RegisterFeature(_bhop);
+    }
+
+    public override void Unload(bool hotReload)
+    {
+        _api.UnRegisterFeature(_bhop);
+    }
+}
+
+public class Bhop : VipFeatureBase
+{
+    private readonly VIP_Bhop _vipBhop;
+    public override string Feature => "Bhop";
+    private bool?[] _isBhopActive = new bool?[65];
+
+    public Bhop(VIP_Bhop vipBhop, IVipCoreApi api) : base(api)
+    {
+        _vipBhop = vipBhop;
+        vipBhop.RegisterListener<Listeners.OnClientConnected>(slot => _isBhopActive[slot + 1] = false);
+        vipBhop.RegisterListener<Listeners.OnClientDisconnectPost>(slot => _isBhopActive[slot + 1] = null);
+        vipBhop.RegisterListener<Listeners.OnTick>(() =>
         {
             foreach (var player in Utilities.GetPlayers()
                          .Where(player => player is { IsValid: true, IsBot: false, PawnIsAlive: true }))
             {
                 if (_isBhopActive[player.Index] == null) continue;
-                if(!_isBhopActive[player.Index]!.Value) continue;
+                if (!_isBhopActive[player.Index]!.Value) continue;
 
                 OnTick(player);
             }
         });
 
-        RegisterEventHandler<EventRoundStart>(EventRoundStart);
+        vipBhop.RegisterEventHandler<EventRoundStart>(EventRoundStart);
     }
 
     private void OnTick(CCSPlayerController player)
@@ -61,40 +81,27 @@ public class VIP_Bhop : BasePlugin, IModulePlugin
         var gamerules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules;
 
         if (gamerules == null) return HookResult.Continue;
-        
+
         foreach (var player in Utilities.GetPlayers()
                      .Where(player => player is { IsValid: true, IsBot: false, PawnIsAlive: true }))
         {
             if (_isBhopActive[player.Index] == null) continue;
             _isBhopActive[player.Index] = false;
-            
-            if (!_api.IsClientVip(player)) continue;
-            if (!_api.PlayerHasFeature(player, Feature)) continue;
-            if (_api.GetPlayerFeatureState(player, Feature) is IVipCoreApi.FeatureState.Disabled
-                or IVipCoreApi.FeatureState.NoAccess) continue;
 
-            var bhopActiveTime = _api.GetFeatureValue<float>(player, Feature);
-        
-            _api.PrintToChat(player, _api.GetTranslatedText("bhop.TimeToActivation", bhopActiveTime));
-            AddTimer(bhopActiveTime + gamerules.FreezeTime, () =>
+            if (!IsClientVip(player)) continue;
+            if (!PlayerHasFeature(player)) continue;
+            if (GetPlayerFeatureState(player) is not FeatureState.Enabled) continue;
+
+            var bhopActiveTime = GetFeatureValue<float>(player);
+
+            PrintToChat(player, GetTranslatedText("bhop.TimeToActivation", bhopActiveTime));
+            _vipBhop.AddTimer(bhopActiveTime + gamerules.FreezeTime, () =>
             {
-                _api.PrintToChat(player, _api.GetTranslatedText("bhop.Activated"));
+                PrintToChat(player, GetTranslatedText("bhop.Activated"));
                 _isBhopActive[player.Index] = true;
             }, TimerFlags.STOP_ON_MAPCHANGE);
         }
 
         return HookResult.Continue;
-    }
-
-
-    public void LoadModule(IApiProvider provider)
-    {
-        _api = provider.Get<IVipCoreApi>();
-        _api.RegisterFeature(Feature);
-    }
-
-    public override void Unload(bool hotReload)
-    {
-        _api.UnRegisterFeature(Feature);
     }
 }
