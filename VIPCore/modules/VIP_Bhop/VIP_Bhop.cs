@@ -24,7 +24,7 @@ public class VIP_Bhop : BasePlugin, IModulePlugin
         _bhop = new Bhop(this, _api);
         _api.RegisterFeature(_bhop);
     }
-
+    
     public override void Unload(bool hotReload)
     {
         _api.UnRegisterFeature(_bhop);
