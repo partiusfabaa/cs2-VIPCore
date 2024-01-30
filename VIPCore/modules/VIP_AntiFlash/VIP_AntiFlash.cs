@@ -35,6 +35,9 @@ public class AntiFlash : VipFeatureBase
         vipAntiFlash.RegisterEventHandler<EventPlayerBlind>((@event, info) =>
         {
             var player = @event.Userid;
+
+            if (player == null) return HookResult.Continue;
+            
             if (!IsClientVip(player)) return HookResult.Continue;
             if (!PlayerHasFeature(player)) return HookResult.Continue;
             if (GetPlayerFeatureState(player) is not IVipCoreApi.FeatureState.Enabled) return HookResult.Continue;
