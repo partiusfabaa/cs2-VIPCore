@@ -64,6 +64,8 @@ public class Respawn : VipFeatureBase
 
             return HookResult.Continue;
         });
+
+        vipRespawn.AddCommand("css_respawn", "", OnCmdVipCommand);
     }
 
     public void OnSelectItem(CCSPlayerController player, FeatureState state)
@@ -71,7 +73,6 @@ public class Respawn : VipFeatureBase
         PlayerRespawn(player);
     }
 
-    [ConsoleCommand("css_respawn")]
     public void OnCmdVipCommand(CCSPlayerController? player, CommandInfo info)
     {
         if (player == null) return;
