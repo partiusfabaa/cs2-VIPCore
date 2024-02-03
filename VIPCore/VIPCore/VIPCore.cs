@@ -24,7 +24,7 @@ public class VipCore : BasePlugin, ICorePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Core";
-    public override string ModuleVersion => "v1.1.7";
+    public override string ModuleVersion => "v1.1.8";
 
     public string DbConnectionString = string.Empty;
 
