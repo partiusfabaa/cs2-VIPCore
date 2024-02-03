@@ -23,7 +23,7 @@ public abstract class VipFeatureBase : IVipFeature
     protected VipFeatureBase(IVipCoreApi api)
     {
         Api = api;
-        
+
         api.OnPlayerSpawn += OnPlayerSpawn;
         api.PlayerLoaded += OnPlayerLoaded;
         api.PlayerRemoved += OnPlayerRemoved;
@@ -41,6 +41,8 @@ public abstract class VipFeatureBase : IVipFeature
     {
     }
 
+    public List<(string feautre, object value)> GetAllRegisteredFeatures() => Api.GetAllRegisteredFeatures().ToList();
+
     public bool IsClientVip(CCSPlayerController player) => Api.IsClientVip(player);
 
     public bool PlayerHasFeature(CCSPlayerController player) => Api.PlayerHasFeature(player, Feature);
@@ -50,7 +52,7 @@ public abstract class VipFeatureBase : IVipFeature
     public T GetFeatureValue<T>(CCSPlayerController player) => Api.GetFeatureValue<T>(player, Feature);
 
     public string GetClientVipGroup(CCSPlayerController player) => Api.GetClientVipGroup(player);
-    
+
     public void UpdateClientVip(CCSPlayerController player, string name = "", string group = "", int time = -1) =>
         Api.UpdateClientVip(player, name, group, time);
 

@@ -55,6 +55,11 @@
         public void UnRegisterFeature(VipFeatureBase vipFeatureBase);
         
         /// <summary>
+        ///  Gets all registered functions
+        /// </summary>
+        public IEnumerable<(string feature, object value)> GetAllRegisteredFeatures();
+        
+        /// <summary>
         /// Gets the state of a feature for a specific player.
         /// </summary>
         /// <param name="player"></param>

@@ -30,7 +30,8 @@ public class Cfg
                     Host = "HOST",
                     Database = "DATABASENAME",
                     User = "USER",
-                    Password = "PASSWORD"
+                    Password = "PASSWORD",
+                    Port = 3306
                 }
             };
             
@@ -83,8 +84,8 @@ public class Cfg
 
 public class Config
 {
-    public float Delay { get; set; }
-    public Dictionary<string, VipGroup> Groups { get; set; } = null!;
+    public float Delay { get; init; }
+    public Dictionary<string, VipGroup> Groups { get; init; } = null!;
 }
 
 public class VipGroup
@@ -98,6 +99,7 @@ public class VipDb
     public required string Database { get; init; }
     public required string User { get; init; }
     public required string Password { get; init; }
+    public int Port { get; init; }
 }
 
 public class ConfigVipCoreSettings
@@ -106,5 +108,5 @@ public class ConfigVipCoreSettings
     public int ServerId { get; init; }
     
     public bool VipLogging { get; init; }
-    public VipDb Connection { get; set; } = null!;
+    public VipDb Connection { get; init; } = null!;
 }

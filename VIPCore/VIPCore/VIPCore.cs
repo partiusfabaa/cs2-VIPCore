@@ -60,6 +60,8 @@ public class VipCore : BasePlugin, ICorePlugin
         {
             var player = @event.Userid;
 
+            if (player == null) return HookResult.Continue;
+
             if (!IsUserActiveVip(player))
                 return HookResult.Continue;
 
@@ -147,6 +149,7 @@ public class VipCore : BasePlugin, ICorePlugin
         var userFromDb = await GetUserFromDb(steamId.AccountId);
 
         Users.Remove(steamId.SteamId64);
+
         foreach (var user in userFromDb.OfType<User>().Where(user => user.sid == CoreSetting.ServerId))
         {
             AddClientToUsers(steamId.SteamId64, user);
@@ -218,21 +221,13 @@ public class VipCore : BasePlugin, ICorePlugin
         {
             player = GetPlayerFromSteamId(steamId);
 
-            if (player == null)
-            {
-                PrintLogError("Player not found");
-                return -1;
-            }
+            if (player == null) return new SteamID(steamId).AccountId;
 
             var authorizedSteamId = player.AuthorizedSteamID;
 
-            if (authorizedSteamId == null)
-            {
-                PrintLogError("AuthorizedSteamId is null");
-                return -1;
-            }
+            if (authorizedSteamId == null) return new SteamID(steamId).AccountId;
 
-            steamId = authorizedSteamId.AccountId.ToString();
+            return authorizedSteamId.AccountId;
         }
 
         return int.Parse(steamId);
@@ -367,7 +362,7 @@ public class VipCore : BasePlugin, ICorePlugin
             Users[player.SteamID].expires = calculateTime;
         }
 
-        Task.Run(() => UpdateUserVip(steamId, time: time == 0 ? 0 : calculateTime));
+        Task.Run(() => UpdateUserTimeInDb(steamId, time == 0 ? 0 : calculateTime));
     }
 
     private string GetTimeUnitName => CoreSetting.TimeMode switch
@@ -421,6 +416,7 @@ public class VipCore : BasePlugin, ICorePlugin
         if (_cfg != null)
         {
             Config = _cfg.LoadConfig();
+            CoreSetting = _cfg.LoadVipSettingsConfig();
         }
 
         const string msg = "configuration successfully rebooted!";
@@ -501,13 +497,14 @@ public class VipCore : BasePlugin, ICorePlugin
 
     private string BuildConnectionString()
     {
+        var connection = CoreSetting.Connection;
         var builder = new MySqlConnectionStringBuilder
         {
-            Database = CoreSetting.Connection.Database,
-            UserID = CoreSetting.Connection.User,
-            Password = CoreSetting.Connection.Password,
-            Server = CoreSetting.Connection.Host,
-            Port = 3306
+            Database = connection.Database,
+            UserID = connection.User,
+            Password = connection.Password,
+            Server = connection.Host,
+            Port = (uint)connection.Port
         };
 
         Console.WriteLine("OK!");
@@ -676,27 +673,27 @@ public class VipCore : BasePlugin, ICorePlugin
     }
 
 
-    // private async Task UpdateUserTimeInDb(int accountId, int newExpires)
-    // {
-    //     var existingUser = await GetExistingUserFromDb(accountId);
-    //
-    //     if (existingUser == null)
-    //         return;
-    //
-    //     try
-    //     {
-    //         existingUser.expires = newExpires;
-    //         await using var connection = new MySqlConnection(DbConnectionString);
-    //         await connection.ExecuteAsync(
-    //             "UPDATE vip_users SET expires = @expires WHERE account_id = @account_id AND sid = @sid;", existingUser);
-    //         PrintLogInfo("Player '{name} [{accId}]' expiration time has been updated to {expires}", existingUser.name,
-    //             existingUser.account_id, newExpires);
-    //     }
-    //     catch (Exception e)
-    //     {
-    //         Console.WriteLine(e);
-    //     }
-    // }
+    private async Task UpdateUserTimeInDb(int accountId, int newExpires)
+    {
+        var existingUser = await GetExistingUserFromDb(accountId);
+    
+        if (existingUser == null)
+            return;
+    
+        try
+        {
+            existingUser.expires = newExpires;
+            await using var connection = new MySqlConnection(DbConnectionString);
+            await connection.ExecuteAsync(
+                "UPDATE vip_users SET expires = @expires WHERE account_id = @account_id AND sid = @sid;", existingUser);
+            PrintLogInfo("Player '{name} [{accId}]' expiration time has been updated to {expires}", existingUser.name,
+                existingUser.account_id, newExpires);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
     //
     // private async Task UpdateUserGroupInDb(int accountId, string newGroup)
     // {
@@ -853,11 +850,19 @@ public class VipCore : BasePlugin, ICorePlugin
 
     public bool IsUserActiveVip(CCSPlayerController player)
     {
-        if (!Users.TryGetValue(player.SteamID, out var user)) return false;
+        var authorizedSteamId = player.AuthorizedSteamID;
+
+        if (authorizedSteamId == null)
+        {
+            PrintLogError("{steamid} is null", "AuthorizedSteamId");
+            return false;
+        }
+
+        if (!Users.TryGetValue(authorizedSteamId.SteamId64, out var user)) return false;
 
         if (user.expires != 0 && DateTime.UtcNow.GetUnixEpoch() > user.expires)
         {
-            Users.Remove(player.SteamID);
+            Users.Remove(authorizedSteamId.SteamId64);
             return false;
         }
 
@@ -923,9 +928,9 @@ public class VipCore : BasePlugin, ICorePlugin
     {
         return Utilities.GetPlayers().FirstOrDefault(u =>
             u.AuthorizedSteamID != null &&
-            (u.AuthorizedSteamID.SteamId2.ToString().Equals(steamId, StringComparison.OrdinalIgnoreCase) ||
-             u.AuthorizedSteamID.SteamId64.ToString().Equals(steamId, StringComparison.OrdinalIgnoreCase) ||
-             u.AuthorizedSteamID.AccountId.ToString().Equals(steamId, StringComparison.OrdinalIgnoreCase)));
+            (u.AuthorizedSteamID.SteamId2.ToString().Equals(steamId) ||
+             u.AuthorizedSteamID.SteamId64.ToString().Equals(steamId) ||
+             u.AuthorizedSteamID.AccountId.ToString().Equals(steamId)));
     }
 }
 
@@ -1006,6 +1011,17 @@ public class VipCoreApi : IVipCoreApi
 
         _vipCore.PrintLogInfo(
             "Feature '{feature}' unregistered successfully", vipFeatureBase.Feature);
+    }
+
+    public IEnumerable<(string feature, object value)> GetAllRegisteredFeatures()
+    {
+        foreach (var config in _vipCore.Config.Groups)
+        {
+            foreach (var keyValuePair in config.Value.Values)
+            {
+                yield return (keyValuePair.Key, keyValuePair.Value);
+            }
+        }
     }
 
     public bool IsClientVip(CCSPlayerController player)
@@ -1174,7 +1190,7 @@ public class VipCoreApi : IVipCoreApi
                 lastvisit = DateTime.UtcNow.GetUnixEpoch(),
                 sid = _vipCore.CoreSetting.ServerId,
                 group = group,
-                expires = timeSeconds == 0 ? timeSeconds : DateTime.UtcNow.AddSeconds(timeSeconds).GetUnixEpoch()
+                expires = timeSeconds == 0 ? 0 : DateTime.UtcNow.AddSeconds(timeSeconds).GetUnixEpoch()
             });
 
             await UpdateUsers(username, accountId, index, steamId64);
