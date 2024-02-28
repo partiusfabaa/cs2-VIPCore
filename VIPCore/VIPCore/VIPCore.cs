@@ -24,7 +24,7 @@ public class VipCore : BasePlugin, ICorePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Core";
-    public override string ModuleVersion => "v1.1.8";
+    public override string ModuleVersion => "v1.1.9";
 
     public string DbConnectionString = string.Empty;
 
@@ -135,7 +135,7 @@ public class VipCore : BasePlugin, ICorePlugin
         {
             Server.NextFrame(() => { RemoveExpiredUsers(player, steamId); });
 
-            await ProcessUserInformationAsync(player, steamId, playerSlot);
+            await ProcessUserInformationAsync(player, steamId);
             //var user = await GetUserFromDb(steamId.AccountId);
         }
         catch (Exception e)
@@ -144,7 +144,7 @@ public class VipCore : BasePlugin, ICorePlugin
         }
     }
 
-    private async Task ProcessUserInformationAsync(CCSPlayerController player, SteamID steamId, int slot)
+    private async Task ProcessUserInformationAsync(CCSPlayerController player, SteamID steamId)
     {
         var userFromDb = await GetUserFromDb(steamId.AccountId);
 
@@ -153,7 +153,7 @@ public class VipCore : BasePlugin, ICorePlugin
         foreach (var user in userFromDb.OfType<User>().Where(user => user.sid == CoreConfig.ServerId))
         {
             AddClientToUsers(steamId.SteamId64, user);
-            SetClientFeature(steamId.SteamId64, user.group, (uint)(slot + 1));
+            SetClientFeature(steamId.SteamId64, user.group);
 
             Server.NextFrame(() => VipApi.OnPlayerLoaded(player, user.group));
 
@@ -185,29 +185,27 @@ public class VipCore : BasePlugin, ICorePlugin
         });
     }
 
-    public void SetClientFeature(ulong steamId, string vipGroup, uint index)
+    public void SetClientFeature(ulong steamId, string vipGroup)
     {
         foreach (var feature in Features)
         {
-            if (Config.Groups.TryGetValue(vipGroup, out var group))
+            if (!Config.Groups.TryGetValue(vipGroup, out var group)) continue;
+            if (!Users.TryGetValue(steamId, out var user)) return;
+
+            if (!group.Values.ContainsKey(feature.Key))
             {
-                if (!Users.TryGetValue(steamId, out var user)) return;
-
-                if (!group.Values.ContainsKey(feature.Key))
-                {
-                    user.FeatureState[feature.Key] = FeatureState.NoAccess;
-                    continue;
-                }
-
-                var cookie = VipApi.GetPlayerCookie<int>(steamId, feature.Key);
-
-                var cookieValue = cookie == 2 ? 0 : cookie;
-                user.FeatureState[feature.Key] = (FeatureState)cookieValue;
+                user.FeatureState[feature.Key] = FeatureState.NoAccess;
+                continue;
             }
+
+            var cookie = VipApi.GetPlayerCookie<int>(steamId, feature.Key);
+
+            var cookieValue = cookie == 2 ? 0 : cookie;
+            user.FeatureState[feature.Key] = (FeatureState)cookieValue;
         }
     }
 
-    private int GetSteamIdFromCommand(string steamId, out CCSPlayerController? player)
+    private int GetAccountIdFromCommand(string steamId, out CCSPlayerController? player)
     {
         player = null;
 
@@ -218,27 +216,26 @@ public class VipCore : BasePlugin, ICorePlugin
             return -1;
         }
 
-        if (steamId.Contains("STEAM_") || steamId.StartsWith("765611"))
+        if (steamId.Contains("STEAM_") || steamId.Contains("765611"))
         {
             player = GetPlayerFromSteamId(steamId);
 
             if (steamId.StartsWith("765611"))
             {
-                var steamIdAsUlong = ulong.Parse(steamId);
-
-                if (player == null) return new SteamID(steamIdAsUlong).AccountId;
+                var accId = new SteamID(ulong.Parse(steamId)).AccountId;
+                
+                if (player == null) return accId;
                 var authorizedSteamId = player.AuthorizedSteamID;
 
-                return authorizedSteamId == null ? new SteamID(steamIdAsUlong).AccountId : authorizedSteamId.AccountId;
+                return authorizedSteamId == null ? accId : authorizedSteamId.AccountId;
             }
             else
             {
-                if (player == null) return new SteamID(steamId).AccountId;
+                var accId = new SteamID(steamId).AccountId;
+                if (player == null) return accId;
 
                 var authorizedSteamId = player.AuthorizedSteamID;
-                if (authorizedSteamId == null) return new SteamID(steamId).AccountId;
-
-                return authorizedSteamId.AccountId;
+                return authorizedSteamId == null ? accId : authorizedSteamId.AccountId;
             }
         }
 
@@ -256,14 +253,8 @@ public class VipCore : BasePlugin, ICorePlugin
             PrintLogInfo("Usage: css_vip_adduser {usage}", $"<steamid or accountid> <group> <time_{GetTimeUnitName}>");
             return;
         }
-
-        foreach (var keyValuePair in Config.Groups)
-        {
-            Console.WriteLine(keyValuePair.Key);
-        }
         
-        Console.WriteLine(command.GetArg(1));
-        var steamId = GetSteamIdFromCommand(command.GetArg(1), out var player);
+        var steamId = GetAccountIdFromCommand(command.GetArg(1), out var player);
         if (steamId == -1)
             return;
 
@@ -293,7 +284,7 @@ public class VipCore : BasePlugin, ICorePlugin
         if (player != null)
         {
             AddClientToUsers(player.SteamID, user);
-            SetClientFeature(player.SteamID, user.group, player.Index);
+            SetClientFeature(player.SteamID, user.group);
             VipApi.OnPlayerLoaded(player, user.group);
         }
     }
@@ -309,7 +300,7 @@ public class VipCore : BasePlugin, ICorePlugin
             return;
         }
 
-        var steamId = GetSteamIdFromCommand(command.GetArg(1), out var player);
+        var steamId = GetAccountIdFromCommand(command.GetArg(1), out var player);
         if (steamId == -1)
             return;
 
@@ -333,7 +324,7 @@ public class VipCore : BasePlugin, ICorePlugin
             return;
         }
 
-        var steamId = GetSteamIdFromCommand(command.GetArg(1), out var player);
+        var steamId = GetAccountIdFromCommand(command.GetArg(1), out var player);
         if (steamId == -1)
             return;
 
@@ -369,7 +360,7 @@ public class VipCore : BasePlugin, ICorePlugin
             return;
         }
 
-        var steamId = GetSteamIdFromCommand(command.GetArg(1), out var player);
+        var steamId = GetAccountIdFromCommand(command.GetArg(1), out var player);
         if (steamId == -1)
             return;
 
@@ -416,17 +407,17 @@ public class VipCore : BasePlugin, ICorePlugin
     //     ReplyToCommand(player, msg);
     // }
 
-    [CommandHelper(1, "<steamid>")]
-    [ConsoleCommand("css_reload_vip_player")]
-    public void OnCommandVipReloadInfractions(CCSPlayerController? player, CommandInfo command)
-    {
-        if (player != null) return;
-        var target = GetPlayerFromSteamId(command.GetArg(1));
-
-        if (target == null) return;
-
-        ProcessUserInformationAsync(target, target.AuthorizedSteamID, target.Slot);
-    }
+    // [CommandHelper(1, "<steamid>")]
+    // [ConsoleCommand("css_reload_vip_player")]
+    // public void OnCommandVipReloadInfractions(CCSPlayerController? player, CommandInfo command)
+    // {
+    //     if (player != null) return;
+    //     var target = GetPlayerFromSteamId(command.GetArg(1));
+    //
+    //     if (target == null) return;
+    //
+    //     ProcessUserInformationAsync(target, target.AuthorizedSteamID, target.Slot);
+    // }
 
     [RequiresPermissions("@css/root")]
     [ConsoleCommand("css_vip_reload")]
@@ -458,25 +449,24 @@ public class VipCore : BasePlugin, ICorePlugin
             if (!Users.TryGetValue(player.SteamID, out var user)) return;
 
             var title = Localizer["menu.Title", user.group];
-            user.Menu = CoreConfig.UseCenterHtmlMenu ? new CenterHtmlMenu(Localizer[title]) : new ChatMenu(title);
+            user.Menu = CoreConfig.UseCenterHtmlMenu ? new CenterHtmlMenu(title) : new ChatMenu(title);
             
             if (user.Menu == null)
             {
-                Console.WriteLine("user?.Menu == null");
+                Console.WriteLine("user.Menu == null");
                 return;
             }
 
             user.Menu.MenuOptions.Clear();
-
             if (Config.Groups.TryGetValue(user.group, out var vipGroup))
             {
-                foreach (var setting in Features.Where(
-                             setting => setting.Value.FeatureType is
-                                 FeatureType.Toggle or FeatureType.Selectable))
+                foreach (var setting in Features.Where(setting => 
+                             setting.Value.FeatureType is FeatureType.Toggle or FeatureType.Selectable))
                 {
                     if (!vipGroup.Values.TryGetValue(setting.Key, out var featureValue)) continue;
                     if (string.IsNullOrEmpty(featureValue.ToString())) continue;
                     if (!user.FeatureState.TryGetValue(setting.Key, out var featureState)) continue;
+                    
                     //var featureState = user.FeatureState[setting.Key];
 
                     var value = featureState switch
@@ -1244,7 +1234,7 @@ public class VipCoreApi : IVipCoreApi
                     expires = user.expires,
                     Menu = new ChatMenu(_vipCore.Localizer["menu.Title", user.group])
                 };
-                _vipCore.SetClientFeature(steamId64, user.group, index);
+                _vipCore.SetClientFeature(steamId64, user.group);
                 return;
             }
 
