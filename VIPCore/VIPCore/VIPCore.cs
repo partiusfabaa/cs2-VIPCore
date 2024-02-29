@@ -407,17 +407,18 @@ public class VipCore : BasePlugin, ICorePlugin
     //     ReplyToCommand(player, msg);
     // }
 
-    // [CommandHelper(1, "<steamid>")]
-    // [ConsoleCommand("css_reload_vip_player")]
-    // public void OnCommandVipReloadInfractions(CCSPlayerController? player, CommandInfo command)
-    // {
-    //     if (player != null) return;
-    //     var target = GetPlayerFromSteamId(command.GetArg(1));
-    //
-    //     if (target == null) return;
-    //
-    //     ProcessUserInformationAsync(target, target.AuthorizedSteamID, target.Slot);
-    // }
+    [CommandHelper(1, "<steamid>")]
+    [ConsoleCommand("css_reload_vip_player")]
+    public void OnCommandVipReloadInfractions(CCSPlayerController? player, CommandInfo command)
+    {
+        if (player != null) return;
+        var target = GetPlayerFromSteamId(command.GetArg(1));
+    
+        if (target == null) return;
+        if (target.AuthorizedSteamID == null) return;
+        
+        ProcessUserInformationAsync(target, target.AuthorizedSteamID);
+    }
 
     [RequiresPermissions("@css/root")]
     [ConsoleCommand("css_vip_reload")]
