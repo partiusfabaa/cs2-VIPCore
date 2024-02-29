@@ -24,7 +24,7 @@ public class VipCore : BasePlugin, ICorePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Core";
-    public override string ModuleVersion => "v1.1.9";
+    public override string ModuleVersion => "v1.2.0";
 
     public string DbConnectionString = string.Empty;
 
@@ -147,7 +147,7 @@ public class VipCore : BasePlugin, ICorePlugin
     private async Task ProcessUserInformationAsync(CCSPlayerController player, SteamID steamId)
     {
         var userFromDb = await GetUserFromDb(steamId.AccountId);
-
+        
         Users.Remove(steamId.SteamId64);
 
         foreach (var user in userFromDb.OfType<User>().Where(user => user.sid == CoreConfig.ServerId))
@@ -155,12 +155,12 @@ public class VipCore : BasePlugin, ICorePlugin
             AddClientToUsers(steamId.SteamId64, user);
             SetClientFeature(steamId.SteamId64, user.group);
 
-            Server.NextFrame(() => VipApi.OnPlayerLoaded(player, user.group));
-
             var timeRemaining = DateTimeOffset.FromUnixTimeSeconds(user.expires);
 
             Server.NextFrame(() =>
             {
+                VipApi.OnPlayerLoaded(player, user.group);
+                
                 AddTimer(5.0f, () => PrintToChat(player,
                     Localizer["vip.WelcomeToTheServer", user.name] + (user.expires == 0
                         ? string.Empty
