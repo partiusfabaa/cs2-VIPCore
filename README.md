@@ -10,7 +10,7 @@
 ## Installation
 1. Install [CounterStrike Sharp](https://github.com/roflmuffin/CounterStrikeSharp), [Metamod:Source](https://www.sourcemm.net/downloads.php/?branch=master)
 3. Download [VIPCore](https://github.com/partiusfabaa/cs2-VIPCore/releases)
-4. Unpack the archive and upload it to the game server (example path: addons/counterstrikesharp/plugins/)
+4. Unpack the archive and upload it to the game server **(example path: `addons/counterstrikesharp/plugins`)**
 
 ### Put the modules in this path `addons/counterstrikesharp/plugins`
 
