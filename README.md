@@ -8,12 +8,12 @@
 </p>
 
 # Installation
-1. Install [CounterStrike Sharp](https://github.com/roflmuffin/CounterStrikeSharp), [Metamod:Source](https://www.sourcemm.net/downloads.php/?branch=master) and [CSSModularity](https://github.com/Muinez/CSSModularity)
+1. Install [CounterStrike Sharp](https://github.com/roflmuffin/CounterStrikeSharp), [Metamod:Source](https://www.sourcemm.net/downloads.php/?branch=master)
 3. Download [VIPCore](https://github.com/partiusfabaa/cs2-VIPCore/releases)
-4. Unpack the archive and upload it to the game server (example path: addons/counterstrikesharp/plugins/ModularityPlugin/)
+4. Unpack the archive and upload it to the game server (example path: addons/counterstrikesharp/plugins/)
 
 ### Put the modules in this path
-`addons/counterstrikesharp/plugins/ModularityPlugin/plugins`
+`addons/counterstrikesharp/plugins`
 
 # Commands 
 
@@ -55,10 +55,6 @@
 }
 ```
 
-# What you need to write a module
-1. Add the dll from CSSModularity to your project (the dll can be found at this path: `addons/counterstrikesharp/plugins/ModularityPlugin/shared/Modularity/Modularity.dll`)
-2. Add the dll from VipCoreApi to your project (the dll can be found at this path: `addons/counterstrikesharp/plugins/ModularityPlugin/shared/VipCoreApi/VipCoreApi.dll`)
-
 # Example module
 
 ```csharp
@@ -77,13 +73,20 @@ public class VIPMyModule : BasePlugin, IModulePlugin
     public override string ModuleVersion => "1.0.0";
 
     private MyPlugin _myPlugin;
-    private IVipCoreApi _api = null!;
 
-    public void LoadModule(IApiProvider provider)
+    private IVipCoreApi? _api;
+    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
+
+    public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = provider.Get<IVipCoreApi>();
-        _myPlugin = new MyPlugin(this, _api);
-        _api.RegisterFeature(_myPlugin, selectItem: _myPlugin.OnSelectItem);
+        _api = PluginCapability.Get();
+        if (_api == null) return;
+
+        _api.OnCoreReady += () =>
+        {
+            _myPlugin = new MyPlugin(this, _api);
+            _api.RegisterFeature(_myPlugin);
+        };
     }
 
     public override void Unload(bool hotReload)
@@ -111,7 +114,7 @@ public class MyPlugin : VipFeatureBase
         }
     }
 
-    public void OnSelectItem(CCSPlayerController player, IVipCoreApi.FeatureState state)
+    public override void OnSelectItem(CCSPlayerController player, IVipCoreApi.FeatureState state)
     {
         if (state == IVipCoreApi.FeatureState.Enabled)
         {
