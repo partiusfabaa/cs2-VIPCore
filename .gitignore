@@ -6,11 +6,7 @@ VIPCore/VipCoreApi/.idea
 VIPCore/VipCoreApi/bin
 VIPCore/VipCoreApi/obj
 VIPCore/addons/
-VIPCoreOldModularity/modules
-VIPCoreOldModularity/shared
-VIPCoreOldModularity/VIPCore/obj/
-VIPCoreOldModularity/VIPCore/bin/
-VIPCoreOldModularity/
+VIPCoreForModularityPlugin/
 *.user
 *.xml
 *.editorconfig
@@ -114,3 +110,4 @@ VIPCore/modules/VIP_RegenHealth/obj
 VIPCore/modules/VIP_RegenArmor/.idea
 VIPCore/modules/VIP_RegenArmor/bin
 VIPCore/modules/VIP_RegenArmor/obj
+VIPCore/VIPCore.zip

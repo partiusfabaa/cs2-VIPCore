@@ -8,7 +8,7 @@
 	"Armor": 5,  	//The number of armor units per interval
 	"Delay": 3,		//Delay before starting recovery (in seconds)
 	"Interval": 3 	//Interval between armor regeneration (in seconds)
-},
+}
 ```
 
 # in lang (not necessarily)

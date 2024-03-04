@@ -1,31 +1,38 @@
 ﻿using System;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using Modularity;
+using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
 using static VipCoreApi.IVipCoreApi;
 
 namespace VIP_Gravity;
 
-public class VipGravity : BasePlugin, IModulePlugin
+public class VipGravity : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Gravity";
     public override string ModuleVersion => "1.0.1";
 
-    private IVipCoreApi _api = null!;
+    private IVipCoreApi? _api;
     private Gravity _gravity;
 
-    public void LoadModule(IApiProvider provider)
+    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
+
+    public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = provider.Get<IVipCoreApi>();
-        _gravity = new Gravity(this, _api);
-        _api.RegisterFeature(_gravity, selectItem: _gravity.OnSelectItem);
+        _api = PluginCapability.Get();
+        if (_api == null) return;
+
+        _api.OnCoreReady += () =>
+        {
+            _gravity = new Gravity(this, _api);
+            _api.RegisterFeature(_gravity);
+        };
     }
 
     public override void Unload(bool hotReload)
     {
-        _api.UnRegisterFeature(_gravity);
+        _api?.UnRegisterFeature(_gravity);
     }
 }
 
@@ -49,8 +56,9 @@ public class Gravity : VipFeatureBase
         playerPawnValue.GravityScale = GetFeatureValue<float>(player);
     }
     
-    public void OnSelectItem(CCSPlayerController player, FeatureState state)
+    public override void OnSelectItem(CCSPlayerController player, FeatureState state)
     {
+        Console.WriteLine(state);
         var playerPawnValue = player.PlayerPawn.Value;
         
         if (state == FeatureState.Disabled)

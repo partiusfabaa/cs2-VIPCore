@@ -1,0 +1,103 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v7.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v7.0": {
+      "VIP_Test/1.0.0": {
+        "dependencies": {
+          "Dapper": "2.1.21",
+          "MySqlConnector": "2.3.1",
+          "CounterStrikeSharp.API": "1.0.180.0",
+          "VipCoreApi": "1.0.0.0"
+        },
+        "runtime": {
+          "VIP_Test.dll": {}
+        }
+      },
+      "Dapper/2.1.21": {
+        "runtime": {
+          "lib/net7.0/Dapper.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.1.21.38011"
+          }
+        }
+      },
+      "Microsoft.Extensions.Logging.Abstractions/7.0.1": {
+        "runtime": {
+          "lib/net7.0/Microsoft.Extensions.Logging.Abstractions.dll": {
+            "assemblyVersion": "7.0.0.0",
+            "fileVersion": "7.0.723.27404"
+          }
+        }
+      },
+      "MySqlConnector/2.3.1": {
+        "dependencies": {
+          "Microsoft.Extensions.Logging.Abstractions": "7.0.1"
+        },
+        "runtime": {
+          "lib/net7.0/MySqlConnector.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.3.1.0"
+          }
+        }
+      },
+      "CounterStrikeSharp.API/1.0.180.0": {
+        "runtime": {
+          "CounterStrikeSharp.API.dll": {
+            "assemblyVersion": "1.0.180.0",
+            "fileVersion": "1.0.180.0"
+          }
+        }
+      },
+      "VipCoreApi/1.0.0.0": {
+        "runtime": {
+          "VipCoreApi.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "VIP_Test/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Dapper/2.1.21": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-EaTXNZX60/k9snRsLxFhD2XmoSKubc+VOeL3hBM6/R8j2MT8/81xOc2V8EEhwr8Mu3Sf951PJPxjlXN4FznH0w==",
+      "path": "dapper/2.1.21",
+      "hashPath": "dapper.2.1.21.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Logging.Abstractions/7.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-pkeBFx0vqMW/A3aUVHh7MPu3WkBhaVlezhSZeb1c9XD0vUReYH1TLFSy5MxJgZfmz5LZzYoErMorlYZiwpOoNA==",
+      "path": "microsoft.extensions.logging.abstractions/7.0.1",
+      "hashPath": "microsoft.extensions.logging.abstractions.7.0.1.nupkg.sha512"
+    },
+    "MySqlConnector/2.3.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-FYTnvNBbNSZotSWUerK22Ztsc3vx3wBRZ4veavkUbfCBNthtCr3CH5Wpoo4l5gBD2TmQD9JbL33Gf9kWko1yYw==",
+      "path": "mysqlconnector/2.3.1",
+      "hashPath": "mysqlconnector.2.3.1.nupkg.sha512"
+    },
+    "CounterStrikeSharp.API/1.0.180.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "VipCoreApi/1.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

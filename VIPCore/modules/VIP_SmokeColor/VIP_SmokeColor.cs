@@ -1,29 +1,36 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using Modularity;
+using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
 
 namespace VIP_SmokeColor;
 
-public class VipSmokeColor : BasePlugin, IModulePlugin
+public class VipSmokeColor : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Smoke Color";
     public override string ModuleVersion => "v1.0.0";
 
-    private IVipCoreApi _api = null!;
-    private SmokeColor _smokeColor;
 
-    public void LoadModule(IApiProvider provider)
+    private SmokeColor _smokeColor;
+    private IVipCoreApi? _api;
+    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
+
+    public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = provider.Get<IVipCoreApi>();
-        _smokeColor = new SmokeColor(this, _api);
-        _api.RegisterFeature(_smokeColor);
+        _api = PluginCapability.Get();
+        if (_api == null) return;
+
+        _api.OnCoreReady += () =>
+        {
+            _smokeColor = new SmokeColor(this, _api);
+            _api.RegisterFeature(_smokeColor);
+        };
     }
 
     public override void Unload(bool hotReload)
     {
-        _api.UnRegisterFeature(_smokeColor);
+        _api?.UnRegisterFeature(_smokeColor);
     }
 }
 

@@ -1,7 +1,10 @@
-﻿using System.Text.Json;
+﻿using System.Collections.Concurrent;
+using System.Text.Json;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
+using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Cvars;
@@ -10,21 +13,22 @@ using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Timers;
 using Dapper;
 using Microsoft.Extensions.Logging;
-using Modularity;
 using MySqlConnector;
 using VipCoreApi;
 using static VipCoreApi.IVipCoreApi;
 using ChatMenu = CounterStrikeSharp.API.Modules.Menu.ChatMenu;
 using JsonException = System.Text.Json.JsonException;
 using JsonSerializer = System.Text.Json.JsonSerializer;
+using Server = CounterStrikeSharp.API.Server;
 
 namespace VIPCore;
 
-public class VipCore : BasePlugin, ICorePlugin
+[MinimumApiVersion(184)]
+public class VipCore : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Core";
-    public override string ModuleVersion => "v1.2.0";
+    public override string ModuleVersion => "v1.2.1";
 
     public string DbConnectionString = string.Empty;
 
@@ -34,21 +38,34 @@ public class VipCore : BasePlugin, ICorePlugin
     public VipCoreApi VipApi = null!;
 
     //public readonly User?[] Users = new User[65];
-    public readonly Dictionary<ulong, User> Users = new();
-    public readonly Dictionary<string, Feature> Features = new();
+    public readonly ConcurrentDictionary<ulong, User> Users = new();
+    public readonly ConcurrentDictionary<string, Feature> Features = new();
+
+    private readonly PluginCapability<IVipCoreApi> _pluginCapability = new("vipcore:core");
 
     public override void Load(bool hotReload)
     {
-        if (hotReload)
-        {
-            _cfg = new Cfg(this);
-            LoadCore(new PluginApis());
-            Logger.LogWarning(
-                "Hot reload completed. Be aware of potential issues. Consider {restart} for a clean state",
-                "restarting");
-            Config = _cfg.LoadConfig();
-            CoreConfig = _cfg.LoadVipSettingsConfig();
-        }
+        VipApi = new VipCoreApi(this, ModuleDirectory);
+        Capabilities.RegisterPluginCapability(_pluginCapability, () => VipApi);
+        Server.NextWorldUpdate(() => VipApi.CoreReady());
+        
+         _cfg = new Cfg(this);
+        if (_cfg == null) return;
+
+        Config = _cfg.LoadConfig();
+        CoreConfig = _cfg.LoadVipSettingsConfig();
+        DbConnectionString = BuildConnectionString();
+        Task.Run(() => CreateTable(DbConnectionString));
+
+        // if (hotReload)
+        // {
+        //     _cfg = new Cfg(this);
+        //     Logger.LogWarning(
+        //         "Hot reload completed. Be aware of potential issues. Consider {restart} for a clean state",
+        //         "restarting");
+        //     Config = _cfg.LoadConfig();
+        //     CoreConfig = _cfg.LoadVipSettingsConfig();
+        // }
 
         RegisterListener<Listeners.OnClientAuthorized>((slot, id) =>
         {
@@ -70,7 +87,7 @@ public class VipCore : BasePlugin, ICorePlugin
                 VipApi.SetPlayerCookie(player.SteamID, featureState.Key, (int)featureState.Value);
             }
 
-            Users.Remove(player.SteamID);
+            Users.Remove(player.SteamID, out var _);
 
             var playerName = player.PlayerName;
             if (player.AuthorizedSteamID == null) return HookResult.Continue;
@@ -147,8 +164,8 @@ public class VipCore : BasePlugin, ICorePlugin
     private async Task ProcessUserInformationAsync(CCSPlayerController player, SteamID steamId)
     {
         var userFromDb = await GetUserFromDb(steamId.AccountId);
-        
-        Users.Remove(steamId.SteamId64);
+
+        Users.Remove(steamId.SteamId64, out _);
 
         foreach (var user in userFromDb.OfType<User>().Where(user => user.sid == CoreConfig.ServerId))
         {
@@ -160,7 +177,7 @@ public class VipCore : BasePlugin, ICorePlugin
             Server.NextFrame(() =>
             {
                 VipApi.OnPlayerLoaded(player, user.group);
-                
+
                 AddTimer(5.0f, () => PrintToChat(player,
                     Localizer["vip.WelcomeToTheServer", user.name] + (user.expires == 0
                         ? string.Empty
@@ -173,7 +190,7 @@ public class VipCore : BasePlugin, ICorePlugin
     private void AddClientToUsers(ulong steamId, User user)
     {
         var title = Localizer["menu.Title", user.group];
-        Users.Add(steamId, new User
+        Users.TryAdd(steamId, new User
         {
             account_id = user.account_id,
             name = user.name,
@@ -223,7 +240,7 @@ public class VipCore : BasePlugin, ICorePlugin
             if (steamId.StartsWith("765611"))
             {
                 var accId = new SteamID(ulong.Parse(steamId)).AccountId;
-                
+
                 if (player == null) return accId;
                 var authorizedSteamId = player.AuthorizedSteamID;
 
@@ -253,7 +270,7 @@ public class VipCore : BasePlugin, ICorePlugin
             PrintLogInfo("Usage: css_vip_adduser {usage}", $"<steamid or accountid> <group> <time_{GetTimeUnitName}>");
             return;
         }
-        
+
         var steamId = GetAccountIdFromCommand(command.GetArg(1), out var player);
         if (steamId == -1)
             return;
@@ -307,7 +324,7 @@ public class VipCore : BasePlugin, ICorePlugin
         if (player != null)
         {
             VipApi.OnPlayerRemoved(player, Users[player.SteamID]!.group);
-            Users.Remove(player.SteamID);
+            Users.Remove(player.SteamID, out _);
         }
 
         Task.Run(() => RemoveUserFromDb(steamId));
@@ -413,10 +430,10 @@ public class VipCore : BasePlugin, ICorePlugin
     {
         if (player != null) return;
         var target = GetPlayerFromSteamId(command.GetArg(1));
-    
+
         if (target == null) return;
         if (target.AuthorizedSteamID == null) return;
-        
+
         ProcessUserInformationAsync(target, target.AuthorizedSteamID);
     }
 
@@ -451,7 +468,7 @@ public class VipCore : BasePlugin, ICorePlugin
 
             var title = Localizer["menu.Title", user.group];
             user.Menu = CoreConfig.UseCenterHtmlMenu ? new CenterHtmlMenu(title) : new ChatMenu(title);
-            
+
             if (user.Menu == null)
             {
                 Console.WriteLine("user.Menu == null");
@@ -461,13 +478,13 @@ public class VipCore : BasePlugin, ICorePlugin
             user.Menu.MenuOptions.Clear();
             if (Config.Groups.TryGetValue(user.group, out var vipGroup))
             {
-                foreach (var setting in Features.Where(setting => 
+                foreach (var setting in Features.Where(setting =>
                              setting.Value.FeatureType is FeatureType.Toggle or FeatureType.Selectable))
                 {
                     if (!vipGroup.Values.TryGetValue(setting.Key, out var featureValue)) continue;
                     if (string.IsNullOrEmpty(featureValue.ToString())) continue;
                     if (!user.FeatureState.TryGetValue(setting.Key, out var featureState)) continue;
-                    
+
                     //var featureState = user.FeatureState[setting.Key];
 
                     var value = featureState switch
@@ -866,8 +883,9 @@ public class VipCore : BasePlugin, ICorePlugin
 
     public bool IsUserActiveVip(CCSPlayerController player)
     {
-        var authorizedSteamId = player.AuthorizedSteamID;
+        if (!player.IsValid || player.IsBot) return false;
 
+        var authorizedSteamId = player.AuthorizedSteamID;
         if (authorizedSteamId == null)
         {
             PrintLogError("{steamid} is null", "AuthorizedSteamId");
@@ -878,7 +896,7 @@ public class VipCore : BasePlugin, ICorePlugin
 
         if (user.expires != 0 && DateTime.UtcNow.GetUnixEpoch() > user.expires)
         {
-            Users.Remove(authorizedSteamId.SteamId64);
+            Users.Remove(authorizedSteamId.SteamId64, out _);
             return false;
         }
 
@@ -921,23 +939,8 @@ public class VipCore : BasePlugin, ICorePlugin
     public void PrintLogWarning(string? message, params object?[] args)
     {
         if (!CoreConfig.VipLogging) return;
-        
+
         Logger.LogWarning($"{message}", args);
-    }
-
-    public void LoadCore(IApiRegisterer apiRegisterer)
-    {
-        VipApi = new VipCoreApi(this, ModuleDirectory);
-        apiRegisterer.Register<IVipCoreApi>(VipApi);
-        _cfg = new Cfg(this);
-        if (_cfg != null)
-        {
-            Config = _cfg.LoadConfig();
-            CoreConfig = _cfg.LoadVipSettingsConfig();
-        }
-
-        DbConnectionString = BuildConnectionString();
-        Task.Run(() => CreateTable(DbConnectionString));
     }
 
     private static CCSPlayerController? GetPlayerFromSteamId(string steamId)
@@ -969,6 +972,7 @@ public class VipCoreApi : IVipCoreApi
     public event Action<CCSPlayerController>? OnPlayerSpawn;
     public event Action<CCSPlayerController, string>? PlayerLoaded;
     public event Action<CCSPlayerController, string>? PlayerRemoved;
+    public event Action? OnCoreReady;
 
     public string GetTranslatedText(string name, params object[] args) => _vipCore.Localizer[name, args];
 
@@ -976,11 +980,15 @@ public class VipCoreApi : IVipCoreApi
     public string ModulesConfigDirectory => Path.Combine(CoreConfigDirectory, "Modules/");
     public string GetDatabaseConnectionString => _vipCore.DbConnectionString;
 
-    public VipCoreApi(VipCore vipCore, string moduleDirectory)
+    public VipCoreApi(VipCore vipCore, string directory)
     {
         _vipCore = vipCore;
-        CoreConfigDirectory = new DirectoryInfo(moduleDirectory).Parent?.Parent?.Parent?.Parent?.FullName +
-                              "/configs/plugins/VIPCore/";
+        CoreConfigDirectory = new DirectoryInfo(directory).Parent?.Parent?.FullName + "/configs/plugins/VIPCore/";
+    }
+
+    public void CoreReady()
+    {
+        OnCoreReady?.Invoke();
     }
 
     public FeatureState GetPlayerFeatureState(CCSPlayerController player, string feature)
@@ -992,8 +1000,7 @@ public class VipCoreApi : IVipCoreApi
     }
 
     public void RegisterFeature(VipFeatureBase vipFeatureBase,
-        FeatureType featureType = FeatureType.Toggle,
-        Action<CCSPlayerController, FeatureState>? selectItem = null)
+        FeatureType featureType = FeatureType.Toggle)//, Action<CCSPlayerController, FeatureState>? selectItem = null)
     {
         foreach (var config in _vipCore.Config.Groups)
         {
@@ -1006,7 +1013,7 @@ public class VipCoreApi : IVipCoreApi
                 _vipCore.Features.TryAdd(vipFeatureBase.Feature, new Feature
                 {
                     FeatureType = featureType,
-                    OnSelectItem = selectItem
+                    OnSelectItem = vipFeatureBase.OnSelectItem
                 });
             }
         }
@@ -1021,7 +1028,7 @@ public class VipCoreApi : IVipCoreApi
             if (vipFeatureBase.Feature != null)
             {
                 config.Value.Values.Remove(vipFeatureBase.Feature);
-                _vipCore.Features.Remove(vipFeatureBase.Feature);
+                _vipCore.Features.Remove(vipFeatureBase.Feature, out _);
             }
         }
 
@@ -1250,7 +1257,7 @@ public class VipCoreApi : IVipCoreApi
         try
         {
             await _vipCore.RemoveUserFromDb(steamId.AccountId);
-            _vipCore.Users.Remove(steamId.SteamId64);
+            _vipCore.Users.Remove(steamId.SteamId64, out _);
         }
         catch (Exception e)
         {

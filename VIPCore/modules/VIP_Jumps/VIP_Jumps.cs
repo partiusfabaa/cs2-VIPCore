@@ -1,32 +1,37 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Utils;
-using Modularity;
 using VipCoreApi;
 
 namespace VIP_Jumps;
 
-public class VipJumps : BasePlugin, IModulePlugin
+public class VipJumps : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Jumps";
     public override string ModuleVersion => "v1.0.1";
 
-    private IVipCoreApi _api = null!;
+    private IVipCoreApi? _api;
     private Jumps _jumps;
 
-    public void LoadModule(IApiProvider provider)
+    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
+
+    public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = provider.Get<IVipCoreApi>();
-        _jumps = new Jumps(this, _api);
-        _api.RegisterFeature(_jumps);
+        _api = PluginCapability.Get();
+        if (_api == null) return;
+
+        _api.OnCoreReady += () =>
+        {
+            _jumps = new Jumps(this, _api);
+            _api.RegisterFeature(_jumps);
+        };
     }
 
     public override void Unload(bool hotReload)
     {
-        _api.UnRegisterFeature(_jumps);
+        _api?.UnRegisterFeature(_jumps);
     }
 }
 

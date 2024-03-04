@@ -1,31 +1,38 @@
 ﻿using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Entities;
-using Modularity;
 using VipCoreApi;
-using static VipCoreApi.IVipCoreApi;
 
 namespace VIP_Flags;
 
-public class VipFlags : BasePlugin, IModulePlugin
+public class VipFlags : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Flags";
     public override string ModuleVersion => "v1.0.0";
     
-    private IVipCoreApi _api = null!;
+    private IVipCoreApi? _api;
     private Flags _flags;
 
-    public void LoadModule(IApiProvider provider)
+    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
+
+    public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = provider.Get<IVipCoreApi>();
-        _flags = new Flags(this, _api);
-        _api.RegisterFeature(_flags, FeatureType.Hide);
+        _api = PluginCapability.Get();
+
+        if (_api == null) return;
+
+        _api.OnCoreReady += () =>
+        {
+            _flags = new Flags(this, _api);
+            _api.RegisterFeature(_flags);
+        };
     }
     
     public override void Unload(bool hotReload)
     {
-        _api.UnRegisterFeature(_flags);
+        _api?.UnRegisterFeature(_flags);
     }
 }
 

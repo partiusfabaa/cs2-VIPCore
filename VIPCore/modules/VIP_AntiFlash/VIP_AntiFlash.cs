@@ -1,28 +1,35 @@
 ﻿using CounterStrikeSharp.API.Core;
-using Modularity;
+using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
 
 namespace VIP_AntiFlash;
 
-public class VipAntiFlash : BasePlugin, IModulePlugin
+public class VipAntiFlash : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Anti Flash";
-    public override string ModuleVersion => "v1.0.1";
+    public override string ModuleVersion => "v1.0.2";
     
-    private IVipCoreApi _api = null!;
+    private IVipCoreApi? _api;
     private AntiFlash _antiFlash;
 
-    public void LoadModule(IApiProvider provider)
+    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
+
+    public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = provider.Get<IVipCoreApi>();
-        _antiFlash = new AntiFlash(this, _api);
-        _api.RegisterFeature(_antiFlash);
+        _api = PluginCapability.Get();
+        if (_api == null) return;
+
+        _api.OnCoreReady += () =>
+        {
+            _antiFlash = new AntiFlash(this, _api);
+            _api.RegisterFeature(_antiFlash);
+        };
     }
 
     public override void Unload(bool hotReload)
     {
-        _api.UnRegisterFeature(_antiFlash);
+        _api?.UnRegisterFeature(_antiFlash);
     }
 }
 
@@ -49,7 +56,7 @@ public class AntiFlash : VipFeatureBase
 
             if (playerPawn == null) return HookResult.Continue;
 
-            var sameTeam = attacker.TeamNum == player.TeamNum;
+            var sameTeam = attacker.Team == player.Team;
             switch (featureValue)
             {
                 case 1:

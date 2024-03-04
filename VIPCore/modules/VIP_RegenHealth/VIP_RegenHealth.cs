@@ -1,31 +1,37 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Entities;
+using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Timers;
-using Modularity;
 using VipCoreApi;
 
 namespace VIP_RegenHealth;
 
-public class VipRegenHealth : BasePlugin, IModulePlugin
+public class VipRegenHealth : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Health Regeneration";
     public override string ModuleVersion => "v1.0.1";
 
     private RegenHealth _regenHealth; 
-    private IVipCoreApi _api = null!;
+    private IVipCoreApi? _api;
+    
+    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
-    public void LoadModule(IApiProvider provider)
+    public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = provider.Get<IVipCoreApi>();
-        _regenHealth = new RegenHealth(this, _api);
-        _api.RegisterFeature(_regenHealth);
+        _api = PluginCapability.Get();
+        if (_api == null) return;
+
+        _api.OnCoreReady += () =>
+        {
+            _regenHealth = new RegenHealth(this, _api);
+            _api.RegisterFeature(_regenHealth);
+        };
     }
 
     public override void Unload(bool hotReload)
     {
-        _api.UnRegisterFeature(_regenHealth);
+        _api?.UnRegisterFeature(_regenHealth);
     }
 }
 

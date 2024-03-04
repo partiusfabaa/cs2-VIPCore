@@ -1,29 +1,36 @@
 ﻿using CounterStrikeSharp.API.Core;
-using Modularity;
+using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
 using static VipCoreApi.IVipCoreApi;
 
 namespace VIP_Money;
 
-public class VipMoney : BasePlugin, IModulePlugin
+public class VipMoney : BasePlugin
 {
     public override string ModuleAuthor => "WodiX";
     public override string ModuleName => "[VIP] Money";
     public override string ModuleVersion => "v1.0.2";
 
-    private IVipCoreApi _api = null!;
+    private IVipCoreApi? _api;
     private Money _money;
 
-    public void LoadModule(IApiProvider provider)
+    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
+
+    public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = provider.Get<IVipCoreApi>();
-        _money = new Money(_api);
-        _api.RegisterFeature(_money);
+        _api = PluginCapability.Get();
+        if (_api == null) return;
+
+        _api.OnCoreReady += () =>
+        {
+            _money = new Money(_api);
+            _api.RegisterFeature(_money);
+        };
     }
 
     public override void Unload(bool hotReload)
     {
-        _api.UnRegisterFeature(_money);
+        _api?.UnRegisterFeature(_money);
     }
 }
 

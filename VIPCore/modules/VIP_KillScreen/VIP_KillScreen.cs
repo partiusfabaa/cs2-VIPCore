@@ -1,32 +1,36 @@
-﻿using System.Runtime.InteropServices;
-using CounterStrikeSharp.API;
+﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Memory;
-using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
-using Modularity;
+using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
 
 namespace VIP_KillScreen;
 
-public class VipKillScreen : BasePlugin, IModulePlugin
+public class VipKillScreen : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Kill Screen";
     public override string ModuleVersion => "v1.0.1";
 
     private KillScreen _killScreen;
-    private IVipCoreApi _api = null!;
+    private IVipCoreApi? _api;
     
-    public void LoadModule(IApiProvider provider)
+    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
+
+    public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = provider.Get<IVipCoreApi>();
-        _killScreen = new KillScreen(this, _api);
-        _api.RegisterFeature(_killScreen);
+        _api = PluginCapability.Get();
+        if (_api == null) return;
+
+        _api.OnCoreReady += () =>
+        {
+            _killScreen = new KillScreen(this, _api);
+            _api.RegisterFeature(_killScreen);
+        };
     }
 
     public override void Unload(bool hotReload)
     {
-        _api.UnRegisterFeature(_killScreen);
+        _api?.UnRegisterFeature(_killScreen);
     }
 }
 

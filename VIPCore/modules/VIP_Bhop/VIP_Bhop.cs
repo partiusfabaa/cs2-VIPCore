@@ -1,33 +1,40 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
-using Modularity;
 using VipCoreApi;
 using static VipCoreApi.IVipCoreApi;
 
 namespace VIP_Bhop;
 
-public class VIP_Bhop : BasePlugin, IModulePlugin
+public class VIP_Bhop : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Bhop";
     public override string ModuleVersion => "v1.0.1";
 
     private Bhop _bhop;
-    private IVipCoreApi _api = null!;
+    private IVipCoreApi? _api;
     
-    public void LoadModule(IApiProvider provider)
+    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
+
+    public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = provider.Get<IVipCoreApi>();
-        _bhop = new Bhop(this, _api);
-        _api.RegisterFeature(_bhop);
+        _api = PluginCapability.Get();
+        if (_api == null) return;
+
+        _api.OnCoreReady += () =>
+        {
+            _bhop = new Bhop(this, _api);
+            _api.RegisterFeature(_bhop);
+        };
     }
     
     public override void Unload(bool hotReload)
     {
-        _api.UnRegisterFeature(_bhop);
+        _api?.UnRegisterFeature(_bhop);
     }
 }
 

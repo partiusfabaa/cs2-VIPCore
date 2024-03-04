@@ -1,28 +1,34 @@
-﻿using CounterStrikeSharp.API;
-using CounterStrikeSharp.API.Core;
-using Modularity;
+﻿using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
 
 namespace VIP_Healthshot;
 
-public class VipHealthshot : BasePlugin, IModulePlugin
+public class VipHealthshot : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Healthshot";
     public override string ModuleVersion => "v1.0.1";
     
-    private IVipCoreApi _api = null!;
     private Healthshot _healthshot;
+    private IVipCoreApi? _api;
+    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
-    public void LoadModule(IApiProvider provider)
+    public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = provider.Get<IVipCoreApi>();
-        _healthshot = new Healthshot(_api);
-        _api.RegisterFeature(_healthshot);
+        _api = PluginCapability.Get();
+        if (_api == null) return;
+
+        _api.OnCoreReady += () =>
+        {
+            _healthshot = new Healthshot(_api);
+            _api.RegisterFeature(_healthshot);
+        };
     }
+    
     public override void Unload(bool hotReload)
     {
-        _api.UnRegisterFeature(_healthshot);
+        _api?.UnRegisterFeature(_healthshot);
     }
 }
 

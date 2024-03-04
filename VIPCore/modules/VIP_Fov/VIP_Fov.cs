@@ -1,30 +1,38 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Menu;
-using Modularity;
 using VipCoreApi;
+using static VipCoreApi.IVipCoreApi;
 
 namespace VIP_Fov;
 
-public class VipFov : BasePlugin, IModulePlugin
+public class VipFov : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Fov";
-    public override string ModuleVersion => "v1.0.0";
+    public override string ModuleVersion => "v1.0.1";
     
-    private IVipCoreApi _api = null!;
+    private IVipCoreApi? _api;
     private Fov _fov;
 
-    public void LoadModule(IApiProvider provider)
+    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
+
+    public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = provider.Get<IVipCoreApi>();
-        _fov = new Fov(this, _api);
-        _api.RegisterFeature(_fov, IVipCoreApi.FeatureType.Selectable, _fov.OnSelectItem);
+        _api = PluginCapability.Get();
+        if (_api == null) return;
+
+        _api.OnCoreReady += () =>
+        {
+            _fov = new Fov(this, _api);
+            _api.RegisterFeature(_fov, FeatureType.Selectable);
+        };
     }
 
     public override void Unload(bool hotReload)
     {
-        _api.UnRegisterFeature(_fov);
+        _api?.UnRegisterFeature(_fov);
     }
 }
 
@@ -61,8 +69,8 @@ public class Fov : VipFeatureBase
             return HookResult.Continue;
         });
     }
-
-    public void OnSelectItem(CCSPlayerController player, IVipCoreApi.FeatureState state)
+    
+    public override void OnSelectItem(CCSPlayerController player, FeatureState state)
     {
         if (_userSettings[player.Index] == null) return;
 

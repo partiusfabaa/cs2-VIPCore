@@ -1,34 +1,36 @@
-﻿using System.Runtime.InteropServices;
-using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Memory;
-using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
-using Modularity;
+﻿using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
 using static VipCoreApi.IVipCoreApi;
 
 namespace VIP_Armor;
 
-public class VipArmor : BasePlugin, IModulePlugin
+public class VipArmor : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Armor";
     public override string ModuleVersion => "v1.0.1";
 
-    private IVipCoreApi _api = null!;
+    private IVipCoreApi? _api;
     private Armor _armor;
+    
+    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
-    public void LoadModule(IApiProvider provider)
+    public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = provider.Get<IVipCoreApi>();
-        _armor = new Armor(_api);
-        _api.RegisterFeature(_armor);
+        _api = PluginCapability.Get();
+        if (_api == null) return;
+
+        _api.OnCoreReady += () =>
+        {
+            _armor = new Armor(_api);
+            _api.RegisterFeature(_armor);
+        };
     }
 
     public override void Unload(bool hotReload)
     {
-        _api.UnRegisterFeature(_armor);
+        _api?.UnRegisterFeature(_armor);
     }
 }
 

@@ -1,5 +1,4 @@
 using System.Text.Json;
-using CounterStrikeSharp.API.Core;
 using Microsoft.Extensions.Logging;
 
 namespace VIPCore;

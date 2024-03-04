@@ -44,9 +44,11 @@
         /// </summary>
         /// <param name="vipFeatureBase"></param>
         /// <param name="featureType"></param>
-        /// <param name="selectItem"></param>
-        public void RegisterFeature(VipFeatureBase vipFeatureBase, FeatureType featureType = FeatureType.Toggle,
-            Action<CCSPlayerController, FeatureState>? selectItem = null);
+        public void RegisterFeature(VipFeatureBase vipFeatureBase, FeatureType featureType = FeatureType.Toggle);
+        
+        ///// <param name="selectItem"></param>
+        // public void RegisterFeature(VipFeatureBase vipFeatureBase, FeatureType featureType = FeatureType.Toggle,
+        //     Action<CCSPlayerController, FeatureState>? selectItem = null); 
 
         /// <summary>
         ///  Unregisters a VIP feature.
@@ -204,5 +206,9 @@
         /// Event triggered when a player is removed.
         /// </summary>
         event Action<CCSPlayerController, string>? PlayerRemoved;
-        //public event Action? OnCoreReady;
+        
+        /// <summary>
+        /// Event checks if the core is loaded
+        /// </summary>
+        public event Action? OnCoreReady;
     }

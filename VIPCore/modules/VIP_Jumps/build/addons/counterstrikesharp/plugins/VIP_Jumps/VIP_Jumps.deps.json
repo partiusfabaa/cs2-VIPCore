@@ -1,0 +1,53 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v7.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v7.0": {
+      "VIP_Jumps/1.0.0": {
+        "dependencies": {
+          "CounterStrikeSharp.API": "1.0.180.0",
+          "VipCoreApi": "1.0.0.0"
+        },
+        "runtime": {
+          "VIP_Jumps.dll": {}
+        }
+      },
+      "CounterStrikeSharp.API/1.0.180.0": {
+        "runtime": {
+          "CounterStrikeSharp.API.dll": {
+            "assemblyVersion": "1.0.180.0",
+            "fileVersion": "1.0.180.0"
+          }
+        }
+      },
+      "VipCoreApi/1.0.0.0": {
+        "runtime": {
+          "VipCoreApi.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "VIP_Jumps/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "CounterStrikeSharp.API/1.0.180.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "VipCoreApi/1.0.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

@@ -1,30 +1,36 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Timers;
-using Modularity;
 using VipCoreApi;
 
 namespace VIP_RegenArmor;
 
-public class VipRegenArmor : BasePlugin, IModulePlugin
+public class VipRegenArmor : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Armor Regeneration";
     public override string ModuleVersion => "v1.0.0";
 
     private RegenArmor _regenArmor;
-    private IVipCoreApi _api = null!;
+    private IVipCoreApi? _api;
+    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
-    public void LoadModule(IApiProvider provider)
+    public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = provider.Get<IVipCoreApi>();
-        _regenArmor = new RegenArmor(this, _api);
-        _api.RegisterFeature(_regenArmor);
+        _api = PluginCapability.Get();
+        if (_api == null) return;
+
+        _api.OnCoreReady += () =>
+        {
+            _regenArmor = new RegenArmor(this, _api);
+            _api.RegisterFeature(_regenArmor);
+        };
     }
 
     public override void Unload(bool hotReload)
     {
-        _api.UnRegisterFeature(_regenArmor);
+        _api?.UnRegisterFeature(_regenArmor);
     }
 }
 

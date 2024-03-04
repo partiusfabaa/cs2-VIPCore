@@ -1,30 +1,36 @@
-﻿using CounterStrikeSharp.API;
-using CounterStrikeSharp.API.Core;
+﻿using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Utils;
-using Modularity;
 using VipCoreApi;
 
 namespace VIP_DecoyTeleport;
 
-public class VipDecoyTeleport : BasePlugin, IModulePlugin
+public class VipDecoyTeleport : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Decoy Teleport";
     public override string ModuleVersion => "v1.0.0";
 
     private DecoyTeleport _decoyTeleport;
-    private IVipCoreApi _api = null!;
+    private IVipCoreApi? _api;
 
-    public void LoadModule(IApiProvider provider)
+    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
+
+    public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = provider.Get<IVipCoreApi>();
-        _decoyTeleport = new DecoyTeleport(this, _api);
-        _api.RegisterFeature(_decoyTeleport);
+        _api = PluginCapability.Get();
+        if (_api == null) return;
+
+        _api.OnCoreReady += () =>
+        {
+            _decoyTeleport = new DecoyTeleport(this, _api);
+            _api.RegisterFeature(_decoyTeleport);
+        };
     }
 
     public override void Unload(bool hotReload)
     {
-        _api.UnRegisterFeature(_decoyTeleport);
+        _api?.UnRegisterFeature(_decoyTeleport);
     }
 }
 

@@ -1,29 +1,35 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using Modularity;
+using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
 
 namespace VIP_Vampirism;
 
-public class VipVampirism : BasePlugin, IModulePlugin
+public class VipVampirism : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Vampirism";
     public override string ModuleVersion => "v1.0.0";
 
     private Vampirism _vampirism;
-    private IVipCoreApi _api = null!;
+    private IVipCoreApi? _api;
+    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
-    public void LoadModule(IApiProvider provider)
+    public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = provider.Get<IVipCoreApi>();
-        _vampirism = new Vampirism(this, _api);
-        _api.RegisterFeature(_vampirism);
+        _api = PluginCapability.Get();
+        if (_api == null) return;
+
+        _api.OnCoreReady += () =>
+        {
+            _vampirism = new Vampirism(this, _api);
+            _api.RegisterFeature(_vampirism);
+        };
     }
 
     public override void Unload(bool hotReload)
     {
-        _api.UnRegisterFeature(_vampirism);
+        _api?.UnRegisterFeature(_vampirism);
     }
 }
 

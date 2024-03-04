@@ -20,6 +20,8 @@ public abstract class VipFeatureBase : IVipFeature
 
     public string GetDatabaseConnectionString => Api.GetDatabaseConnectionString;
 
+    public event Action<CCSPlayerController, FeatureState> SelectItem;
+    
     protected VipFeatureBase(IVipCoreApi api)
     {
         Api = api;
@@ -27,6 +29,7 @@ public abstract class VipFeatureBase : IVipFeature
         api.OnPlayerSpawn += OnPlayerSpawn;
         api.PlayerLoaded += OnPlayerLoaded;
         api.PlayerRemoved += OnPlayerRemoved;
+        SelectItem += OnSelectItem;
     }
 
     public virtual void OnPlayerSpawn(CCSPlayerController player)
@@ -38,6 +41,10 @@ public abstract class VipFeatureBase : IVipFeature
     }
 
     public virtual void OnPlayerRemoved(CCSPlayerController player, string group)
+    {
+    }
+    
+    public virtual void OnSelectItem(CCSPlayerController player, FeatureState state)
     {
     }
 

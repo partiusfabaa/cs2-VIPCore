@@ -2,28 +2,31 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
+using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Entities;
 using Dapper;
-using Modularity;
 using MySqlConnector;
 using VipCoreApi;
 
 namespace VIP_Test;
 
-public class VipTest : BasePlugin, IModulePlugin
+public class VipTest : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Test";
     public override string ModuleVersion => "v1.0.0";
 
     private static readonly string Feature = "vip_test_count";
-    private IVipCoreApi _api = null!;
+    private IVipCoreApi? _api;
     private Config _config = null!;
     
-    public void LoadModule(IApiProvider provider)
+    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
+
+    public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = provider.Get<IVipCoreApi>();
+        _api = PluginCapability.Get();
+        if (_api == null) return;
         _config = LoadConfig();
         Task.Run(CreateVipTestTable);
     }

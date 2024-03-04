@@ -1,32 +1,39 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
-using Modularity;
 using System.Drawing;
+using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
 namespace VIP_RainbowModel;
 
-public class VipRainbowModel : BasePlugin, IModulePlugin
+public class VipRainbowModel : BasePlugin
 {
     public override string ModuleAuthor => "WodiX";
     public override string ModuleName => "[VIP] RainbowModel";
     public override string ModuleVersion => "v1.0.3";
 
-    private IVipCoreApi _api = null!;
+    private IVipCoreApi? _api;
     private RainbowModel _rainbowModel;
 
-    public void LoadModule(IApiProvider provider)
+    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
+
+    public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = provider.Get<IVipCoreApi>();
-        _rainbowModel = new RainbowModel(this, _api);
-        _api.RegisterFeature(_rainbowModel, selectItem: _rainbowModel.OnSelectItem);
+        _api = PluginCapability.Get();
+        if (_api == null) return;
+
+        _api.OnCoreReady += () =>
+        {
+            _rainbowModel = new RainbowModel(this, _api);
+            _api.RegisterFeature(_rainbowModel);
+        };
     }
 
     public override void Unload(bool hotReload)
     {
-        _api.UnRegisterFeature(_rainbowModel);
+        _api?.UnRegisterFeature(_rainbowModel);
     }
 }
 
