@@ -31,9 +31,9 @@ Located in the folder `addons/counterstrikesharp/configs/plugins/VIPCore`
 ### Core.json
 ```json
 {
-	"TimeMode": 0,         // 0 - seconds | 1 - minutes | 2 - hours | 3 - days)
-	"ServerId": 0,		 // SERVER ID
-	"VipLogging": true,    //Whether to log VIPCore | true - yes | false - no
+	"TimeMode": 0,			// 0 - seconds | 1 - minutes | 2 - hours | 3 - days)
+	"ServerId": 0,			// SERVER ID
+	"VipLogging": true,		//Whether to log VIPCore | true - yes | false - no
 	"Connection": {
 		"Host": 	"host",
 		"Database": "database",
