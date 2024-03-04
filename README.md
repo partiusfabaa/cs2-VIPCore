@@ -7,56 +7,56 @@
 <a href="https://www.buymeacoffee.com/thesamefabius"><img src="https://img.buymeacoffee.com/button-api/?text=Support my work&emoji=🐱&slug=thesamefabius&button_colour=febee6&font_colour=000000&font_family=Inter&outline_colour=000000&coffee_colour=FFDD00" /></a>
 </p>
 
-# Installation
+## Installation
 1. Install [CounterStrike Sharp](https://github.com/roflmuffin/CounterStrikeSharp), [Metamod:Source](https://www.sourcemm.net/downloads.php/?branch=master)
 3. Download [VIPCore](https://github.com/partiusfabaa/cs2-VIPCore/releases)
-4. Unpack the archive and upload it to the game server (example path: addons/counterstrikesharp/plugins/)
+4. Unpack the archive and upload it to the game server **(example path: `addons/counterstrikesharp/plugins`)**
 
-### Put the modules in this path
-`addons/counterstrikesharp/plugins`
+### Put the modules in this path `addons/counterstrikesharp/plugins`
 
-# Commands 
+## Commands 
 
-| Command                             | Description                                               |
+| **Command**                             | **Description**                                               |
 |-------------------------------------|-----------------------------------------------------------|
-| `css_vip_reload` or `!vip_reload`    | Reloads the configuration. (`@css/root`) |
-| `css_vip_adduser "steamid or accountid" "vipgroup" "time or 0 permanently"` | Adds a VIP player (for server console only) |
-| `css_vip_updategroup "steamid or accountid" "vipgroup"` | Updates the player's VIP Group (for server console only) |
-| `css_vip_updatetime "steamid or accountid" "time or 0 permanently"` | Updates the player's time (for server console only) |
-| `css_vip_deleteuser "steamid or accountid"` | Allows you to delete a player by SteamID identifier (for server console only) |
-| `css_vip` or `!vip` | Opens the VIP menu |
+| **`css_vip_reload` or `!vip_reload`**    | Reloads the configuration **(`@css/root`)** |
+| **`css_vip_adduser "steamid or accountid" "vipgroup" "time or 0 permanently"`** | Adds a VIP player **(for server console only)** |
+| **`css_vip_updategroup "steamid or accountid" "vipgroup"`** | Updates the player's VIP Group **(for server console only)** |
+| **`css_vip_updatetime "steamid or accountid" "time or 0 permanently"`** | Updates the player's time **(for server console only)** |
+| **`css_vip_deleteuser "steamid or accountid"`** | Allows you to delete a player by SteamID identifier **(for server console only)** |
+| **`css_vip`** or **`!vip`** | Opens the VIP menu |
 
-# Configs (addons/counterstrikesharp/configs/plugins/VIPCore/)
+## Configs
+Located in the folder `addons/counterstrikesharp/configs/plugins/VIPCore`
 
 ### Core.json
 ```json
 {
-  "TimeMode": 0,         // 0 - seconds | 1 - minutes | 2 - hours | 3 - days)
-  "ServerId": 0,		 // SERVER ID
-  "VipLogging": true,    //Whether to log VIPCore | true - yes | false - no
-  "Connection": {
-    "Host": 	"host",
-    "Database": "database",
-    "User": 	"user",
-    "Password": "password"
-  }
+	"TimeMode": 0,		// 0 - seconds | 1 - minutes | 2 - hours | 3 - days)
+	"ServerId": 0,		// SERVER ID
+	"VipLogging": true,	//Whether to log VIPCore | true - yes | false - no
+	"Connection": {
+		"Host": 	"host",
+		"Database": "database",
+		"User": 	"user",
+		"Password": "password"
+	}
 }
 ```
 ### vip.json
 ```json
 {
-  "Groups": {
-     "VIP1": {
-        "Values": {
-            "features": values
-        }
-     }
-  }
+	"Delay": 2.0
+	"Groups": {
+		"VIP1": {
+			"Values": {
+				"features": values
+			}
+		}
+	}
 }
 ```
 
-# Example module
-
+## Example Module
 ```csharp
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
