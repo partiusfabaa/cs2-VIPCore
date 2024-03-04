@@ -26,37 +26,37 @@
 | `css_vip_deleteuser "steamid or accountid"` | Allows you to delete a player by SteamID identifier (for server console only) |
 | `css_vip` or `!vip` | Opens the VIP menu |
 
-## Configs (addons/counterstrikesharp/configs/plugins/VIPCore/)
+## Configs `(addons/counterstrikesharp/configs/plugins/VIPCore/)`
 
 ### Core.json
 ```json
 {
-  "TimeMode": 0,         // 0 - seconds | 1 - minutes | 2 - hours | 3 - days)
-  "ServerId": 0,		 // SERVER ID
-  "VipLogging": true,    //Whether to log VIPCore | true - yes | false - no
-  "Connection": {
-    "Host": 	"host",
-    "Database": "database",
-    "User": 	"user",
-    "Password": "password"
-  }
+	"TimeMode": 0,         // 0 - seconds | 1 - minutes | 2 - hours | 3 - days)
+	"ServerId": 0,		 // SERVER ID
+	"VipLogging": true,    //Whether to log VIPCore | true - yes | false - no
+	"Connection": {
+		"Host": 	"host",
+		"Database": "database",
+		"User": 	"user",
+		"Password": "password"
+	}
 }
 ```
 ### vip.json
 ```json
 {
-  "Groups": {
-     "VIP1": {
-        "Values": {
-            "features": values
-        }
-     }
-  }
+	"Delay": 2.0
+	"Groups": {
+		"VIP1": {
+			"Values": {
+				"features": values
+			}
+		}
+	}
 }
 ```
 
-## Example module
-
+## Example Module
 ```csharp
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
