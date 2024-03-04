@@ -17,4 +17,26 @@
 	"SmokeColor": "Culoare Smoke",
 	"Jumps": "Jumps",
 	"Healthshot": "Healthshot"
+	"Respawn": "Respawn",
+	"respawn.Limit": "Respawn limit reached!",
+	"respawn.InCommand": "You must be in a team!",
+	"respawn.IsAlive": "You must be dead!",
+	"respawn.Success": "Respawn successful!"
+	"Antiflash": "Anti-Flash",
+	"Armor": "Armor",
+	"Bhop": "BunnyHop",
+	"bhop.TimeToActivation": "BunnyHop will be active in {red}{0}{default} seconds",
+	"bhop.Activated": "BunnyHop activated!",
+	"DecoyTp": "Teleport Grenade",
+	"fov.Disable": "Disable",
+	"fov.On": "You have set {blue}FOV {default} to {red}{0}",
+	"fov.Off": "You've disabled the {blue}FOV",
+	"Items": "Items",
+	"Killscreen": "Kill Effect",
+	"Money": "Money",
+	"RainbowModel": "Rainbow Model",
+	"ArmorRegen": "Armor Regeneration",
+	"HealthRegen": "Health Regeneration",
+	"vip.ResetDeaths": "Your deaths are reset!",
+	"Vampirism": "Vampirism"	
 }

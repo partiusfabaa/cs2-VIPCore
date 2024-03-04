@@ -7,7 +7,7 @@
 <a href="https://www.buymeacoffee.com/thesamefabius"><img src="https://img.buymeacoffee.com/button-api/?text=Support my work&emoji=🐱&slug=thesamefabius&button_colour=febee6&font_colour=000000&font_family=Inter&outline_colour=000000&coffee_colour=FFDD00" /></a>
 </p>
 
-# Installation
+## Installation
 1. Install [CounterStrike Sharp](https://github.com/roflmuffin/CounterStrikeSharp), [Metamod:Source](https://www.sourcemm.net/downloads.php/?branch=master)
 3. Download [VIPCore](https://github.com/partiusfabaa/cs2-VIPCore/releases)
 4. Unpack the archive and upload it to the game server (example path: addons/counterstrikesharp/plugins/)
@@ -15,7 +15,7 @@
 ### Put the modules in this path
 `addons/counterstrikesharp/plugins`
 
-# Commands 
+## Commands 
 
 | Command                             | Description                                               |
 |-------------------------------------|-----------------------------------------------------------|
@@ -26,7 +26,7 @@
 | `css_vip_deleteuser "steamid or accountid"` | Allows you to delete a player by SteamID identifier (for server console only) |
 | `css_vip` or `!vip` | Opens the VIP menu |
 
-# Configs (addons/counterstrikesharp/configs/plugins/VIPCore/)
+## Configs (addons/counterstrikesharp/configs/plugins/VIPCore/)
 
 ### Core.json
 ```json
@@ -55,7 +55,7 @@
 }
 ```
 
-# Example module
+## Example module
 
 ```csharp
 using CounterStrikeSharp.API.Core;
