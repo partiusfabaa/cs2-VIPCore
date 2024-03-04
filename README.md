@@ -25,7 +25,8 @@
 | `css_vip_deleteuser "steamid or accountid"` | Allows you to delete a player by SteamID identifier (for server console only) |
 | `css_vip` or `!vip` | Opens the VIP menu |
 
-## Configs `(addons/counterstrikesharp/configs/plugins/VIPCore/)`
+## Configs
+Located in the `addons/counterstrikesharp/configs/plugins/VIPCore` folder
 
 ### Core.json
 ```json
