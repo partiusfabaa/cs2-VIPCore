@@ -66,7 +66,7 @@ using VipCoreApi;
 
 namespace VIPMyModule;
 
-public class VIPMyModule : BasePlugin, IModulePlugin
+public class VIPMyModule : BasePlugin
 {
     public override string ModuleAuthor => "Author";
     public override string ModuleName => "[VIP] My Module";
