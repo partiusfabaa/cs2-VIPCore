@@ -110,4 +110,9 @@ VIPCore/modules/VIP_RegenHealth/obj
 VIPCore/modules/VIP_RegenArmor/.idea
 VIPCore/modules/VIP_RegenArmor/bin
 VIPCore/modules/VIP_RegenArmor/obj
+
+VIPCore/modules/VIP_Endurance/.idea
+VIPCore/modules/VIP_Endurance/bin
+VIPCore/modules/VIP_Endurance/obj
+
 VIPCore/VIPCore.zip
