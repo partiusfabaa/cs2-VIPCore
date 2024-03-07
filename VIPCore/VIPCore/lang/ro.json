@@ -21,7 +21,7 @@
 	"respawn.Limit": "Respawn limit reached!",
 	"respawn.InTeam": "You must be in a team!",
 	"respawn.IsAlive": "You must be dead!",
-	"respawn.Success": "Respawn successful!"
+	"respawn.Success": "Respawn successful!",
 	"Antiflash": "Anti-Flash",
 	"Armor": "Armor",
 	"Bhop": "BunnyHop",
@@ -38,5 +38,5 @@
 	"ArmorRegen": "Armor Regeneration",
 	"HealthRegen": "Health Regeneration",
 	"vip.ResetDeaths": "Your deaths are reset!",
-	"Vampirism": "Vampirism"	
+	"Vampirism": "Vampirism"
 }
