@@ -76,18 +76,20 @@ public class VipCore : BasePlugin
         RegisterEventHandler<EventPlayerDisconnect>((@event, _) =>
         {
             var player = @event.Userid;
-
             if (player == null) return HookResult.Continue;
-
+            
             if (!IsUserActiveVip(player))
                 return HookResult.Continue;
-
-            foreach (var featureState in Users[player.SteamID].FeatureState)
+            
+            if (Users.TryGetValue(player.SteamID, out var user))
             {
-                VipApi.SetPlayerCookie(player.SteamID, featureState.Key, (int)featureState.Value);
-            }
+                foreach (var featureState in user.FeatureState)
+                {
+                    VipApi.SetPlayerCookie(player.SteamID, featureState.Key, (int)featureState.Value);
+                }
 
-            Users.Remove(player.SteamID, out var _);
+                Users.Remove(player.SteamID, out var _);
+            }
 
             var playerName = player.PlayerName;
             if (player.AuthorizedSteamID == null) return HookResult.Continue;
@@ -553,13 +555,13 @@ public class VipCore : BasePlugin
 
             var createVipUsersTable = @"
             CREATE TABLE IF NOT EXISTS `vip_users` (
-            `account_id` BIGINT NOT NULL PRIMARY KEY,
-            `name` VARCHAR(64) NOT NULL,
-            `lastvisit` BIGINT NOT NULL,
-            `sid` BIGINT NOT NULL,
-            `group` VARCHAR(64) NOT NULL,
-            `expires` BIGINT NOT NULL
-             );";
+                `account_id` BIGINT NOT NULL,
+                `name` VARCHAR(64) NOT NULL,
+                `lastvisit` BIGINT NOT NULL,
+                `sid` BIGINT NOT NULL,
+                `group` VARCHAR(64) NOT NULL,
+                `expires` BIGINT NOT NULL,
+            PRIMARY KEY (`account_id`, `sid`));";
 
             await dbConnection.ExecuteAsync(createVipUsersTable);
         }
@@ -881,10 +883,15 @@ public class VipCore : BasePlugin
     //     }
     // }
 
+    private bool IsValidEntity(CEntityInstance ent)
+    {
+        return ent.IsValid;
+    }
+    
     public bool IsUserActiveVip(CCSPlayerController player)
     {
-        if (!player.IsValid || player.IsBot) return false;
-
+        if (!IsValidEntity(player) || !player.IsValid || player.IsBot || player.Connected != PlayerConnectedState.PlayerConnected) return false;
+        
         var authorizedSteamId = player.AuthorizedSteamID;
         if (authorizedSteamId == null)
         {
