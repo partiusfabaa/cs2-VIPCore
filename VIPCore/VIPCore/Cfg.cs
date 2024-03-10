@@ -24,7 +24,7 @@ public class Cfg
                 TimeMode = 0,
                 ServerId = 0,
                 UseCenterHtmlMenu = false,
-                DisplayUnavailableOptions = true,
+                //DisplayUnavailableOptions = true,
                 ReOpenMenuAfterItemClick = false,
                 VipLogging = true,
                 Connection = new VipDb
@@ -100,7 +100,7 @@ public class ConfigVipCoreSettings
     public int TimeMode { get; init; }
     public int ServerId { get; init; }
     public bool UseCenterHtmlMenu { get; init; }
-    public bool DisplayUnavailableOptions { get; init; }
+    //public bool DisplayUnavailableOptions { get; init; }
     public bool ReOpenMenuAfterItemClick { get; init; }
     public bool VipLogging { get; init; }
     public VipDb Connection { get; init; } = null!;

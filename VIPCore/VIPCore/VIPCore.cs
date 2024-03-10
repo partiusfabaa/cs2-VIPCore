@@ -356,8 +356,8 @@ public class VipCore : BasePlugin
 
         if (!Users.TryGetValue(player.SteamID, out var user)) return;
 
-        //var title = Localizer["menu.Title", user.group];
-        //user.Menu = CoreConfig.UseCenterHtmlMenu ? new CenterHtmlMenu(title) : new ChatMenu(title);
+        var title = Localizer["menu.Title", user.group];
+        user.Menu = CoreConfig.UseCenterHtmlMenu ? new CenterHtmlMenu(title) : new ChatMenu(title);
 
         if (user.Menu == null)
         {
@@ -370,18 +370,9 @@ public class VipCore : BasePlugin
         {
             foreach (var setting in Features.Where(setting => setting.Value.FeatureType is not FeatureType.Hide))
             {
-                if (!vipGroup.Values.ContainsKey(setting.Key)) continue;
-                //if (string.IsNullOrEmpty(featureValue.ToString())) continue;
-
-                FeatureState featureState;
-                if (CoreConfig.DisplayUnavailableOptions)
-                {
-                    featureState = user.FeatureState[setting.Key];
-                }
-                else
-                {
-                    if (!user.FeatureState.TryGetValue(setting.Key, out featureState)) continue;
-                }
+                if (!vipGroup.Values.TryGetValue(setting.Key, out var featureValue)) continue;
+                if (string.IsNullOrEmpty(featureValue.ToString())) continue;
+                if (!user.FeatureState.TryGetValue(setting.Key, out var featureState)) continue;
 
                 var value = featureState switch
                 {
@@ -415,11 +406,11 @@ public class VipCore : BasePlugin
 
                         user.FeatureState[setting.Key] = returnState;
                         setting.Value.OnSelectItem?.Invoke(controller, returnState);
-
+                        
                         if (CoreConfig.ReOpenMenuAfterItemClick)
                             CreateMenu(controller);
                         else
-                            user.Menu.PostSelectAction = PostSelectAction.Reset;
+                            MenuManager.CloseActiveMenu(player);
                     }, featureState == FeatureState.NoAccess);
             }
         }
