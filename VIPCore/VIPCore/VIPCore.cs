@@ -279,8 +279,8 @@ public class VipCore : BasePlugin
     public void OnCmdUpdateUserGroup(CCSPlayerController? controller, CommandInfo command)
     {
         if (controller != null) return;
-
-        if (command.ArgCount is > 3 or < 3)
+        
+        if (command.ArgCount is > 4 or < 4)
         {
             PrintLogInfo("Usage: css_vip_updateuser {usage}", "<steamid or accountid> [group or -s] [time or -s]",
                 "if you don't want to update something, don't leave it blank, write `-` or `-s`\nExample of updating time: css_vip_updateuser \"STEAM_0:0:123456\" -s 3600");
@@ -508,7 +508,7 @@ public class VipCore : BasePlugin
         _ => throw new KeyNotFoundException("No such number was found!")
     };
 
-    private int CalculateEndTimeInSeconds(int time) => DateTime.UtcNow.AddSeconds(CoreConfig.TimeMode switch
+    public int CalculateEndTimeInSeconds(int time) => DateTime.UtcNow.AddSeconds(CoreConfig.TimeMode switch
     {
         1 => time * 60,
         2 => time * 3600,

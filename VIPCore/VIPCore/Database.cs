@@ -160,10 +160,9 @@ public class Database
 
             if (!string.IsNullOrEmpty(group))
                 existingUser.group = group;
-
-
+            
             if (time > -1)
-                existingUser.expires = DateTime.UtcNow.AddSeconds(time).GetUnixEpoch();
+                existingUser.expires = time == 0 ? 0 : _vipCore.CalculateEndTimeInSeconds(time);
 
             await connection.ExecuteAsync(@"
             UPDATE 
