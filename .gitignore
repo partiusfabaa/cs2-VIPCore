@@ -115,5 +115,13 @@ VIPCore/modules/VIP_Endurance/.idea
 VIPCore/modules/VIP_Endurance/bin
 VIPCore/modules/VIP_Endurance/obj
 
+VIPCore/modules/VIP_FastDefuse/.idea
+VIPCore/modules/VIP_FastDefuse/bin
+VIPCore/modules/VIP_FastDefuse/obj
+
+VIPCore/modules/VIP_FastPlant/.idea
+VIPCore/modules/VIP_FastPlant/bin
+VIPCore/modules/VIP_FastPlant/obj
+
 VIPCore/VIPCore.zip
 VIPCore-v1.2.2/

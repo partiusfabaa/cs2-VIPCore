@@ -83,7 +83,8 @@ public class VipCore : BasePlugin
             var authAccId = player.AuthorizedSteamID;
             if (authAccId != null)
             {
-                Task.Run(() => Database.UpdateUserVip(authAccId.AccountId, name: player.PlayerName));
+                var playerName = player.PlayerName;
+                Task.Run(() => Database.UpdateUserVip(authAccId.AccountId, name: playerName));
             }
 
             return HookResult.Continue;
@@ -282,7 +283,7 @@ public class VipCore : BasePlugin
         
         if (command.ArgCount is > 4 or < 4)
         {
-            PrintLogInfo("Usage: css_vip_updateuser {usage}", "<steamid or accountid> [group or -s] [time or -s]",
+            PrintLogInfo("Usage: css_vip_updateuser {usage}\n{t}", "<steamid or accountid> [group or -s] [time or -s]",
                 "if you don't want to update something, don't leave it blank, write `-` or `-s`\nExample of updating time: css_vip_updateuser \"STEAM_0:0:123456\" -s 3600");
             return;
         }
@@ -470,6 +471,8 @@ public class VipCore : BasePlugin
 
     public void PrintToChat(CCSPlayerController player, string msg)
     {
+        if (!player.IsValid) return;
+        
         player.PrintToChat($"{Localizer["vip.Prefix"]} {msg}");
     }
 
