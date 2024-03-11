@@ -10,7 +10,7 @@ public class VipEndurance : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Endurance";
-    public override string ModuleVersion => "v1.0.0";
+    public override string ModuleVersion => "v1.0.1";
 
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
     private IVipCoreApi? _api;
@@ -45,10 +45,12 @@ public class Endurance : VipFeatureBase
         basePlugin.RegisterListener<Listeners.OnTick>(() =>
         {
             foreach (var players in Utilities.GetPlayers().Where(u =>
-                         u.IsValid && IsClientVip(u) && PlayerHasFeature(u) && _enduranceEnabled[u.Slot]))
+                         u is { IsValid: true, PawnIsAlive: true } && IsClientVip(u) && PlayerHasFeature(u) && _enduranceEnabled[u.Slot]))
             {
                 var playerPawn = players.PlayerPawn.Value;
-                if (playerPawn != null && playerPawn is { IsValid: true, VelocityModifier: < 1.0f })
+                if (playerPawn == null) continue;
+                
+                if (playerPawn is { IsValid: true, VelocityModifier: < 1.0f })
                 {
                     playerPawn.VelocityModifier = 1.0f;
                 }
@@ -58,6 +60,8 @@ public class Endurance : VipFeatureBase
 
     public override void OnPlayerLoaded(CCSPlayerController player, string group)
     {
+        if (!PlayerHasFeature(player)) return;
+        
         _enduranceEnabled[player.Slot] = GetPlayerFeatureState(player) == FeatureState.Enabled;
     }
 
