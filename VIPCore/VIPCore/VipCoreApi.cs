@@ -5,6 +5,7 @@ using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Entities;
 using Microsoft.Extensions.Logging;
 using VipCoreApi;
+using static VipCoreApi.IVipCoreApi;
 
 namespace VIPCore;
 
@@ -35,16 +36,8 @@ public class VipCoreApi : IVipCoreApi
         OnCoreReady?.Invoke();
     }
 
-    public IVipCoreApi.FeatureState GetPlayerFeatureState(CCSPlayerController player, string feature)
-    {
-        if (!_vipCore.Users.TryGetValue(player.SteamID, out var user))
-            throw new InvalidOperationException("player not found");
-
-        return user.FeatureState.GetValueOrDefault(feature, IVipCoreApi.FeatureState.NoAccess);
-    }
-
     public void RegisterFeature(VipFeatureBase vipFeatureBase,
-        IVipCoreApi.FeatureType featureType = IVipCoreApi.FeatureType.Toggle)//, Action<CCSPlayerController, FeatureState>? selectItem = null)
+        FeatureType featureType = FeatureType.Toggle)//, Action<CCSPlayerController, FeatureState>? selectItem = null)
     {
         foreach (var config in _vipCore.Config.Groups)
         {
@@ -91,6 +84,25 @@ public class VipCoreApi : IVipCoreApi
         }
     }
 
+    public FeatureState GetPlayerFeatureState(CCSPlayerController player, string feature)
+    {
+        if (!_vipCore.Users.TryGetValue(player.SteamID, out var user))
+            throw new InvalidOperationException("player not found");
+
+        return user.FeatureState.GetValueOrDefault(feature, FeatureState.NoAccess);
+    }
+
+    public void SetPlayerFeatureState(CCSPlayerController player, string feature, FeatureState newState)
+    {
+        if(!_vipCore.Users.TryGetValue(player.SteamID, out var user))
+            throw new InvalidOperationException("player not found");
+
+        if (!user.FeatureState.ContainsKey(feature))
+            throw new InvalidOperationException("feature not found");
+
+        user.FeatureState[feature] = newState;
+    }
+    
     public bool IsClientVip(CCSPlayerController player)
     {
         return _vipCore.IsUserActiveVip(player);

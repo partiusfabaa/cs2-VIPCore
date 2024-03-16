@@ -68,6 +68,15 @@
         /// <param name="feature"></param>
         /// <returns></returns>
         public FeatureState GetPlayerFeatureState(CCSPlayerController player, string feature);
+
+        /// <summary>
+        /// Sets the state of the function for a specific player.
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="feature"></param>
+        /// <param name="newState"></param>
+        /// <returns></returns>
+        public void SetPlayerFeatureState(CCSPlayerController player, string feature, FeatureState newState);
         
         /// <summary>
         /// Checks if a player is a VIP client.
