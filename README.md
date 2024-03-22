@@ -1,3 +1,5 @@
+![GitHub all releases](https://img.shields.io/github/downloads/partiusfabaa/cs2-VIPCore/total?style=social)
+
 # cs2-VIPCore
 
 #### If you find an error or anything else. Please message me in discord: thesamefabius
