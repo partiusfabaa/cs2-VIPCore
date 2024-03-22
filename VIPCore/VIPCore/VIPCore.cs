@@ -280,7 +280,7 @@ public class VipCore : BasePlugin
     public void OnCmdUpdateUserGroup(CCSPlayerController? controller, CommandInfo command)
     {
         if (controller != null) return;
-        
+
         if (command.ArgCount is > 4 or < 4)
         {
             PrintLogInfo("Usage: css_vip_updateuser {usage}\n{t}", "<steamid or accountid> [group or -s] [time or -s]",
@@ -366,14 +366,13 @@ public class VipCore : BasePlugin
             return;
         }
 
-        user.Menu.MenuOptions.Clear();
         if (Config.Groups.TryGetValue(user.group, out var vipGroup))
         {
-            foreach (var setting in Features.Where(setting => setting.Value.FeatureType is not FeatureType.Hide))
+            foreach (var (key, feature) in Features.Where(setting => setting.Value.FeatureType is not FeatureType.Hide))
             {
-                if (!vipGroup.Values.TryGetValue(setting.Key, out var featureValue)) continue;
+                if (!vipGroup.Values.TryGetValue(key, out var featureValue)) continue;
                 if (string.IsNullOrEmpty(featureValue.ToString())) continue;
-                if (!user.FeatureState.TryGetValue(setting.Key, out var featureState)) continue;
+                if (!user.FeatureState.TryGetValue(key, out var featureState)) continue;
 
                 var value = featureState switch
                 {
@@ -383,10 +382,10 @@ public class VipCore : BasePlugin
                     _ => throw new ArgumentOutOfRangeException()
                 };
 
-                var featureType = setting.Value.FeatureType;
+                var featureType = feature.FeatureType;
 
                 user.Menu.AddMenuOption(
-                    Localizer[setting.Key] + (featureType == FeatureType.Selectable
+                    Localizer[key] + (featureType == FeatureType.Selectable
                         ? string.Empty
                         : $" [{value}]"),
                     (controller, _) =>
@@ -402,16 +401,14 @@ public class VipCore : BasePlugin
                             };
 
                             VipApi.PrintToChat(player,
-                                $"{Localizer[setting.Key]}: {(returnState == FeatureState.Enabled ? $"{Localizer["chat.Enabled"]}" : $"{Localizer["chat.Disabled"]}")}");
+                                $"{Localizer[key]}: {(returnState == FeatureState.Enabled ? $"{Localizer["chat.Enabled"]}" : $"{Localizer["chat.Disabled"]}")}");
                         }
 
-                        user.FeatureState[setting.Key] = returnState;
-                        setting.Value.OnSelectItem?.Invoke(controller, returnState);
+                        user.FeatureState[key] = returnState;
+                        feature.OnSelectItem?.Invoke(controller, returnState);
                         
                         if (CoreConfig.ReOpenMenuAfterItemClick)
                             CreateMenu(controller);
-                        else
-                            MenuManager.CloseActiveMenu(player);
                     }, featureState == FeatureState.NoAccess);
             }
         }
@@ -472,7 +469,7 @@ public class VipCore : BasePlugin
     public void PrintToChat(CCSPlayerController player, string msg)
     {
         if (!player.IsValid) return;
-        
+
         player.PrintToChat($"{Localizer["vip.Prefix"]} {msg}");
     }
 

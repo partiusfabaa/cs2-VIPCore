@@ -1,4 +1,5 @@
 VIPCore/ignoremodules/
+VIPCore/privatemodules/
 VIPCore/VIPCore/.idea
 VIPCore/VIPCore/bin/
 VIPCore/VIPCore/obj/
