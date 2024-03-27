@@ -5,7 +5,10 @@ using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Cvars;
+using CounterStrikeSharp.API.Modules.Cvars.Validators;
 using CounterStrikeSharp.API.Modules.Entities;
+using CounterStrikeSharp.API.Modules.Events;
 using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Timers;
 using Microsoft.Extensions.Logging;
@@ -32,8 +35,10 @@ public class VipCore : BasePlugin
     public readonly ConcurrentDictionary<string, Feature> Features = new();
     private readonly PluginCapability<IVipCoreApi> _pluginCapability = new("vipcore:core");
 
-    public string DbConnectionString = string.Empty;
+    public readonly FakeConVar<bool> IsCoreEnableConVar = new("css_vip_enable", "", true);
 
+    public string DbConnectionString = string.Empty;
+    
     public override void Load(bool hotReload)
     {
         VipApi = new VipCoreApi(this, ModuleDirectory);
@@ -428,7 +433,11 @@ public class VipCore : BasePlugin
             UserID = connection.User,
             Password = connection.Password,
             Server = connection.Host,
-            Port = (uint)connection.Port
+            Port = (uint)connection.Port,
+            Pooling = true,
+            MinimumPoolSize = 0,
+            MaximumPoolSize = 640,
+            ConnectionIdleTimeout = 30
         };
 
         Console.WriteLine("OK!");
@@ -437,7 +446,7 @@ public class VipCore : BasePlugin
 
     public bool IsUserActiveVip(CCSPlayerController player)
     {
-        if (!Utils.IsValidEntity(player) || !player.IsValid || player.IsBot ||
+        if (!IsCoreEnableConVar.Value || !Utils.IsValidEntity(player) || !player.IsValid || player.IsBot ||
             player.Connected != PlayerConnectedState.PlayerConnected) return false;
 
         var authorizedSteamId = player.AuthorizedSteamID;
