@@ -108,6 +108,12 @@
         /// <param name="player"></param>
         /// <returns></returns>
         public string GetClientVipGroup(CCSPlayerController player);
+
+        /// <summary>
+        /// Gets the VIP groups from the vip.json file
+        /// </summary>
+        /// <returns>list</returns>
+        public string[] GetVipGroups();
         
         /// <summary>
         /// Updates VIP information for a player.

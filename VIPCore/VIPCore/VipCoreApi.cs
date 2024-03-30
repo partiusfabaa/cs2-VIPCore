@@ -132,6 +132,31 @@ public class VipCoreApi : IVipCoreApi
         return user.group;
     }
 
+    public string[] GetVipGroups()
+    {
+        if (CoreConfigDirectory == null)
+        {
+            return Array.Empty<string>();
+        }
+
+        var filePath = Path.Combine(CoreConfigDirectory, "vip.json");
+
+        if (!File.Exists(filePath))
+        {
+            return Array.Empty<string>();
+        }
+
+        var json = File.ReadAllText(filePath);
+        var jsonObject = JsonSerializer.Deserialize<JsonDocument>(json);
+
+        if (jsonObject == null || !jsonObject.RootElement.TryGetProperty("Groups", out var groupsProperty) || groupsProperty.ValueKind != JsonValueKind.Object)
+        {
+            return Array.Empty<string>();
+        }
+
+        return groupsProperty.EnumerateObject().Select(p => p.Name).ToArray();
+    }
+
     public void UpdateClientVip(CCSPlayerController player, string name = "", string group = "", int time = -1)
     {
         var steamId =
