@@ -112,7 +112,7 @@
         /// <summary>
         /// Gets the VIP groups from the vip.json file
         /// </summary>
-        /// <returns>list</returns>
+        /// <returns></returns>
         public string[] GetVipGroups();
         
         /// <summary>
