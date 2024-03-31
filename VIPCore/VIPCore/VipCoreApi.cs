@@ -146,15 +146,12 @@ public class VipCoreApi : IVipCoreApi
             return Array.Empty<string>();
         }
 
-        var json = File.ReadAllText(filePath);
-        var jsonObject = JsonSerializer.Deserialize<JsonDocument>(json);
-
-        if (jsonObject == null || !jsonObject.RootElement.TryGetProperty("Groups", out var groupsProperty) || groupsProperty.ValueKind != JsonValueKind.Object)
+        if (_vipCore.Config.Groups == null)
         {
             return Array.Empty<string>();
         }
 
-        return groupsProperty.EnumerateObject().Select(p => p.Name).ToArray();
+        return _vipCore.Config.Groups.Keys.ToArray();
     }
 
     public void UpdateClientVip(CCSPlayerController player, string name = "", string group = "", int time = -1)
