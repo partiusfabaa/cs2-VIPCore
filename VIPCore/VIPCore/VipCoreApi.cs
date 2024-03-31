@@ -146,7 +146,7 @@ public class VipCoreApi : IVipCoreApi
             return Array.Empty<string>();
         }
 
-        if (_vipCore.Config.Groups == null)
+        if (_vipCore.Config.Groups.Count == 0)
         {
             return Array.Empty<string>();
         }
