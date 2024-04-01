@@ -134,18 +134,6 @@ public class VipCoreApi : IVipCoreApi
 
     public string[] GetVipGroups()
     {
-        if (CoreConfigDirectory == null)
-        {
-            return Array.Empty<string>();
-        }
-
-        var filePath = Path.Combine(CoreConfigDirectory, "vip.json");
-
-        if (!File.Exists(filePath))
-        {
-            return Array.Empty<string>();
-        }
-
         if (_vipCore.Config.Groups.Count == 0)
         {
             return Array.Empty<string>();
@@ -153,6 +141,7 @@ public class VipCoreApi : IVipCoreApi
 
         return _vipCore.Config.Groups.Keys.ToArray();
     }
+
 
     public void UpdateClientVip(CCSPlayerController player, string name = "", string group = "", int time = -1)
     {
