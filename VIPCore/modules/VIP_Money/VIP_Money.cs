@@ -2,6 +2,7 @@
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
 using static VipCoreApi.IVipCoreApi;
+using CounterStrikeSharp.API.Modules.Cvars;
 
 namespace VIP_Money;
 
@@ -50,14 +51,28 @@ public class Money : VipFeatureBase
 
         var moneyServices = player.InGameMoneyServices;
         if (moneyServices == null) return;
-        
+
         var moneyValue = GetFeatureValue<string>(player);
 
         if (string.IsNullOrWhiteSpace(moneyValue)) return;
 
+        int maxmoney = ConVar.Find("mp_maxmoney").GetPrimitiveValue<int>();
+
         if (moneyValue.Contains("++"))
-            moneyServices.Account += int.Parse(moneyValue.Split("++")[1]);
+        {
+            var money = int.Parse(moneyValue.Split("++")[1]);
+            if (moneyServices.Account + money  > maxmoney)
+                moneyServices.Account = maxmoney;
+            else
+                moneyServices.Account += money;
+        }
         else
-            moneyServices.Account = int.Parse(moneyValue);
+        {
+            var money = int.Parse(moneyValue);
+            if (money > maxmoney)
+                moneyServices.Account = maxmoney;
+            else
+                moneyServices.Account = money;
+        }
     }
 }
