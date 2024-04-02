@@ -57,19 +57,19 @@ public class Money : VipFeatureBase
         if (string.IsNullOrWhiteSpace(moneyValue)) return;
 
         int maxmoney = ConVar.Find("mp_maxmoney").GetPrimitiveValue<int>();
-        var money = int.Parse(moneyValue);
 
         if (moneyValue.Contains("++"))
         {
-            if (moneyServices.Account + money.Split("++")[1] > maxmoney)
+            var money = int.Parse(moneyValue.Split("++")[1]);
+            if (moneyServices.Account + money  > maxmoney)
                 moneyServices.Account = maxmoney;
             else
-                moneyServices.Account += money.Split("++")[1];
+                moneyServices.Account += money;
         }
         else
         {
-            if (money >
-                maxmoney)
+            var money = int.Parse(moneyValue);
+            if (money > maxmoney)
                 moneyServices.Account = maxmoney;
             else
                 moneyServices.Account = money;
