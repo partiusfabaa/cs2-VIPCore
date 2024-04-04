@@ -10,7 +10,7 @@ public class VipZeus : BasePlugin
     public override string ModuleName => "[VIP] Zeus";
     public override string ModuleVersion => "v1.0";
     
-    private Zeus _zeus;
+    private Zeus? _zeus;
     private IVipCoreApi? _api;
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
@@ -19,16 +19,16 @@ public class VipZeus : BasePlugin
         _api = PluginCapability.Get();
         if (_api == null) return;
 
-        _api.OnCoreReady += () =>
-        {
-            _zeus = new Zeus(_api);
-            _api.RegisterFeature(_zeus);
-        };
+        _zeus = new Zeus(_api);
+        _api.RegisterFeature(_zeus);
     }
     
     public override void Unload(bool hotReload)
-    {
-        _api?.UnRegisterFeature(_zeus);
+    {   
+        if(_api != null && _zeus != null)
+        {
+            _api?.UnRegisterFeature(_zeus);
+        }
     }
 }
 

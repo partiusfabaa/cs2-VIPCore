@@ -10,9 +10,6 @@
     <Reference Include="CounterStrikeSharp.API">
       <HintPath>..\..\CounterStrikeSharp.API.dll</HintPath>
     </Reference>
-    <Reference Include="Modularity">
-      <HintPath>..\..\Modularity.dll</HintPath>
-    </Reference>
     <Reference Include="VipCoreApi">
       <HintPath>..\..\VipCoreApi.dll</HintPath>
     </Reference>

@@ -10,7 +10,7 @@ public class VipDefuser : BasePlugin
     public override string ModuleName => "[VIP] Defuser";
     public override string ModuleVersion => "v1.0";
     
-    private Defuser _defuser;
+    private Defuser? _defuser;
     private IVipCoreApi? _api;
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
@@ -19,23 +19,22 @@ public class VipDefuser : BasePlugin
         _api = PluginCapability.Get();
         if (_api == null) return;
 
-        _api.OnCoreReady += () =>
-        {
-            _defuser = new Defuser(_api);
-            _api.RegisterFeature(_defuser);
-        };
+        _defuser = new Defuser(_api);
+        _api.RegisterFeature(_defuser);
     }
     
     public override void Unload(bool hotReload)
     {
-        _api?.UnRegisterFeature(_defuser);
+        if (_api != null && _defuser != null)
+        {
+            _api.UnRegisterFeature(_defuser);
+        }
     }
 }
 
 public class Defuser : VipFeatureBase
 {
     public override string Feature => "Defuser";
-    
     public Defuser(IVipCoreApi api) : base(api)
     {
     }

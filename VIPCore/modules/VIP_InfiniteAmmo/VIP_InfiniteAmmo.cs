@@ -19,16 +19,13 @@ public class VipInfiniteAmmo : BasePlugin
 		_api = PluginCapability.Get();
 		if (_api == null) return;
 
-		_api.OnCoreReady += () =>
-		{
-			_infiniteAmmoFeature = new InfiniteAmmo(this, _api);
-			_api.RegisterFeature(_infiniteAmmoFeature);
-		};
+		_infiniteAmmoFeature = new InfiniteAmmo(this, _api);
+		_api.RegisterFeature(_infiniteAmmoFeature);
 	}
 
 	public override void Unload(bool hotReload)
     {
-        if (_infiniteAmmoFeature != null)
+        if (_api != null && _infiniteAmmoFeature != null)
         {
             _api?.UnRegisterFeature(_infiniteAmmoFeature);
         }
