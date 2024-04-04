@@ -15,7 +15,6 @@ public class VipInfiniteAmmo : BasePlugin
 	private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 	public override void OnAllPluginsLoaded(bool hotReload)
 	{
-
 		_api = PluginCapability.Get();
 		if (_api == null) return;
 
