@@ -38,5 +38,8 @@
 	"ArmorRegen": "Armor Regeneration",
 	"HealthRegen": "Health Regeneration",
 	"vip.ResetDeaths": "Your deaths are reset!",
-	"Vampirism": "Vampirism"
+	"Vampirism": "Vampirism",
+	"tag.Disable": "Disable",
+	"tag.On": "You have set {blue}Tag {default} to {red}{0}",
+	"tag.Off": "You've disabled the {blue}Tag"
 }
