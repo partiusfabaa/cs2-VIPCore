@@ -38,5 +38,9 @@
 	"ArmorRegen": "Регенерация брони",
 	"HealthRegen": "Регенерация здоровья",
 	"vip.ResetDeaths": "Ваши смерти сброшены!",
-	"Vampirism": "Вампиризм"
+	"Vampirism": "Вампиризм",
+	"endurance": "Выносливость",
+	"tag.Disable": "Выключить",
+	"tag.On": "Вы установили значение {blue}Tag {default}на {red}{0}",
+	"tag.Off": "Вы выключили {blue}Tag"
 }
