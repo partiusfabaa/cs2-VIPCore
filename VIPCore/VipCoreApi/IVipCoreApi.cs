@@ -125,7 +125,7 @@
         /// <param name="group"></param>
         /// <param name="time"></param>
         public void SetClientVip(CCSPlayerController player, string group, int time);
-        
+
         /// <summary>
         /// Manage VIP status for a player.
         /// </summary>
@@ -133,6 +133,14 @@
         /// <param name="group"></param>
         /// <param name="time"></param>
         public void GiveClientVip(CCSPlayerController player, string group, int time);
+        
+        /// <summary>
+        /// Gives VIP player for 1 game session
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="group"></param>
+        /// <param name="time"></param>
+        public void GiveClientTemporaryVip(CCSPlayerController player, string group, int time);
         
         /// <summary>
         /// Remove VIP status for a player.

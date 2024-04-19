@@ -69,6 +69,9 @@ public abstract class VipFeatureBase : IVipFeature
     public void GiveClientVip(CCSPlayerController player, string group, int time) =>
         Api.GiveClientVip(player, group, time);
 
+    public void GiveClientTemporaryVip(CCSPlayerController player, string group, int time) =>
+        Api.GiveClientTemporaryVip(player, group, time);
+
     public void RemoveClientVip(CCSPlayerController player) => Api.RemoveClientVip(player);
 
     public void SetPlayerCookie<T>(ulong steamId64, string key, T value) => Api.SetPlayerCookie(steamId64, key, value);

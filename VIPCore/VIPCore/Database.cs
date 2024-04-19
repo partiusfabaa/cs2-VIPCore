@@ -252,7 +252,7 @@ public class Database
                         user.sid
                     });
 
-                Server.NextFrame(() =>
+                await Server.NextFrameAsync(() =>
                 {
                     var authSteamId = player.AuthorizedSteamID;
                     if (authSteamId != null && authSteamId.AccountId == user.account_id)

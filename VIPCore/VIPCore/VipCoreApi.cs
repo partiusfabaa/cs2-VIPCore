@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Text;
+using System.Text.Json;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Cvars;
@@ -25,10 +26,10 @@ public class VipCoreApi : IVipCoreApi
     public string ModulesConfigDirectory => Path.Combine(CoreConfigDirectory, "Modules/");
     public string GetDatabaseConnectionString => _vipCore.DbConnectionString;
 
-    public VipCoreApi(VipCore vipCore, string directory)
+    public VipCoreApi(VipCore vipCore)
     {
         _vipCore = vipCore;
-        CoreConfigDirectory = new DirectoryInfo(directory).Parent?.Parent?.FullName + "/configs/plugins/VIPCore/";
+        CoreConfigDirectory = Path.Combine(Application.RootDirectory, "configs/plugins/VIPCore/");
     }
 
     public void CoreReady()
@@ -37,7 +38,7 @@ public class VipCoreApi : IVipCoreApi
     }
 
     public void RegisterFeature(VipFeatureBase vipFeatureBase,
-        FeatureType featureType = FeatureType.Toggle)//, Action<CCSPlayerController, FeatureState>? selectItem = null)
+        FeatureType featureType = FeatureType.Toggle) //, Action<CCSPlayerController, FeatureState>? selectItem = null)
     {
         foreach (var config in _vipCore.Config.Groups)
         {
@@ -94,7 +95,7 @@ public class VipCoreApi : IVipCoreApi
 
     public void SetPlayerFeatureState(CCSPlayerController player, string feature, FeatureState newState)
     {
-        if(!_vipCore.Users.TryGetValue(player.SteamID, out var user))
+        if (!_vipCore.Users.TryGetValue(player.SteamID, out var user))
             throw new InvalidOperationException("player not found");
 
         if (!user.FeatureState.ContainsKey(feature))
@@ -102,10 +103,10 @@ public class VipCoreApi : IVipCoreApi
 
         user.FeatureState[feature] = newState;
     }
-    
+
     public bool IsClientVip(CCSPlayerController player)
     {
-        return _vipCore.IsUserActiveVip(player);
+        return _vipCore.IsPlayerVip(player);
     }
 
     public bool PlayerHasFeature(CCSPlayerController player, string feature)
@@ -144,7 +145,7 @@ public class VipCoreApi : IVipCoreApi
         {
             _vipCore.Users[steamId.SteamId64] = user;
         }
-            
+
         OnPlayerLoaded(player, group);
     }
 
@@ -173,7 +174,7 @@ public class VipCoreApi : IVipCoreApi
         {
             var user = _vipCore.CreateNewUser(accountId, name, group, time);
             await _vipCore.Database.UpdateUserInDb(user);
-            
+
             if (_vipCore.Users.ContainsKey(steamId64))
             {
                 _vipCore.Users[steamId64] = user;
@@ -185,8 +186,21 @@ public class VipCoreApi : IVipCoreApi
         }
     }
 
+    public void GiveClientTemporaryVip(CCSPlayerController player, string group, int time)
+    {
+        GiveClientVip(player, group, time, true);
+    }
+
     public void GiveClientVip(CCSPlayerController player, string group, int time)
     {
+        GiveClientVip(player, group, time, false);
+    }
+
+    private void GiveClientVip(CCSPlayerController player, string group, int time, bool isTemporary)
+    {
+        if (IsClientVip(player))
+            throw new Exception($"Player {player.PlayerName} already has a VIP");
+
         var name = player.PlayerName;
 
         var authSteamId = player.AuthorizedSteamID;
@@ -200,7 +214,16 @@ public class VipCoreApi : IVipCoreApi
         var steamId64 = authSteamId.SteamId64;
 
         OnPlayerLoaded(player, group);
-        Task.Run(() => GiveClientVipAsync(name, accountId, group, time, steamId64));
+
+        var user = _vipCore.CreateNewUser(accountId, name, group, time);
+        _vipCore.Users.TryAdd(steamId64, user);
+        _vipCore.SetClientFeature(steamId64, group);
+        _vipCore.IsClientVip[player.Slot] = true;
+
+        if (!isTemporary)
+        {
+            Task.Run(() => _vipCore.Database.AddUserToDb(user));
+        }
     }
 
     public void RemoveClientVip(CCSPlayerController player)
@@ -212,6 +235,19 @@ public class VipCoreApi : IVipCoreApi
 
         OnPlayerRemoved(player, user.group);
         Task.Run(() => RemoveClientVipAsync(steamId));
+    }
+
+    private async Task RemoveClientVipAsync(SteamID steamId)
+    {
+        try
+        {
+            await _vipCore.Database.RemoveUserFromDb(steamId.AccountId);
+            _vipCore.Users.Remove(steamId.SteamId64, out _);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
     }
 
     public void PrintToChat(CCSPlayerController player, string message)
@@ -255,35 +291,6 @@ public class VipCoreApi : IVipCoreApi
         PlayerRemoved?.Invoke(player, group);
     }
 
-    private async Task GiveClientVipAsync(string username, int accountId, string group, int timeSeconds,
-        ulong steamId64)
-    {
-        try
-        {
-            var user = _vipCore.CreateNewUser(accountId, username, group, timeSeconds);
-            await _vipCore.Database.AddUserToDb(user);
-
-            _vipCore.Users.TryAdd(steamId64, user);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-        }
-    }
-
-    private async Task RemoveClientVipAsync(SteamID steamId)
-    {
-        try
-        {
-            await _vipCore.Database.RemoveUserFromDb(steamId.AccountId);
-            _vipCore.Users.Remove(steamId.SteamId64, out _);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-        }
-    }
-
     public T GetFeatureValue<T>(CCSPlayerController player, string feature)
     {
         if (!_vipCore.Users.TryGetValue(player.SteamID, out var user))
@@ -319,9 +326,12 @@ public class VipCoreApi : IVipCoreApi
         if (!File.Exists(configFilePath))
         {
             var defaultConfig = Activator.CreateInstance<T>();
-            var defaultJson =
-                JsonSerializer.Serialize(defaultConfig, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(configFilePath, defaultJson);
+
+            File.WriteAllText(configFilePath,
+                JsonSerializer.Serialize(defaultConfig,
+                    new JsonSerializerOptions
+                        { WriteIndented = true, ReadCommentHandling = JsonCommentHandling.Skip }));
+            return defaultConfig;
         }
 
         var configJson = File.ReadAllText(configFilePath);
