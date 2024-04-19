@@ -60,6 +60,8 @@ public abstract class VipFeatureBase : IVipFeature
 
     public string GetClientVipGroup(CCSPlayerController player) => Api.GetClientVipGroup(player);
 
+    public string[] GetVipGroups() => Api.GetVipGroups();
+
     public void UpdateClientVip(CCSPlayerController player, string name = "", string group = "", int time = -1) =>
         Api.UpdateClientVip(player, name, group, time);
 

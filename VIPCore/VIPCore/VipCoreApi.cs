@@ -133,6 +133,17 @@ public class VipCoreApi : IVipCoreApi
         return user.group;
     }
 
+    public string[] GetVipGroups()
+    {
+        if (_vipCore.Config.Groups.Count == 0)
+        {
+            return Array.Empty<string>();
+        }
+
+        return _vipCore.Config.Groups.Keys.ToArray();
+    }
+
+
     public void UpdateClientVip(CCSPlayerController player, string name = "", string group = "", int time = -1)
     {
         var steamId =
