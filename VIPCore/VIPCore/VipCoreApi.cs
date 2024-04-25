@@ -117,12 +117,7 @@ public class VipCoreApi : IVipCoreApi
 
         if (!_vipCore.Config.Groups.TryGetValue(user.group, out var vipGroup)) return false;
 
-        foreach (var vipGroupValue in vipGroup.Values.Where(vipGroupValue => vipGroupValue.Key == feature))
-        {
-            return !string.IsNullOrEmpty(vipGroupValue.Value.ToString());
-        }
-
-        return false;
+        return vipGroup.Values.Any(vipGroupValue => vipGroupValue.Key == feature && !string.IsNullOrEmpty(vipGroupValue.Value.ToString()));
     }
 
     public string GetClientVipGroup(CCSPlayerController player)
@@ -365,7 +360,7 @@ public class VipCoreApi : IVipCoreApi
 
         if (value != null)
         {
-            var existingCookie = cookies.FirstOrDefault(c => c.SteamId64 == steamId64);
+            var existingCookie = cookies.Find(c => c.SteamId64 == steamId64);
 
             if (existingCookie != null)
                 existingCookie.Features[key] = value;
@@ -387,7 +382,7 @@ public class VipCoreApi : IVipCoreApi
     {
         var cookies = LoadCookies();
 
-        var cookie = cookies.FirstOrDefault(c => c.SteamId64 == steamId64);
+        var cookie = cookies.Find(c => c.SteamId64 == steamId64);
 
         if (cookie != null && cookie.Features.TryGetValue(key, out var jsonElement))
         {

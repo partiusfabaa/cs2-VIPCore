@@ -48,11 +48,11 @@ public static class Utils
 
     public static CCSPlayerController? GetPlayerFromSteamId(string steamId)
     {
-        return Utilities.GetPlayers().FirstOrDefault(u =>
+        return Utilities.GetPlayers().Find(u =>
             u.AuthorizedSteamID != null &&
             (u.AuthorizedSteamID.SteamId2.ToString().Equals(steamId) ||
-             u.AuthorizedSteamID.SteamId64.ToString().Equals(steamId) ||
-             u.AuthorizedSteamID.AccountId.ToString().Equals(steamId)));
+            u.AuthorizedSteamID.SteamId64.ToString().Equals(steamId) ||
+            u.AuthorizedSteamID.AccountId.ToString().Equals(steamId)));
     }
 
     public static string ReplaceFirstCharacter(string input)
