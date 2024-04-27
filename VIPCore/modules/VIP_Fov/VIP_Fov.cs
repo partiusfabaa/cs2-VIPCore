@@ -23,11 +23,8 @@ public class VipFov : BasePlugin
         _api = PluginCapability.Get();
         if (_api == null) return;
 
-        _api.OnCoreReady += () =>
-        {
-            _fov = new Fov(this, _api);
-            _api.RegisterFeature(_fov, FeatureType.Selectable);
-        };
+        _fov = new Fov(this, _api);
+        _api.RegisterFeature(_fov, FeatureType.Selectable);
     }
 
     public override void Unload(bool hotReload)
@@ -36,72 +33,62 @@ public class VipFov : BasePlugin
     }
 }
 
-public class UserSettings
-{
-    public int Fov { get; set; } = -1;
-    public ChatMenu Menu { get; set; } = new("Fov");
-}
-
 public class Fov : VipFeatureBase
 {
     public override string Feature => "Fov";
-    private readonly UserSettings?[] _userSettings = new UserSettings?[65];
+    private readonly int[] _fovSettings = new int[67];
 
-    public Fov(VipFov vipFov, IVipCoreApi api) : base(api)
+    public Fov(BasePlugin vipFov, IVipCoreApi api) : base(api)
     {
-        vipFov.RegisterListener<Listeners.OnClientConnected>(slot =>
-        {
-            var cookie = GetPlayerCookie<int>(Utilities.GetPlayerFromSlot(slot).SteamID, "player_fov");
-
-            _userSettings[slot + 1] = new UserSettings { Fov = cookie == 0 ? 90 : cookie };
-        });
         vipFov.RegisterEventHandler<EventPlayerDisconnect>((@event, info) =>
         {
             var player = @event.Userid;
 
-            if (!IsClientVip(player))
+            if (player != null && !IsClientVip(player))
             {
-                _userSettings[player.Index]!.Fov = 90;
+                _fovSettings[player.Slot] = 90;
                 ChangeFov(player);
             }
-
-            _userSettings[player.Index] = null;
             return HookResult.Continue;
         });
     }
-    
+
+    public override void OnPlayerLoaded(CCSPlayerController player, string group)
+    {
+        var cookie = GetPlayerCookie<int>(player.SteamID, "player_fov");
+
+        _fovSettings[player.Slot] = cookie == 0 ? 90 : cookie;
+    }
+
     public override void OnSelectItem(CCSPlayerController player, FeatureState state)
     {
-        if (_userSettings[player.Index] == null) return;
-
         var userFov = GetFeatureValue<List<int>>(player);
 
-        _userSettings[player.Index]!.Menu.MenuOptions.Clear();
-        _userSettings[player.Index]!.Menu.AddMenuOption(GetTranslatedText("fov.Disable"), (controller, option) =>
+        var menu = CreateMenu(GetTranslatedText(Feature));
+        menu.AddMenuOption(GetTranslatedText("fov.Disable"), (controller, option) =>
         {
-            _userSettings[player.Index]!.Fov = 90;
+            _fovSettings[player.Slot] = 90;
 
             PrintToChat(player, GetTranslatedText("fov.Off"));
             ChangeFov(controller);
-        }, _userSettings[player.Index]!.Fov == 90);
+        }, _fovSettings[player.Slot] == 90);
+        
         foreach (var i in userFov)
         {
-            _userSettings[player.Index]!.Menu.AddMenuOption(i.ToString(), (controller, option) =>
+            menu.AddMenuOption(i.ToString(), (controller, option) =>
             {
-                _userSettings[player.Index]!.Fov = i;
+                _fovSettings[player.Slot] = i;
                 PrintToChat(player, GetTranslatedText("fov.On", i));
                 ChangeFov(controller);
-            }, _userSettings[player.Index]!.Fov == i);
+            }, _fovSettings[player.Slot] == i);
         }
 
-        MenuManager.OpenChatMenu(player, _userSettings[player.Index]!.Menu);
+        menu.Open(player);
     }
 
     private void ChangeFov(CCSPlayerController player)
     {
-        if (_userSettings[player.Index] == null) return;
-
-        var fov = (uint)_userSettings[player.Index]!.Fov;
+        var fov = (uint)_fovSettings[player.Slot];
         SetPlayerCookie(player.SteamID, "player_fov", fov);
         player.DesiredFOV = fov;
         Utilities.SetStateChanged(player, "CBasePlayerController", "m_iDesiredFOV");
@@ -109,9 +96,8 @@ public class Fov : VipFeatureBase
 
     public override void OnPlayerSpawn(CCSPlayerController player)
     {
-        if (_userSettings[player.Index] == null) return;
         if (!PlayerHasFeature(player))
-            _userSettings[player.Index]!.Fov = 90;
+            _fovSettings[player.Slot] = 90;
 
         ChangeFov(player);
     }

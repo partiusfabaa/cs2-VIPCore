@@ -26,11 +26,10 @@ public class VipRespawn : BasePlugin
         _api.OnCoreReady += () =>
         {
             _respawn = new Respawn(this, _api);
-            _api.RegisterFeature(_respawn);
+            _api.RegisterFeature(_respawn, FeatureType.Selectable);
         };
     }
-
-
+    
     public override void Unload(bool hotReload)
     {
         _api?.UnRegisterFeature(_respawn);

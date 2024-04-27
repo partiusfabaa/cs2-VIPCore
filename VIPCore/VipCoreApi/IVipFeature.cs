@@ -1,8 +1,12 @@
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Menu;
 using static VipCoreApi.IVipCoreApi;
 
 namespace VipCoreApi;
 
+/// <summary>
+/// Interface for VipFeatureBase class
+/// </summary>
 public interface IVipFeature
 {
     string Feature { get; }
@@ -83,6 +87,8 @@ public abstract class VipFeatureBase : IVipFeature
     public T LoadConfig<T>(string name, string path) => Api.LoadConfig<T>(name, path);
 
     public T LoadConfig<T>(string name) => Api.LoadConfig<T>(name);
+
+    public IMenu CreateMenu(string title) => Api.CreateMenu(title);
 
     public void PrintToChat(CCSPlayerController player, string message) => Api.PrintToChat(player, message);
 

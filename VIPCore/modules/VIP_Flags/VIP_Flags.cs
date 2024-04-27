@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Entities;
 using VipCoreApi;
+using static VipCoreApi.IVipCoreApi;
 
 namespace VIP_Flags;
 
@@ -26,7 +27,7 @@ public class VipFlags : BasePlugin
         _api.OnCoreReady += () =>
         {
             _flags = new Flags(this, _api);
-            _api.RegisterFeature(_flags);
+            _api.RegisterFeature(_flags, FeatureType.Selectable);
         };
     }
     

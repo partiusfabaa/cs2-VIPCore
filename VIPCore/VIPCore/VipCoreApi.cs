@@ -4,6 +4,7 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Entities;
+using CounterStrikeSharp.API.Modules.Menu;
 using Microsoft.Extensions.Logging;
 using VipCoreApi;
 using static VipCoreApi.IVipCoreApi;
@@ -15,6 +16,7 @@ public class VipCoreApi : IVipCoreApi
     private readonly VipCore _vipCore;
 
     //public event Action? OnCoreReady;
+
     public event Action<CCSPlayerController>? OnPlayerSpawn;
     public event Action<CCSPlayerController, string>? PlayerLoaded;
     public event Action<CCSPlayerController, string>? PlayerRemoved;
@@ -37,8 +39,7 @@ public class VipCoreApi : IVipCoreApi
         OnCoreReady?.Invoke();
     }
 
-    public void RegisterFeature(VipFeatureBase vipFeatureBase,
-        FeatureType featureType = FeatureType.Toggle) //, Action<CCSPlayerController, FeatureState>? selectItem = null)
+    public void RegisterFeature(VipFeatureBase vipFeatureBase, FeatureType featureType = FeatureType.Toggle)
     {
         foreach (var config in _vipCore.Config.Groups)
         {
@@ -78,9 +79,9 @@ public class VipCoreApi : IVipCoreApi
     {
         foreach (var config in _vipCore.Config.Groups)
         {
-            foreach (var keyValuePair in config.Value.Values)
+            foreach (var (key, value) in config.Value.Values)
             {
-                yield return (keyValuePair.Key, keyValuePair.Value);
+                yield return (key, value);
             }
         }
     }
@@ -117,7 +118,8 @@ public class VipCoreApi : IVipCoreApi
 
         if (!_vipCore.Config.Groups.TryGetValue(user.group, out var vipGroup)) return false;
 
-        return vipGroup.Values.Any(vipGroupValue => vipGroupValue.Key == feature && !string.IsNullOrEmpty(vipGroupValue.Value.ToString()));
+        return vipGroup.Values.Any(vipGroupValue =>
+            vipGroupValue.Key == feature && !string.IsNullOrEmpty(vipGroupValue.Value.ToString()));
     }
 
     public string GetClientVipGroup(CCSPlayerController player)
@@ -130,12 +132,11 @@ public class VipCoreApi : IVipCoreApi
 
     public string[] GetVipGroups()
     {
-        if (_vipCore.Config.Groups.Count == 0)
-        {
+        var groups = _vipCore.Config.Groups;
+        if (groups.Count == 0)
             return Array.Empty<string>();
-        }
 
-        return _vipCore.Config.Groups.Keys.ToArray();
+        return groups.Keys.ToArray();
     }
 
 
@@ -352,6 +353,11 @@ public class VipCoreApi : IVipCoreApi
     public T LoadConfig<T>(string name)
     {
         return LoadConfig<T>(name, ModulesConfigDirectory);
+    }
+    
+    public IMenu CreateMenu(string title)
+    {
+        return _vipCore.CoreConfig.UseCenterHtmlMenu ? new CenterHtmlMenu(title, _vipCore) : new ChatMenu(title);
     }
 
     public void SetPlayerCookie<T>(ulong steamId64, string key, T value)

@@ -1,4 +1,5 @@
-﻿using CounterStrikeSharp.API;
+﻿using System.Collections.Generic;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Menu;
@@ -66,7 +67,7 @@ public class Tag : VipFeatureBase
                 _userSettings[player.Index]!.Tag = "";
                 ChangeTag(player);
             }
-
+            
             _userSettings[player.Index] = null;
             return HookResult.Continue;
         });
@@ -77,7 +78,7 @@ public class Tag : VipFeatureBase
         if (_userSettings[player.Index] == null) return;
 
         var userTag = GetFeatureValue<List<string>>(player);
-
+        
         _userSettings[player.Index]!.Menu.MenuOptions.Clear();
         _userSettings[player.Index]!.Menu.AddMenuOption(GetTranslatedText("tag.Disable"), (controller, option) =>
         {

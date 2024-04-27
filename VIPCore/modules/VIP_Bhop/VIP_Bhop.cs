@@ -1,4 +1,5 @@
-﻿using CounterStrikeSharp.API;
+﻿using System.Text.Json.Serialization;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Cvars;
@@ -17,7 +18,7 @@ public class VIP_Bhop : BasePlugin
 
     private Bhop _bhop;
     private IVipCoreApi? _api;
-    
+
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
     public override void OnAllPluginsLoaded(bool hotReload)
@@ -25,13 +26,10 @@ public class VIP_Bhop : BasePlugin
         _api = PluginCapability.Get();
         if (_api == null) return;
 
-        _api.OnCoreReady += () =>
-        {
-            _bhop = new Bhop(this, _api);
-            _api.RegisterFeature(_bhop);
-        };
+        _bhop = new Bhop(this, _api);
+        _api.RegisterFeature(_bhop);
     }
-    
+
     public override void Unload(bool hotReload)
     {
         _api?.UnRegisterFeature(_bhop);
@@ -42,20 +40,20 @@ public class Bhop : VipFeatureBase
 {
     private readonly VIP_Bhop _vipBhop;
     public override string Feature => "Bhop";
-    private bool?[] _isBhopActive = new bool?[65];
+    private readonly BhopSettings[] _isBhopActive = new BhopSettings[70];
 
     public Bhop(VIP_Bhop vipBhop, IVipCoreApi api) : base(api)
     {
         _vipBhop = vipBhop;
-        vipBhop.RegisterListener<Listeners.OnClientConnected>(slot => _isBhopActive[slot + 1] = false);
-        vipBhop.RegisterListener<Listeners.OnClientDisconnectPost>(slot => _isBhopActive[slot + 1] = null);
+        vipBhop.RegisterListener<Listeners.OnClientConnected>(slot => _isBhopActive[slot] = new BhopSettings());
+        vipBhop.RegisterListener<Listeners.OnClientDisconnectPost>(slot => _isBhopActive[slot] = new BhopSettings());
+
         vipBhop.RegisterListener<Listeners.OnTick>(() =>
         {
             foreach (var player in Utilities.GetPlayers()
                          .Where(player => player is { IsValid: true, IsBot: false, PawnIsAlive: true }))
             {
-                if (_isBhopActive[player.Index] == null) continue;
-                if (!_isBhopActive[player.Index]!.Value) continue;
+                if (!_isBhopActive[player.Slot].Active) continue;
 
                 OnTick(player);
             }
@@ -69,11 +67,15 @@ public class Bhop : VipFeatureBase
         var playerPawn = player.PlayerPawn.Value;
         if (playerPawn != null)
         {
+            var maxSpeed = _isBhopActive[player.Slot].MaxSpeed;
+            if(Math.Round(playerPawn.AbsVelocity.Length2D()) > maxSpeed && maxSpeed is not 0)
+                ChangeVelocity(playerPawn, maxSpeed);
+            
             var flags = (PlayerFlags)playerPawn.Flags;
             var buttons = player.Buttons;
 
             if (buttons.HasFlag(PlayerButtons.Jump) && flags.HasFlag(PlayerFlags.FL_ONGROUND) &&
-                !playerPawn.MoveType.HasFlag(MoveType_t.MOVETYPE_LADDER) && _isBhopActive[player.Index]!.Value)
+                !playerPawn.MoveType.HasFlag(MoveType_t.MOVETYPE_LADDER) && _isBhopActive[player.Slot].Active)
                 playerPawn.AbsVelocity.Z = 300;
         }
     }
@@ -92,23 +94,43 @@ public class Bhop : VipFeatureBase
         foreach (var player in Utilities.GetPlayers()
                      .Where(player => player is { IsValid: true, IsBot: false, PawnIsAlive: true }))
         {
-            if (_isBhopActive[player.Index] == null) continue;
-            _isBhopActive[player.Index] = false;
+            _isBhopActive[player.Slot].Active = false;
 
             if (!IsClientVip(player)) continue;
             if (!PlayerHasFeature(player)) continue;
             if (GetPlayerFeatureState(player) is not FeatureState.Enabled) continue;
 
-            var bhopActiveTime = GetFeatureValue<float>(player);
+            
+            var bhopSettings = GetFeatureValue<BhopSettings>(player);
+            _isBhopActive[player.Slot].MaxSpeed = bhopSettings.MaxSpeed;
 
-            PrintToChat(player, GetTranslatedText("bhop.TimeToActivation", bhopActiveTime));
-            _vipBhop.AddTimer(bhopActiveTime + gamerules.FreezeTime, () =>
+            PrintToChat(player, GetTranslatedText("bhop.TimeToActivation", bhopSettings.Timer));
+            _vipBhop.AddTimer(bhopSettings.Timer + gamerules.FreezeTime, () =>
             {
                 PrintToChat(player, GetTranslatedText("bhop.Activated"));
-                _isBhopActive[player.Index] = true;
+                _isBhopActive[player.Slot].Active = true;
             }, TimerFlags.STOP_ON_MAPCHANGE);
         }
 
         return HookResult.Continue;
     }
+
+    private void ChangeVelocity(CCSPlayerPawn? pawn, float vel)
+    {
+        if (pawn == null) return;
+
+        var currentVelocity = new Vector(pawn.AbsVelocity.X, pawn.AbsVelocity.Y, pawn.AbsVelocity.Z);
+        var currentSpeed3D = Math.Sqrt(currentVelocity.X * currentVelocity.X + currentVelocity.Y * currentVelocity.Y + currentVelocity.Z * currentVelocity.Z);
+
+        pawn.AbsVelocity.X = (float)(currentVelocity.X / currentSpeed3D) * vel;
+        pawn.AbsVelocity.Y = (float)(currentVelocity.Y / currentSpeed3D) * vel;
+        pawn.AbsVelocity.Z = (float)(currentVelocity.Z / currentSpeed3D) * vel;
+    }
+}
+
+public class BhopSettings
+{
+    [JsonIgnore] public bool Active { get; set; }
+    public float Timer { get; set; }
+    public float MaxSpeed { get; set; }
 }

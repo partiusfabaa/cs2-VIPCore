@@ -7,7 +7,6 @@ using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Timers;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
@@ -146,18 +145,6 @@ public class VipCore : BasePlugin
     }
 
     private async Task OnClientAuthorizedAsync(CCSPlayerController player, SteamID steamId)
-    {
-        try
-        {
-            await ProcessUserInformationAsync(player, steamId);
-        }
-        catch (Exception e)
-        {
-            Logger.LogError(e.ToString());
-        }
-    }
-
-    private async Task ProcessUserInformationAsync(CCSPlayerController player, SteamID steamId)
     {
         try
         {
@@ -335,7 +322,7 @@ public class VipCore : BasePlugin
         if (target == null) return;
         if (target.AuthorizedSteamID == null) return;
 
-        ProcessUserInformationAsync(target, target.AuthorizedSteamID);
+        OnClientAuthorizedAsync(target, target.AuthorizedSteamID);
     }
 
     [RequiresPermissions("@css/root")]
@@ -361,9 +348,7 @@ public class VipCore : BasePlugin
 
         if (!Users.TryGetValue(player.SteamID, out var user)) return;
 
-        var title = Localizer["menu.Title", user.group];
-        IMenu menu = CoreConfig.UseCenterHtmlMenu ? new CenterHtmlMenu(title) : new ChatMenu(title);
-
+        var menu = VipApi.CreateMenu(Localizer["menu.Title", user.group]);
         if (Config.Groups.TryGetValue(user.group, out var vipGroup))
         {
             foreach (var (key, feature) in Features.Where(setting => setting.Value.FeatureType is not FeatureType.Hide))
@@ -411,10 +396,7 @@ public class VipCore : BasePlugin
             }
         }
 
-        if (CoreConfig.UseCenterHtmlMenu)
-            MenuManager.OpenCenterHtmlMenu(this, player, (CenterHtmlMenu)menu);
-        else
-            MenuManager.OpenChatMenu(player, (ChatMenu)menu);
+        menu.Open(player);
     }
 
     private string BuildConnectionString()

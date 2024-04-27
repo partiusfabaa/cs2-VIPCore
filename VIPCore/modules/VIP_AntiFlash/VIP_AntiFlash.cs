@@ -1,6 +1,7 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
+using static VipCoreApi.IVipCoreApi;
 
 namespace VIP_AntiFlash;
 
@@ -43,18 +44,14 @@ public class AntiFlash : VipFeatureBase
         {
             var player = @event.Userid;
 
-            if (player == null) return HookResult.Continue;
-            
-            if (!IsClientVip(player)) return HookResult.Continue;
-            if (!PlayerHasFeature(player)) return HookResult.Continue;
-            if (GetPlayerFeatureState(player) is not IVipCoreApi.FeatureState.Enabled) return HookResult.Continue;
+            if (player == null || !player.IsValid) return HookResult.Continue;
+            if (!IsClientVip(player) || !PlayerHasFeature(player) || GetPlayerFeatureState(player) is not FeatureState.Enabled) return HookResult.Continue;
 
             var featureValue = GetFeatureValue<int>(player);
             var attacker = @event.Attacker;
 
             var playerPawn = player.PlayerPawn.Value;
-
-            if (playerPawn == null) return HookResult.Continue;
+            if (playerPawn == null || playerPawn.LifeState is not (byte)LifeState_t.LIFE_ALIVE) return HookResult.Continue;
 
             var sameTeam = attacker.Team == player.Team;
             switch (featureValue)
@@ -68,7 +65,7 @@ public class AntiFlash : VipFeatureBase
                         playerPawn.FlashDuration = 0.0f;
                     break;
                 case 3:
-                    if (sameTeam && player == attacker)
+                    if (sameTeam || player == attacker)
                         playerPawn.FlashDuration = 0.0f;
                     break;
                 default:

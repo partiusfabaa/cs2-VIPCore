@@ -23,11 +23,8 @@ public class VipHealth : BasePlugin
 
         if (_api == null) return;
 
-        _api.OnCoreReady += () =>
-        {
-            _health = new Health(_api);
-            _api.RegisterFeature(_health);
-        };
+        _health = new Health(_api);
+        _api.RegisterFeature(_health);
     }
 
     public override void Unload(bool hotReload)
