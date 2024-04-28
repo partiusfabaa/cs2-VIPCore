@@ -9,16 +9,16 @@
 
 RU:
 
-`"fov.Disable": "Выключить"`
+`"tag.Disable": "Выключить"`
 
-`"fov.On": "Вы установили значение {blue}Tag {default}на {red}{0}"`
+`"tag.On": "Вы установили значение {blue}Tag {default}на {red}{0}"`
 
-`"fov.Off": "Вы выключили {blue}Tag"`
+`"tag.Off": "Вы выключили {blue}Tag"`
 
 EN:
 
-`"fov.Disable": "Disable"`
+`"tag.Disable": "Disable"`
 
-`"fov.On": "You have set {blue}Tag {default} to {red}{0}"`
+`"tag.On": "You have set {blue}Tag {default} to {red}{0}"`
 
-`"fov.Off": "You've disabled the {blue}Tag"`
+`"tag.Off": "You've disabled the {blue}Tag"`
