@@ -63,6 +63,7 @@ public class Zeus : VipFeatureBase
         if (!PlayerHasFeature(player)) return;
         if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
             or IVipCoreApi.FeatureState.NoAccess) return;
+        if (player == null) return;    
         
         if ((player.TeamNum == 3 || player.TeamNum == 2) && !HasWeapon(player, "weapon_taser"))
         {   

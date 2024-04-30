@@ -63,6 +63,7 @@ public class Defuser : VipFeatureBase
         if (!PlayerHasFeature(player)) return;
         if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
             or IVipCoreApi.FeatureState.NoAccess) return;
+        if (player == null) return;
         
         if (player.TeamNum == 3 && !HasWeapon(player, "item_defuser"))
         {
