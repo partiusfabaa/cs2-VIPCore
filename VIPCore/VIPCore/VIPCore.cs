@@ -19,7 +19,7 @@ public class VipCore : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Core";
-    public override string ModuleVersion => "v1.2.7";
+    public override string ModuleVersion => "v1.2.9";
 
     public Config Config { get; set; } = null!;
     public CoreConfig CoreConfig { get; set; } = null!;
@@ -67,6 +67,9 @@ public class VipCore : BasePlugin
         RegisterListener<Listeners.OnClientAuthorized>((slot, id) =>
         {
             var player = Utilities.GetPlayerFromSlot(slot);
+
+            if (player is null || !player.IsValid) return;
+
             Task.Run(() => OnClientAuthorizedAsync(player, id));
         });
 
@@ -119,10 +122,10 @@ public class VipCore : BasePlugin
 
     private HookResult EventPlayerSpawn(EventPlayerSpawn @event, GameEventInfo info)
     {
-        if (@event.Userid.Handle == IntPtr.Zero || @event.Userid.UserId == null)
+        var player = @event.Userid;
+        if (player is null || !player.IsValid || player.Handle == IntPtr.Zero || player.UserId == null)
             return HookResult.Continue;
 
-        var player = @event.Userid;
 
         if (player.IsBot || !IsClientVip[player.Slot])
             return HookResult.Continue;
