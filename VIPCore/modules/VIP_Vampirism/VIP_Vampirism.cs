@@ -20,11 +20,8 @@ public class VipVampirism : BasePlugin
         _api = PluginCapability.Get();
         if (_api == null) return;
 
-        _api.OnCoreReady += () =>
-        {
-            _vampirism = new Vampirism(this, _api);
-            _api.RegisterFeature(_vampirism);
-        };
+        _vampirism = new Vampirism(this, _api);
+        _api.RegisterFeature(_vampirism);
     }
 
     public override void Unload(bool hotReload)
@@ -43,7 +40,7 @@ public class Vampirism : VipFeatureBase
         {
             var attacker = @event.Attacker;
 
-            if (!attacker.IsValid) return HookResult.Continue;
+            if (attacker is null || !attacker.IsValid) return HookResult.Continue;
 
             if (attacker == @event.Userid) return HookResult.Continue;
 

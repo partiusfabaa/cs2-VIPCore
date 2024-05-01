@@ -22,11 +22,8 @@ public class VipFastPlant : BasePlugin
         _api = PluginCapability.Get();
         if (_api == null) return;
 
-        _api.OnCoreReady += () =>
-        {
-            _fastPlant = new FastPlant(this, _api);
-            _api.RegisterFeature(_fastPlant);
-        };
+        _fastPlant = new FastPlant(this, _api);
+        _api.RegisterFeature(_fastPlant);
     }
 
     public override void Unload(bool hotReload)
