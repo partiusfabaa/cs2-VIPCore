@@ -1,6 +1,7 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
+using CounterStrikeSharp.API.Modules.Timers;
 using VipCoreApi;
 
 namespace VIP_Defuser;
@@ -63,11 +64,19 @@ public class Defuser : VipFeatureBase
         if (!PlayerHasFeature(player)) return;
         if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
             or IVipCoreApi.FeatureState.NoAccess) return;
+            
         if (player == null) return;
         
+        var playerPawn = player.PlayerPawn.Value;
+        if (playerPawn == null) return;
+           
         if (player.TeamNum == 3 && !HasWeapon(player, "item_defuser"))
         {
-            player.GiveNamedItem("item_defuser");
+            if (playerPawn != null)
+            {
+                var itemServices = new CCSPlayer_ItemServices(playerPawn.ItemServices.Handle);
+                    itemServices.HasDefuser = true;
+            }
         }
     }
 }
