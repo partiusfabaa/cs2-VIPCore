@@ -21,11 +21,8 @@ public class VipDecoyTeleport : BasePlugin
         _api = PluginCapability.Get();
         if (_api == null) return;
 
-        _api.OnCoreReady += () =>
-        {
-            _decoyTeleport = new DecoyTeleport(this, _api);
-            _api.RegisterFeature(_decoyTeleport);
-        };
+        _decoyTeleport = new DecoyTeleport(this, _api);
+                    _api.RegisterFeature(_decoyTeleport);
     }
 
     public override void Unload(bool hotReload)

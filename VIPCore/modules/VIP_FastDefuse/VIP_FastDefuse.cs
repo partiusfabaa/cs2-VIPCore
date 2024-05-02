@@ -22,11 +22,8 @@ public class VipFastDefuse : BasePlugin
         _api = PluginCapability.Get();
         if (_api == null) return;
 
-        _api.OnCoreReady += () =>
-        {
-            _fastDefuse = new FastDefuse(this, _api);
-            _api.RegisterFeature(_fastDefuse);
-        };
+        _fastDefuse = new FastDefuse(this, _api);
+        _api.RegisterFeature(_fastDefuse);
     }
 
     public override void Unload(bool hotReload)

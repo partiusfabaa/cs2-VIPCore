@@ -21,11 +21,8 @@ public class VipKillScreen : BasePlugin
         _api = PluginCapability.Get();
         if (_api == null) return;
 
-        _api.OnCoreReady += () =>
-        {
-            _killScreen = new KillScreen(this, _api);
-            _api.RegisterFeature(_killScreen);
-        };
+        _killScreen = new KillScreen(this, _api);
+        _api.RegisterFeature(_killScreen);
     }
 
     public override void Unload(bool hotReload)
@@ -43,8 +40,8 @@ public class KillScreen : VipFeatureBase
         vipKillScreen.RegisterEventHandler<EventPlayerDeath>((@event, info) =>
         {
             var attacker = @event.Attacker;
-            if (!attacker.IsValid) return HookResult.Continue;
-            if (attacker.PlayerName == @event.Userid.PlayerName) return HookResult.Continue;
+            if (attacker is null || !attacker.IsValid) return HookResult.Continue;
+            if (@event.Userid is not null && attacker.PlayerName == @event.Userid.PlayerName) return HookResult.Continue;
 
             if (!IsClientVip(attacker)) return HookResult.Continue;
             if (!PlayerHasFeature(attacker)) return HookResult.Continue;
