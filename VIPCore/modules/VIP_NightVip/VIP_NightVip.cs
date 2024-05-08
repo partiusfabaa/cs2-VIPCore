@@ -105,31 +105,7 @@ public class VIP_NightVip : BasePlugin, IPluginConfig<VIP_NightVipConfig>
         if (playerGroup == Config.VIPGroup)
             _api.RemoveClientVip(player);
     }
-
-    private VIP_NightVipConfig LoadConfig()
-    {
-        var configPath = Path.Combine(_api.ModulesConfigDirectory, ConfigFileName);
-
-        if (!File.Exists(configPath)) return CreateConfig(configPath);
-
-        return JsonSerializer.Deserialize<VIP_NightVipConfig>(File.ReadAllText(configPath))!;
-    }
-
-    private VIP_NightVipConfig CreateConfig(string configPath)
-    {
-        var config = new VIP_NightVipConfig
-        {
-            VIPGroup = "VIP",
-            PluginStartTime = "20:00:00",
-            PluginEndTime = "06:00:00"
-        };
-
-        File.WriteAllText(configPath,
-            JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true }));
-
-        return config;
-    }
-
+    
     public override void Unload(bool hotReload)
     {
     }
