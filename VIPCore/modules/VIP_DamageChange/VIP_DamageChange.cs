@@ -44,7 +44,7 @@ public class DamageMultiplier : VipFeatureBase
     {   
         CTakeDamageInfo damageInfo = hook.GetParam<CTakeDamageInfo>(1);
 
-         CCSPlayerController player = new CCSPlayerController(damageInfo.Attacker.Value.Handle);
+        CCSPlayerController player = new CCSPlayerController(damageInfo.Attacker.Value.Handle);
 
         if (!PlayerHasFeature(player)) return HookResult.Continue;
         if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
@@ -53,7 +53,7 @@ public class DamageMultiplier : VipFeatureBase
         if (damageInfo.Attacker.Value is null)
             return HookResult.Continue;
 
-        if (player.IsValid && IsClientVip(player))
+        if (player.IsValid)
         {
             CCSWeaponBase? ccsWeaponBase = damageInfo.Ability.Value?.As<CCSWeaponBase>();
 
