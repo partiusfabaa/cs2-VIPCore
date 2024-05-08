@@ -36,19 +36,15 @@ public class VIPVipsOnline : BasePlugin
         var vipList = string.Join(", ", onlineVips);
 
         if (onlineVips.Count != 0)
-        {
             message = ReplaceColorPlaceholders(_api.GetTranslatedText("vip.OnlineVips", vipList));
-        }
         else
-        {
             message = ReplaceColorPlaceholders(_api.GetTranslatedText("vip.NoVipsOnline"));
-        }
 
         if (player != null)
             _api.PrintToChat(player, message);
         else
         {
-            if(onlineVips.Count != 0)
+            if (onlineVips.Count != 0)
                 Console.WriteLine($"VIP players online: {vipList}.");
             else
                 Console.WriteLine($"No VIP players online.");
