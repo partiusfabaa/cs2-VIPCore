@@ -10,7 +10,7 @@ The `[VIP] Night VIP` plugin assigns players to a VIP group based on specific ti
 - VIPs are only assigned during a specified time window
 
 ### `Config`
-Place the configuration file at `addons/counterstrikesharp/configs/plugins/VIPCore/Modules/VIP_NightVipConfig.json`.
+Place the configuration file at `addons/counterstrikesharp/configs/plugins/VIP_NightVip/VIP_NightVip.json`.
 
 ```json
 {
