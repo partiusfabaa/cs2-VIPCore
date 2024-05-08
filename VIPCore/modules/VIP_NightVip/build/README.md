@@ -1,5 +1,4 @@
-![Static Badge](https://img.shields.io/badge/ver-1.0.0-darkgreen)
-![Static Badge](https://img.shields.io/badge/CS2VIPCore-v1-purple)
+![Static Badge](https://img.shields.io/badge/ver-1.0-darkgreen)
 
 ## `[VIP] Night VIP`
 The `[VIP] Night VIP` plugin assigns players to a VIP group based on specific time periods using the cs2-VIPCore API.
