@@ -21,8 +21,6 @@ public class VIP_NightVip : BasePlugin, IPluginConfig<VIP_NightVipConfig>
     public override string ModuleName => "[VIP] Night VIP";
     public override string ModuleVersion => "v1.0";
     public override string ModuleDescription => "Gives VIP between a certain period of time.";
-
-    private static readonly string ConfigFileName = "VIP_NightVipConfig.json";
     private IVipCoreApi? _api;
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
@@ -37,7 +35,6 @@ public class VIP_NightVip : BasePlugin, IPluginConfig<VIP_NightVipConfig>
         _api = PluginCapability.Get();
         if (_api == null) return;
 
-        Config = LoadConfig();
         _api.OnCoreReady += () =>
         {
             AddEventHandlers();
