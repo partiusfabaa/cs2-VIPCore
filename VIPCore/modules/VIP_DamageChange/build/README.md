@@ -1,5 +1,6 @@
 # Ability to change the amount of damage
 
+# Thanks to @K4ryuu for the damage multiplier function
 # WORKING JUST FOR LINUX
 
 # Config
