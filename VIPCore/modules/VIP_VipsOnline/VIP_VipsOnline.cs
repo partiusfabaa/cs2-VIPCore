@@ -5,7 +5,6 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
 using VipCoreApi;
 
 namespace VIP_VipsOnline;
@@ -22,10 +21,11 @@ public class VIPVipsOnline : BasePlugin
     {
         _api = PluginCapability.Get();
         if (_api == null) return;
+
+        AddCommand("css_vips", "List online VIP players", ListVipOnlinePlayers);
+        AddCommand("css_vipsonline", "List online VIP players", ListVipOnlinePlayers);
     }
 
-    [ConsoleCommand("css_vips","List online VIP players")]
-    [ConsoleCommand("css_vipsonline","List online VIP players")]
     private void ListVipOnlinePlayers(CCSPlayerController? player, CommandInfo info)
     {
         if (_api == null) return;
