@@ -1,4 +1,6 @@
-﻿using CounterStrikeSharp.API.Core;
+﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
 
@@ -41,7 +43,9 @@ public class SpeedModifier : VipFeatureBase
 
     private HookResult PrePlayerHurtHandler(EventPlayerHurt @event, GameEventInfo info)
     {
-        CCSPlayerController player = @event.Userid;
+        CCSPlayerController? player = @event.Userid;
+
+        if (player == null) return HookResult.Continue;
 
         if (!PlayerHasFeature(player)) return HookResult.Continue;
         if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
@@ -57,6 +61,7 @@ public class SpeedModifier : VipFeatureBase
             if (playerPawn != null)
             {
                 playerPawn.VelocityModifier = speedModifierValue;
+                Utilities.SetStateChanged(player, "CCSPlayerPawn", "m_flVelocityModifier");
             } 
         }
         return HookResult.Continue;
@@ -76,6 +81,7 @@ public class SpeedModifier : VipFeatureBase
         if (playerPawn != null)
         {
             playerPawn.VelocityModifier = speedModifierValue;
+            Utilities.SetStateChanged(player, "CCSPlayerPawn", "m_flVelocityModifier");
         } 
     }
 }
