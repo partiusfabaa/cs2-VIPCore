@@ -10,7 +10,7 @@ public class VipSpeed : BasePlugin
 {
     public override string ModuleAuthor => "panda";
     public override string ModuleName => "[VIP] Speed";
-    public override string ModuleVersion => "v1.0";
+    public override string ModuleVersion => "v1.1";
     private IVipCoreApi? _api;
     private SpeedModifier? _speedModifier;
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
