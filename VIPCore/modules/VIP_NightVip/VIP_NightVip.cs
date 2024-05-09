@@ -7,39 +7,32 @@ using CounterStrikeSharp.API.Modules.Entities;
 using VipCoreApi;
 
 namespace VIP_NightVip;
-
-public class VIP_NightVipConfig: BasePluginConfig
+public class VIP_NightVipConfig
 {
     public string VIPGroup { get; set; } = "VIP";
     public string PluginStartTime { get; set; } = "20:00:00";
     public string PluginEndTime { get; set; } = "06:00:00";
 }
-
-public class VIP_NightVip : BasePlugin, IPluginConfig<VIP_NightVipConfig>
+public class VIP_NightVip : BasePlugin
 {
     public override string ModuleAuthor => "panda.";
     public override string ModuleName => "[VIP] Night VIP";
     public override string ModuleVersion => "v1.0";
     public override string ModuleDescription => "Gives VIP between a certain period of time.";
     private IVipCoreApi? _api;
+    private static readonly string ConfigFileName = "vip_night.json";
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
-    public VIP_NightVipConfig Config { get; set; } = null!;
+    public VIP_NightVipConfig _config { get; set; } = null!;
 
-    public void OnConfigParsed(VIP_NightVipConfig config)
-    {
-        Config = config;
-    }
     public override void OnAllPluginsLoaded(bool hotReload)
     {
         _api = PluginCapability.Get();
         if (_api == null) return;
+        _config = LoadConfig();
 
-        _api.OnCoreReady += () =>
-        {
-            AddEventHandlers();
-            GiveVIPToAllPlayers();
-        };
+        AddEventHandlers();
+        GiveVIPToAllPlayers();
     }
 
     private void AddEventHandlers()
@@ -84,12 +77,12 @@ public class VIP_NightVip : BasePlugin, IPluginConfig<VIP_NightVipConfig>
         if (_api == null) return;
 
         var currentTime = DateTime.Parse(DateTime.Now.ToString("HH:mm:ss"));
-        var startTime = DateTime.Parse(Config.PluginStartTime);
-        var endTime = DateTime.Parse(Config.PluginEndTime);
+        var startTime = DateTime.Parse(_config.PluginStartTime);
+        var endTime = DateTime.Parse(_config.PluginEndTime);
 
         if ((currentTime >= startTime || currentTime < endTime) && !_api.IsClientVip(player))
         {
-            _api.GiveClientVip(player, Config.VIPGroup, -1);
+            _api.GiveClientVip(player, _config.VIPGroup, -1);
             _api.PrintToChat(player, $" \x02[NightVIP] \x01You are receiving \x06VIP\x01 because it's \x07VIP Night \x01time.");
         }
     }
@@ -99,10 +92,32 @@ public class VIP_NightVip : BasePlugin, IPluginConfig<VIP_NightVipConfig>
         if (_api == null || !_api.IsClientVip(player)) return;
 
         var playerGroup = _api.GetClientVipGroup(player);
-        if (playerGroup == Config.VIPGroup)
+        if (playerGroup == _config.VIPGroup)
             _api.RemoveClientVip(player);
     }
-    
+    private VIP_NightVipConfig LoadConfig()
+    {
+        var configPath = Path.Combine(_api.ModulesConfigDirectory, ConfigFileName);
+
+        if (!File.Exists(configPath)) return CreateConfig(configPath);
+
+        return JsonSerializer.Deserialize<VIP_NightVipConfig>(File.ReadAllText(configPath))!;
+    }
+
+    private VIP_NightVipConfig CreateConfig(string configPath)
+    {
+        var config = new VIP_NightVipConfig
+        {
+            VIPGroup = "VIP",
+            PluginStartTime = "20:00:00",
+            PluginEndTime = "06:00:00"
+        };
+
+        File.WriteAllText(configPath, JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true }));
+
+        return config;
+    }
+
     public override void Unload(bool hotReload)
     {
     }
