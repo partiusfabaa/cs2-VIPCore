@@ -7,12 +7,14 @@ using CounterStrikeSharp.API.Modules.Entities;
 using VipCoreApi;
 
 namespace VIP_NightVip;
+
 public class VIP_NightVipConfig
 {
     public string VIPGroup { get; set; } = "VIP";
     public string PluginStartTime { get; set; } = "20:00:00";
     public string PluginEndTime { get; set; } = "06:00:00";
 }
+
 public class VIP_NightVip : BasePlugin
 {
     public override string ModuleAuthor => "panda.";
@@ -29,6 +31,7 @@ public class VIP_NightVip : BasePlugin
     {
         _api = PluginCapability.Get();
         if (_api == null) return;
+        
         _config = LoadConfig();
 
         AddEventHandlers();
@@ -95,6 +98,7 @@ public class VIP_NightVip : BasePlugin
         if (playerGroup == _config.VIPGroup)
             _api.RemoveClientVip(player);
     }
+
     private VIP_NightVipConfig LoadConfig()
     {
         var configPath = Path.Combine(_api.ModulesConfigDirectory, ConfigFileName);
