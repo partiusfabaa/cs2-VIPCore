@@ -21,17 +21,19 @@ public class VIP_NightVip : BasePlugin
     public override string ModuleName => "[VIP] Night VIP";
     public override string ModuleVersion => "v1.0";
     public override string ModuleDescription => "Gives VIP between a certain period of time.";
+
     private IVipCoreApi? _api;
     private static readonly string ConfigFileName = "vip_night.json";
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
-    public VIP_NightVipConfig _config { get; set; } = null!;
+    private VIP_NightVipConfig _config = null!;
+    private readonly HashSet<ulong> _playersGivenVIP = new();
 
     public override void OnAllPluginsLoaded(bool hotReload)
     {
         _api = PluginCapability.Get();
         if (_api == null) return;
-        
+
         _config = LoadConfig();
 
         AddEventHandlers();
@@ -72,8 +74,9 @@ public class VIP_NightVip : BasePlugin
     private void GiveVIPToAllPlayers()
     {
         Server.NextFrame(() =>
-		{
-            foreach (var player in Utilities.GetPlayers().Where(p => p != null && p.IsValid && !p.IsBot && !p.IsHLTV && p.PlayerPawn.IsValid))
+        {
+            foreach (var player in Utilities.GetPlayers()
+                .Where(p => p != null && p.IsValid && !p.IsBot && !p.IsHLTV && p.PlayerPawn.IsValid))
             {
                 GiveVIPIfNotAlready(player);
             }
@@ -82,7 +85,7 @@ public class VIP_NightVip : BasePlugin
 
     private void GiveVIPIfNotAlready(CCSPlayerController player)
     {
-        if (_api == null) return;
+        if (_api == null || player == null || player.AuthorizedSteamID == null) return;
 
         var currentTime = DateTime.Parse(DateTime.Now.ToString("HH:mm:ss"));
         var startTime = DateTime.Parse(_config.PluginStartTime);
@@ -91,22 +94,26 @@ public class VIP_NightVip : BasePlugin
         if ((currentTime >= startTime || currentTime < endTime) && !_api.IsClientVip(player))
         {
             _api.GiveClientVip(player, _config.VIPGroup, -1);
+            _playersGivenVIP.Add(player.AuthorizedSteamID.SteamId64);
             _api.PrintToChat(player, $" \x02[NightVIP] \x01You are receiving \x06VIP\x01 because it's \x07VIP Night \x01time.");
         }
     }
 
     private void RemoveVIPIfInGroup(CCSPlayerController player)
     {
-        if (_api == null || !_api.IsClientVip(player)) return;
+        if (_api == null || !_api.IsClientVip(player) || player == null || player.AuthorizedSteamID == null) return;
 
         var playerGroup = _api.GetClientVipGroup(player);
-        if (playerGroup == _config.VIPGroup)
+        if (playerGroup == _config.VIPGroup && _playersGivenVIP.Contains(player.AuthorizedSteamID.SteamId64))
+        {
             _api.RemoveClientVip(player);
+            _playersGivenVIP.Remove(player.AuthorizedSteamID.SteamId64);
+        }
     }
 
     private VIP_NightVipConfig LoadConfig()
     {
-        var configPath = Path.Combine(_api.ModulesConfigDirectory, ConfigFileName);
+        var configPath = Path.Combine(_api!.ModulesConfigDirectory, ConfigFileName);
 
         if (!File.Exists(configPath)) return CreateConfig(configPath);
 
