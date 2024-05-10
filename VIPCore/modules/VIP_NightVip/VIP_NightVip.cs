@@ -71,8 +71,13 @@ public class VIP_NightVip : BasePlugin
 
     private void GiveVIPToAllPlayers()
     {
-        foreach (var player in Utilities.GetPlayers().Where(p => p != null && p.IsValid && !p.IsBot && !p.IsHLTV && p.PlayerPawn.IsValid))
-            GiveVIPIfNotAlready(player);
+        Server.NextFrame(() =>
+		{
+            foreach (var player in Utilities.GetPlayers().Where(p => p != null && p.IsValid && !p.IsBot && !p.IsHLTV && p.PlayerPawn.IsValid))
+            {
+                GiveVIPIfNotAlready(player);
+            }
+        });
     }
 
     private void GiveVIPIfNotAlready(CCSPlayerController player)
