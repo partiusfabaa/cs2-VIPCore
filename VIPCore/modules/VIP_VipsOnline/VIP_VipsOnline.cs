@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Globalization;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
@@ -36,9 +37,9 @@ public class VIPVipsOnline : BasePlugin
         var vipList = string.Join(", ", onlineVips);
 
         if (onlineVips.Count != 0)
-            message = ReplaceColorPlaceholders(_api.GetTranslatedText("vip.OnlineVips", vipList));
+            message = ReplaceColorPlaceholders(string.Format(Localizer["vip.OnlineVips"], vipList));
         else
-            message = ReplaceColorPlaceholders(_api.GetTranslatedText("vip.NoVipsOnline"));
+            message = ReplaceColorPlaceholders(string.Format(Localizer["vip.NoVipsOnline"]));
 
         if (player != null)
             _api.PrintToChat(player, message);
