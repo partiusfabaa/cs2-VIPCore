@@ -1,0 +1,4 @@
+{
+    "vip.NoVipsOnline": "[yellow]No VIP players are currently online.",
+    "vip.OnlineVips": "[green]VIP players online: [default]{0}."
+}
