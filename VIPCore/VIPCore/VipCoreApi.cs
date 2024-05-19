@@ -107,7 +107,7 @@ public class VipCoreApi : IVipCoreApi
 
     public bool IsClientVip(CCSPlayerController player)
     {
-        return _vipCore.IsPlayerVip(player);
+        return _vipCore.IsPlayerVip(player) && _vipCore.IsCoreEnableConVar.Value;
     }
 
     public bool PlayerHasFeature(CCSPlayerController player, string feature)
@@ -134,7 +134,7 @@ public class VipCoreApi : IVipCoreApi
     {
         var groups = _vipCore.Config.Groups;
         if (groups.Count == 0)
-            return Array.Empty<string>();
+            return [];
 
         return groups.Keys.ToArray();
     }
