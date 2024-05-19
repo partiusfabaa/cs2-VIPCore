@@ -19,7 +19,7 @@ public class VipCore : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Core";
-    public override string ModuleVersion => "v1.2.9";
+    public override string ModuleVersion => "v1.3.0";
 
     public Config Config { get; set; } = null!;
     public CoreConfig CoreConfig { get; set; } = null!;
