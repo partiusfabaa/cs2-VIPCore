@@ -10,9 +10,9 @@ namespace VIP_NightVip;
 
 public class VIP_NightVipConfig
 {
-    public string VIPGroup { get; set; } = "VIP";
+    public string VIPGroup { get; set; } = "VIPGOLD";
     public string PluginStartTime { get; set; } = "20:00:00";
-    public string PluginEndTime { get; set; } = "06:00:00";
+    public string PluginEndTime { get; set; } = "08:00:00";
 }
 
 public class VIP_NightVip : BasePlugin
@@ -73,6 +73,18 @@ public class VIP_NightVip : BasePlugin
 
     private void GiveVIPToAllPlayers()
     {
+        var currentTime = DateTime.Now.TimeOfDay;
+        var startTime = TimeSpan.Parse(_config.PluginStartTime);
+        var endTime = TimeSpan.Parse(_config.PluginEndTime);
+
+        bool isVipTime;
+        if (startTime < endTime)
+            isVipTime = currentTime >= startTime && currentTime < endTime;
+        else
+            isVipTime = currentTime >= startTime || currentTime < endTime;
+
+        if (!isVipTime) return;
+
         Server.NextFrame(() =>
         {
             foreach (var player in Utilities.GetPlayers()
@@ -83,15 +95,22 @@ public class VIP_NightVip : BasePlugin
         });
     }
 
+
     private void GiveVIPIfNotAlready(CCSPlayerController player)
     {
         if (_api == null || player == null || player.AuthorizedSteamID == null) return;
 
-        var currentTime = DateTime.Parse(DateTime.Now.ToString("HH:mm:ss"));
-        var startTime = DateTime.Parse(_config.PluginStartTime);
-        var endTime = DateTime.Parse(_config.PluginEndTime);
+        var currentTime = DateTime.Now.TimeOfDay;
+        var startTime = TimeSpan.Parse(_config.PluginStartTime);
+        var endTime = TimeSpan.Parse(_config.PluginEndTime);
 
-        if ((currentTime >= startTime || currentTime < endTime) && !_api.IsClientVip(player))
+        bool isVipTime;
+        if (startTime < endTime)
+            isVipTime = currentTime >= startTime && currentTime < endTime;
+        else
+            isVipTime = currentTime >= startTime || currentTime < endTime;
+
+        if (isVipTime && !_api.IsClientVip(player))
         {
             _api.GiveClientVip(player, _config.VIPGroup, -1);
             _playersGivenVIP.Add(player.AuthorizedSteamID.SteamId64);
@@ -124,9 +143,9 @@ public class VIP_NightVip : BasePlugin
     {
         var config = new VIP_NightVipConfig
         {
-            VIPGroup = "VIP",
+            VIPGroup = "vip",
             PluginStartTime = "20:00:00",
-            PluginEndTime = "06:00:00"
+            PluginEndTime = "08:00:00"
         };
 
         File.WriteAllText(configPath, JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true }));

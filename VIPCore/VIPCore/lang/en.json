@@ -42,5 +42,10 @@
 	"endurance": "Endurance",
 	"tag.Disable": "Disable",
 	"tag.On": "You have set {blue}Tag {default} to {red}{0}",
-	"tag.Off": "You've disabled the {blue}Tag"
+	"tag.Off": "You've disabled the {blue}Tag",
+	"Defuser": "Defuse Kit",
+	"InfiniteAmmo": "Infinite Ammo",
+	"Zeus": "Zeus",
+	"DamageChange": "Damage Change",
+	"Speed": "Speed"
 }
