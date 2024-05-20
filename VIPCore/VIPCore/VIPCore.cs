@@ -19,7 +19,7 @@ public class VipCore : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Core";
-    public override string ModuleVersion => "v1.2.9";
+    public override string ModuleVersion => "v1.3.0";
 
     public Config Config { get; set; } = null!;
     public CoreConfig CoreConfig { get; set; } = null!;
@@ -36,6 +36,8 @@ public class VipCore : BasePlugin
     public string DbConnectionString = string.Empty;
 
     public readonly bool[] IsClientVip = new bool[70];
+
+    private string[] _sortedItems = [];
 
     public override void Load(bool hotReload)
     {
@@ -60,6 +62,14 @@ public class VipCore : BasePlugin
     {
         Config = VipApi.LoadConfig<Config>("vip", VipApi.CoreConfigDirectory);
         CoreConfig = VipApi.LoadConfig<CoreConfig>("vip_core", VipApi.CoreConfigDirectory);
+
+
+        var sortMenuPath = Path.Combine(VipApi.CoreConfigDirectory, "sort_menu.txt");
+        
+        if(!File.Exists(sortMenuPath))
+            File.WriteAllLines(sortMenuPath, ["feature1", "feature2"]);
+        
+        _sortedItems = File.ReadAllLines(sortMenuPath);
     }
 
     private void RegisterEventHandlers()
@@ -125,8 +135,7 @@ public class VipCore : BasePlugin
         var player = @event.Userid;
         if (player is null || !player.IsValid || player.Handle == IntPtr.Zero || player.UserId == null)
             return HookResult.Continue;
-
-
+        
         if (player.IsBot || !IsClientVip[player.Slot])
             return HookResult.Continue;
 
@@ -338,69 +347,76 @@ public class VipCore : BasePlugin
 
         ReplyToCommand(controller, msg);
     }
-
+    
     private void CreateMenu(CCSPlayerController? player)
+{
+    if (player == null) return;
+
+    if (!IsClientVip[player.Slot])
     {
-        if (player == null) return;
-
-        if (!IsClientVip[player.Slot])
-        {
-            PrintToChat(player, Localizer["vip.NoAccess"]);
-            return;
-        }
-
-        if (!Users.TryGetValue(player.SteamID, out var user)) return;
-
-        var menu = VipApi.CreateMenu(Localizer["menu.Title", user.group]);
-        if (Config.Groups.TryGetValue(user.group, out var vipGroup))
-        {
-            foreach (var (key, feature) in Features.Where(setting => setting.Value.FeatureType is not FeatureType.Hide))
-            {
-                if (!vipGroup.Values.TryGetValue(key, out var featureValue)) continue;
-                if (string.IsNullOrEmpty(featureValue.ToString())) continue;
-                if (!user.FeatureState.TryGetValue(key, out var featureState)) continue;
-
-                var value = featureState switch
-                {
-                    FeatureState.Enabled => $"{Localizer["chat.Enabled"]}",
-                    FeatureState.Disabled => $"{Localizer["chat.Disabled"]}",
-                    FeatureState.NoAccess => $"{Localizer["chat.NoAccess"]}",
-                    _ => throw new ArgumentOutOfRangeException()
-                };
-
-                var featureType = feature.FeatureType;
-
-                menu.AddMenuOption(
-                    Localizer[key] + (featureType == FeatureType.Selectable
-                        ? string.Empty
-                        : $" [{value}]"),
-                    (controller, _) =>
-                    {
-                        var returnState = featureState;
-                        if (featureType != FeatureType.Selectable)
-                        {
-                            returnState = featureState switch
-                            {
-                                FeatureState.Enabled => FeatureState.Disabled,
-                                FeatureState.Disabled => FeatureState.Enabled,
-                                _ => returnState
-                            };
-
-                            VipApi.PrintToChat(player,
-                                $"{Localizer[key]}: {(returnState == FeatureState.Enabled ? $"{Localizer["chat.Enabled"]}" : $"{Localizer["chat.Disabled"]}")}");
-                        }
-
-                        user.FeatureState[key] = returnState;
-                        feature.OnSelectItem?.Invoke(controller, returnState);
-
-                        if (CoreConfig.ReOpenMenuAfterItemClick)
-                            CreateMenu(controller);
-                    }, featureState == FeatureState.NoAccess);
-            }
-        }
-
-        menu.Open(player);
+        PrintToChat(player, Localizer["vip.NoAccess"]);
+        return;
     }
+
+    if (!Users.TryGetValue(player.SteamID, out var user)) return;
+
+    var menu = VipApi.CreateMenu(Localizer["menu.Title", user.group]);
+    if (Config.Groups.TryGetValue(user.group, out var vipGroup))
+    {
+        var sortedFeatures = Features.Where(setting => setting.Value.FeatureType is not FeatureType.Hide)
+                                     .OrderBy(setting => Array.IndexOf(_sortedItems, setting.Key))
+                                     .ThenBy(setting => setting.Key);
+
+        foreach (var (key, feature) in sortedFeatures)
+        {
+            if (!vipGroup.Values.TryGetValue(key, out var featureValue)) continue;
+            if (string.IsNullOrEmpty(featureValue.ToString())) continue;
+            if (!user.FeatureState.TryGetValue(key, out var featureState)) continue;
+
+            var value = featureState switch
+            {
+                FeatureState.Enabled => $"{Localizer["chat.Enabled"]}",
+                FeatureState.Disabled => $"{Localizer["chat.Disabled"]}",
+                FeatureState.NoAccess => $"{Localizer["chat.NoAccess"]}",
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            var featureType = feature.FeatureType;
+
+            menu.AddMenuOption(
+                Localizer[key] + (featureType == FeatureType.Selectable
+                    ? string.Empty
+                    : $" [{value}]"),
+                (controller, _) =>
+                {
+                    var returnState = featureState;
+                    if (featureType != FeatureType.Selectable)
+                    {
+                        returnState = featureState switch
+                        {
+                            FeatureState.Enabled => FeatureState.Disabled,
+                            FeatureState.Disabled => FeatureState.Enabled,
+                            _ => returnState
+                        };
+
+                        VipApi.PrintToChat(player,
+                            $"{Localizer[key]}: {(returnState == FeatureState.Enabled ? $"{Localizer["chat.Enabled"]}" : $"{Localizer["chat.Disabled"]}")}");
+                    }
+
+                    user.FeatureState[key] = returnState;
+                    feature.OnSelectItem?.Invoke(controller, returnState);
+                    
+                    if (CoreConfig.ReOpenMenuAfterItemClick && featureType != FeatureType.Selectable)
+                    {
+                        CreateMenu(controller);
+                    }
+                }, featureState == FeatureState.NoAccess);
+        }
+    }
+
+    menu.Open(player);
+}
+
 
     private string BuildConnectionString()
     {
@@ -429,7 +445,8 @@ public class VipCore : BasePlugin
 
     private bool IsUserActiveVip(CCSPlayerController player)
     {
-        if (!IsCoreEnableConVar.Value || !Utils.IsValidEntity(player) || !player.IsValid || player.IsBot) return false;
+        if (!IsCoreEnableConVar.Value || !Utils.IsValidEntity(player) || !player.IsValid || player.IsBot)
+            return false;
 
         var authorizedSteamId = player.AuthorizedSteamID;
         if (authorizedSteamId == null)
@@ -438,7 +455,8 @@ public class VipCore : BasePlugin
             return false;
         }
 
-        if (!Users.TryGetValue(authorizedSteamId.SteamId64, out var user)) return false;
+        if (!Users.TryGetValue(authorizedSteamId.SteamId64, out var user))
+            return false;
 
         if (user.expires != 0 && DateTime.UtcNow.GetUnixEpoch() > user.expires)
         {

@@ -2,6 +2,7 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
+using static VipCoreApi.IVipCoreApi;
 
 namespace VIP_Vampirism;
 
@@ -46,7 +47,7 @@ public class Vampirism : VipFeatureBase
 
             if (IsClientVip(attacker) && PlayerHasFeature(attacker) && attacker.PawnIsAlive)
             {
-                if (GetPlayerFeatureState(attacker) is not IVipCoreApi.FeatureState.Enabled)
+                if (GetPlayerFeatureState(attacker) is not FeatureState.Enabled)
                     return HookResult.Continue;
 
                 var attackerPawn = attacker.PlayerPawn.Value;
