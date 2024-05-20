@@ -10,7 +10,7 @@ namespace VIP_NightVip;
 
 public class VIP_NightVipConfig
 {
-    public string VIPGroup { get; set; } = "VIPGOLD";
+    public string VIPGroup { get; set; } = "vip";
     public string PluginStartTime { get; set; } = "20:00:00";
     public string PluginEndTime { get; set; } = "08:00:00";
 }
