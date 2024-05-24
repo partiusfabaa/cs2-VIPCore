@@ -15,5 +15,6 @@ Place the configuration file at `addons/counterstrikesharp/configs/plugins/VIPCo
 {
   "VIPGroup": "VIP",
   "PluginStartTime": "20:00:00",
-  "PluginEndTime": "06:00:00"
+  "PluginEndTime": "06:00:00",
+  "Timezone": "UTC" //default, see timezones.txt for all possible time zones, will also work with "UTC+2" format
 }
