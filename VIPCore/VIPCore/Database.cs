@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities;
 using Dapper;
 using MySqlConnector;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace VIPCore;
 
@@ -34,7 +35,47 @@ public class Database
                 `expires` BIGINT NOT NULL,
             PRIMARY KEY (`account_id`, `sid`));";
 
+
             await dbConnection.ExecuteAsync(createVipUsersTable);
+
+            var createVipServersTable = @"
+             CREATE TABLE IF NOT EXISTS `vip_servers` (
+                 `serverId` BIGINT NOT NULL,
+                 `serverIp` VARCHAR(45) NOT NULL,
+                 `port` INT NOT NULL,
+                 `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                 `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+             PRIMARY KEY (`serverId`));";
+
+            await dbConnection.ExecuteAsync(createVipServersTable);
+
+            // Check if the ServerIP and ServerPort already exist
+            var checkVipServerQuery = @"
+                SELECT COUNT(*) 
+                FROM `vip_servers` 
+                WHERE `serverIp` = @ServerIP AND `port` = @ServerPort;";
+
+            var serverExists = await dbConnection.ExecuteScalarAsync<int>(checkVipServerQuery, new
+            {
+                ServerIP = _vipCore.CoreConfig.ServerIP,
+                ServerPort = _vipCore.CoreConfig.ServerPort
+            });
+
+            if (serverExists == 0)
+            {
+                // Insert ServerIP and ServerPort from config into vip_servers table
+                var insertVipServerQuery = @"
+                INSERT INTO `vip_servers` (`serverId`, `serverIp`, `port`) 
+                VALUES (@ServerId, @ServerIP, @ServerPort);";
+
+                await dbConnection.ExecuteAsync(insertVipServerQuery, new
+                {
+                    ServerId = _vipCore.CoreConfig.ServerId,
+                    ServerIP = _vipCore.CoreConfig.ServerIP,
+                    ServerPort = _vipCore.CoreConfig.ServerPort,
+                });
+            }
+
         }
         catch (Exception e)
         {
@@ -48,10 +89,11 @@ public class Database
         {
             await using var connection = new MySqlConnection(_dbConnectionString);
             await connection.OpenAsync();
-            
+            var serverId = await GetServerId(connection);
+
             var existingUser = await connection.QuerySingleOrDefaultAsync<User>(
                 @"SELECT * FROM vip_users WHERE account_id = @AccId AND sid = @sid",
-                new { AccId = accountId, sid = _vipCore.CoreConfig.ServerId });
+                new { AccId = accountId, sid = serverId });
 
             if (existingUser != null) return existingUser;
 
@@ -71,12 +113,13 @@ public class Database
         {
             await using var connection = new MySqlConnection(_dbConnectionString);
             await connection.OpenAsync();
+            var serverId = await GetServerId(connection);
 
             var existingUser = await connection.QuerySingleOrDefaultAsync<User>(
                 @"SELECT * FROM vip_users WHERE account_id = @AccId AND sid = @sid", new
                 {
                     AccId = user.account_id,
-                    sid = _vipCore.CoreConfig.ServerId
+                    sid = serverId
                 });
 
             if (existingUser != null)
@@ -103,12 +146,12 @@ public class Database
         {
             await using var connection = new MySqlConnection(_dbConnectionString);
             await connection.OpenAsync();
-
+            var serverId = await GetServerId(connection);
             var existingUser = await connection.QuerySingleOrDefaultAsync<User>(
                 @"SELECT * FROM vip_users WHERE account_id = @AccId AND sid = @sid", new
                 {
                     AccId = user.account_id,
-                    sid = _vipCore.CoreConfig.ServerId
+                    sid = serverId
                 });
 
             if (existingUser == null)
@@ -141,12 +184,12 @@ public class Database
         {
             await using var connection = new MySqlConnection(_dbConnectionString);
             await connection.OpenAsync();
-
+            var serverId = await GetServerId(connection);
             var existingUser = await connection.QuerySingleOrDefaultAsync<User>(
                 @"SELECT * FROM vip_users WHERE account_id = @AccId AND sid = @sid", new
                 {
                     AccId = accountId,
-                    sid = _vipCore.CoreConfig.ServerId
+                    sid = serverId
                 });
 
             if (existingUser == null)
@@ -163,7 +206,7 @@ public class Database
             
             if (time > -1)
                 existingUser.expires = time == 0 ? 0 : _vipCore.CalculateEndTimeInSeconds(time);
-
+         
             await connection.ExecuteAsync(@"
             UPDATE 
                 vip_users
@@ -192,10 +235,10 @@ public class Database
         {
             await using var connection = new MySqlConnection(_dbConnectionString);
             await connection.OpenAsync();
-            
+            var serverId = await GetServerId(connection);
             await connection.ExecuteAsync(@"
             DELETE FROM vip_users
-        WHERE account_id = @AccId AND sid = @sid;", new { AccId = accId, sid = _vipCore.CoreConfig.ServerId });
+        WHERE account_id = @AccId AND sid = @sid;", new { AccId = accId, sid = serverId });
 
             _vipCore.PrintLogInfo("Player {name}[{accId}] has been successfully removed", existingUser.name, accId);
         }
@@ -211,10 +254,10 @@ public class Database
         {
             await using var connection = new MySqlConnection(_dbConnectionString);
             await connection.OpenAsync();
-            
+            var serverId = await GetServerId(connection);
             var user = await connection.QueryAsync<User?>(
                 "SELECT * FROM `vip_users` WHERE `account_id` = @AccId AND sid = @sid AND (expires > @CurrTime OR expires = 0)",
-                new { AccId = accId, sid = _vipCore.CoreConfig.ServerId, CurrTime = DateTime.UtcNow.GetUnixEpoch() }
+                new { AccId = accId, sid = serverId, CurrTime = DateTime.UtcNow.GetUnixEpoch() }
             );
 
             return user.ToList();
@@ -233,15 +276,17 @@ public class Database
         {
             await using var connection = new MySqlConnection(_dbConnectionString);
             await connection.OpenAsync();
+            var serverId = await GetServerId(connection);
 
             var expiredUsers = await connection.QueryAsync<User>(
                 "SELECT * FROM vip_users WHERE account_id = @AccId AND sid = @sid AND expires < @CurrentTime AND expires > 0",
                 new
                 {
                     AccId = steamId.AccountId,
-                    sid = _vipCore.CoreConfig.ServerId,
+                    sid = serverId,
                     CurrentTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
                 });
+            Console.WriteLine($"Removing expired VIPS, Current time:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}");
 
             foreach (var user in expiredUsers)
             {
@@ -269,5 +314,14 @@ public class Database
         {
             Console.WriteLine(e);
         }
+    }
+    private async Task<long> GetServerId(MySqlConnection connection)
+    {
+        var query = @"
+                SELECT `serverId`
+                FROM `vip_servers`
+                WHERE `serverIp` = @ServerIP AND `port` = @ServerPort;";
+
+        return await connection.ExecuteScalarAsync<long>(query, new { ServerIP = _vipCore.CoreConfig.ServerIP, ServerPort = _vipCore.CoreConfig.ServerPort });
     }
 }
