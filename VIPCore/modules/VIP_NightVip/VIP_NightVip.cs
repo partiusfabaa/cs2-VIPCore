@@ -88,7 +88,9 @@ public class VIP_NightVip : BasePlugin
 
         if (isVipTime && !_api.IsClientVip(player) && player.IsValid && !player.IsBot && !player.IsHLTV && player != null && player.PawnIsAlive)
         {
-            var remainingTime = (endTime > currentTimeInTimeZone.TimeOfDay) ? (endTime - currentTimeInTimeZone.TimeOfDay).TotalMinutes : (TimeSpan.FromHours(24) - currentTimeInTimeZone.TimeOfDay + endTime).TotalMinutes;
+            var remainingTime = (endTime > currentTimeInTimeZone.TimeOfDay) 
+            ? (endTime - currentTimeInTimeZone.TimeOfDay).TotalMinutes
+            : (TimeSpan.FromHours(24) - currentTimeInTimeZone.TimeOfDay + endTime).TotalMinutes;
 
             _api.GiveClientTemporaryVip(player, Config.VIPGroup, (int)remainingTime);
             _api.PrintToChat(player, $" \x02[NightVIP] \x01You are receiving \x06VIP\x01 because it's \x07VIP Night \x01time.");
