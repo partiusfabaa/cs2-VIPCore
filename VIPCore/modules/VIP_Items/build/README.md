@@ -3,7 +3,10 @@
 # Config
 
 ### in vip.json
-`"Items": [ "item1", "item2" ]`
+`"Items": {`
+` "CT" : ["item1", "item2"], `
+` "T" : ["item1", "item2"] `
+`}`
 
 # in lang (not necessarily)
 
