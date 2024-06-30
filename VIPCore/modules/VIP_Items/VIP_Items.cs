@@ -10,7 +10,7 @@ public class VipItems : BasePlugin
     public override string ModuleName => "[VIP] Items";
     public override string ModuleVersion => "1.0.1";
 
-    private Items _items;
+    private Items _items = null!;
     private IVipCoreApi? _api;
 
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
@@ -20,11 +20,8 @@ public class VipItems : BasePlugin
         _api = PluginCapability.Get();
         if (_api == null) return;
 
-        _api.OnCoreReady += () =>
-        {
-            _items = new Items(_api);
-            _api.RegisterFeature(_items);
-        };
+        _items = new Items(_api);
+        _api.RegisterFeature(_items);
     }
 
     public override void Unload(bool hotReload)
@@ -54,24 +51,36 @@ public class Items : VipFeatureBase
     public override void OnPlayerSpawn(CCSPlayerController player)
     {
         if (IsPistolRound()) return;
-        
+
         if (!PlayerHasFeature(player)) return;
         if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
             or IVipCoreApi.FeatureState.NoAccess) return;
 
-        var items = GetFeatureValue<List<string>?>(player);
+        var itemsConfig = GetFeatureValue<Dictionary<string, List<string>>?>(player);
+        if (itemsConfig == null) return;
+
+        var teamKey = player.TeamNum switch
+        {
+            2 => "T",
+            3 => "CT",
+            _ => null
+        };
+
+        if (teamKey == null || !itemsConfig.ContainsKey(teamKey)) return;
+
+        var items = itemsConfig[teamKey];
 
         var playerPawnValue = player.PlayerPawn.Value;
         if (playerPawnValue == null) return;
 
         var weaponService = playerPawnValue.WeaponServices;
         if (weaponService == null || items is not { Count: > 0 }) return;
-        
+
         foreach (var item in items)
         {
             var itemName = _grenadeIndex.ContainsKey(item) ? item : null;
             var ammoIndex = itemName != null ? _grenadeIndex[item] : -1;
-
+            
             if (itemName != null && weaponService.Ammo[ammoIndex] == 0)
                 player.GiveNamedItem(item);
             else
