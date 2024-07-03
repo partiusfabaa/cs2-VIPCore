@@ -2,6 +2,7 @@
 **/.idea
 **/bin
 **/obj
+.history
 
 VIPCore/ignoremodules/
 VIPCore/privatemodules/
