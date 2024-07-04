@@ -19,7 +19,7 @@ public class VipCore : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Core";
-    public override string ModuleVersion => "v1.2.9";
+    public override string ModuleVersion => "v1.3.0f";
 
     public Config Config { get; set; } = null!;
     public CoreConfig CoreConfig { get; set; } = null!;
@@ -36,6 +36,8 @@ public class VipCore : BasePlugin
     public string DbConnectionString = string.Empty;
 
     public readonly bool[] IsClientVip = new bool[70];
+
+    private string[] _sortedItems = [];
 
     public override void Load(bool hotReload)
     {
@@ -60,6 +62,13 @@ public class VipCore : BasePlugin
     {
         Config = VipApi.LoadConfig<Config>("vip", VipApi.CoreConfigDirectory);
         CoreConfig = VipApi.LoadConfig<CoreConfig>("vip_core", VipApi.CoreConfigDirectory);
+
+        var sortMenuPath = Path.Combine(VipApi.CoreConfigDirectory, "sort_menu.txt");
+
+        if (!File.Exists(sortMenuPath))
+            File.WriteAllLines(sortMenuPath, ["feature1", "feature2"]);
+
+        _sortedItems = File.ReadAllLines(sortMenuPath);
     }
 
     private void RegisterEventHandlers()
@@ -82,7 +91,7 @@ public class VipCore : BasePlugin
             IsClientVip[player.Slot] = false;
             if (Users.TryGetValue(player.SteamID, out var user))
             {
-                foreach (var featureState in user.FeatureState)
+                foreach (var featureState in user.FeatureState.Where(f => Features[f.Key].FeatureType is FeatureType.Toggle))
                 {
                     VipApi.SetPlayerCookie(player.SteamID, featureState.Key, (int)featureState.Value);
                 }
@@ -125,7 +134,6 @@ public class VipCore : BasePlugin
         var player = @event.Userid;
         if (player is null || !player.IsValid || player.Handle == IntPtr.Zero || player.UserId == null)
             return HookResult.Continue;
-
 
         if (player.IsBot || !IsClientVip[player.Slot])
             return HookResult.Continue;
@@ -213,11 +221,10 @@ public class VipCore : BasePlugin
         };
     }
 
+    [RequiresPermissions("@css/root")]
     [ConsoleCommand("css_vip_adduser")]
     public void OnCmdAddUser(CCSPlayerController? controller, CommandInfo command)
     {
-        if (controller != null) return;
-
         if (command.ArgCount is > 4 or < 4)
         {
             PrintLogInfo("Usage: css_vip_adduser {usage}", $"<steamid or accountid> <group> <time_{GetTimeUnitName}>");
@@ -250,11 +257,10 @@ public class VipCore : BasePlugin
         }
     }
 
+    [RequiresPermissions("@css/root")]
     [ConsoleCommand("css_vip_deleteuser")]
     public void OnCmdDeleteVipUser(CCSPlayerController? controller, CommandInfo command)
     {
-        if (controller != null) return;
-
         if (command.ArgCount is < 2 or > 2)
         {
             ReplyToCommand(controller, "Using: css_vip_deleteuser <steamid or accountid>");
@@ -274,11 +280,10 @@ public class VipCore : BasePlugin
         Task.Run(() => Database.RemoveUserFromDb(steamId));
     }
 
+    [RequiresPermissions("@css/root")]
     [ConsoleCommand("css_vip_updateuser")]
     public void OnCmdUpdateUserGroup(CCSPlayerController? controller, CommandInfo command)
     {
-        if (controller != null) return;
-
         if (command.ArgCount is > 4 or < 4)
         {
             PrintLogInfo("Usage: css_vip_updateuser {usage}\n{t}", "<steamid or accountid> [group or -s] [time or -s]",
@@ -315,11 +320,11 @@ public class VipCore : BasePlugin
         Task.Run(() => Database.UpdateUserVip(accountId, group: vipGroup, time: time));
     }
 
+    [RequiresPermissions("@css/root")]
     [CommandHelper(1, "<steamid>")]
     [ConsoleCommand("css_reload_vip_player")]
     public void OnCommandVipReloadInfractions(CCSPlayerController? player, CommandInfo command)
     {
-        if (player != null) return;
         var target = Utils.GetPlayerFromSteamId(command.GetArg(1));
 
         if (target == null) return;
@@ -354,19 +359,27 @@ public class VipCore : BasePlugin
         var menu = VipApi.CreateMenu(Localizer["menu.Title", user.group]);
         if (Config.Groups.TryGetValue(user.group, out var vipGroup))
         {
-            foreach (var (key, feature) in Features.Where(setting => setting.Value.FeatureType is not FeatureType.Hide))
+            var sortedFeatures = Features.Where(setting => setting.Value.FeatureType is not FeatureType.Hide)
+                .OrderBy(setting => Array.IndexOf(_sortedItems, setting.Key))
+                .ThenBy(setting => setting.Key);
+
+            foreach (var (key, feature) in sortedFeatures)
             {
                 if (!vipGroup.Values.TryGetValue(key, out var featureValue)) continue;
                 if (string.IsNullOrEmpty(featureValue.ToString())) continue;
                 if (!user.FeatureState.TryGetValue(key, out var featureState)) continue;
 
-                var value = featureState switch
+                var value = string.Empty;
+                if (feature.FeatureType is FeatureType.Toggle)
                 {
-                    FeatureState.Enabled => $"{Localizer["chat.Enabled"]}",
-                    FeatureState.Disabled => $"{Localizer["chat.Disabled"]}",
-                    FeatureState.NoAccess => $"{Localizer["chat.NoAccess"]}",
-                    _ => throw new ArgumentOutOfRangeException()
-                };
+                    value = featureState switch
+                    {
+                        FeatureState.Enabled => $"{Localizer["chat.Enabled"]}",
+                        FeatureState.Disabled => $"{Localizer["chat.Disabled"]}",
+                        FeatureState.NoAccess => $"{Localizer["chat.NoAccess"]}",
+                        _ => throw new ArgumentOutOfRangeException()
+                    };
+                }
 
                 var featureType = feature.FeatureType;
 
@@ -393,14 +406,17 @@ public class VipCore : BasePlugin
                         user.FeatureState[key] = returnState;
                         feature.OnSelectItem?.Invoke(controller, returnState);
 
-                        if (CoreConfig.ReOpenMenuAfterItemClick)
+                        if (CoreConfig.ReOpenMenuAfterItemClick && featureType != FeatureType.Selectable)
+                        {
                             CreateMenu(controller);
+                        }
                     }, featureState == FeatureState.NoAccess);
             }
         }
 
         menu.Open(player);
     }
+
 
     private string BuildConnectionString()
     {
@@ -429,7 +445,8 @@ public class VipCore : BasePlugin
 
     private bool IsUserActiveVip(CCSPlayerController player)
     {
-        if (!IsCoreEnableConVar.Value || !Utils.IsValidEntity(player) || !player.IsValid || player.IsBot) return false;
+        if (!IsCoreEnableConVar.Value || !Utils.IsValidEntity(player) || !player.IsValid || player.IsBot)
+            return false;
 
         var authorizedSteamId = player.AuthorizedSteamID;
         if (authorizedSteamId == null)
@@ -438,7 +455,8 @@ public class VipCore : BasePlugin
             return false;
         }
 
-        if (!Users.TryGetValue(authorizedSteamId.SteamId64, out var user)) return false;
+        if (!Users.TryGetValue(authorizedSteamId.SteamId64, out var user))
+            return false;
 
         if (user.expires != 0 && DateTime.UtcNow.GetUnixEpoch() > user.expires)
         {

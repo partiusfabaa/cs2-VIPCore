@@ -107,7 +107,7 @@ public class VipCoreApi : IVipCoreApi
 
     public bool IsClientVip(CCSPlayerController player)
     {
-        return _vipCore.IsPlayerVip(player);
+        return _vipCore.IsPlayerVip(player) && _vipCore.IsCoreEnableConVar.Value;
     }
 
     public bool PlayerHasFeature(CCSPlayerController player, string feature)
@@ -134,7 +134,7 @@ public class VipCoreApi : IVipCoreApi
     {
         var groups = _vipCore.Config.Groups;
         if (groups.Count == 0)
-            return Array.Empty<string>();
+            return [];
 
         return groups.Keys.ToArray();
     }
@@ -241,6 +241,7 @@ public class VipCoreApi : IVipCoreApi
             throw new InvalidOperationException("player not found");
 
         OnPlayerRemoved(player, user.group);
+        _vipCore.IsClientVip[player.Slot] = false;
         Task.Run(() => RemoveClientVipAsync(steamId));
     }
 
@@ -248,8 +249,8 @@ public class VipCoreApi : IVipCoreApi
     {
         try
         {
-            await _vipCore.Database.RemoveUserFromDb(steamId.AccountId);
             _vipCore.Users.Remove(steamId.SteamId64, out _);
+            await _vipCore.Database.RemoveUserFromDb(steamId.AccountId);
         }
         catch (Exception e)
         {
@@ -354,7 +355,7 @@ public class VipCoreApi : IVipCoreApi
     {
         return LoadConfig<T>(name, ModulesConfigDirectory);
     }
-    
+
     public IMenu CreateMenu(string title)
     {
         return _vipCore.CoreConfig.UseCenterHtmlMenu ? new CenterHtmlMenu(title, _vipCore) : new ChatMenu(title);
