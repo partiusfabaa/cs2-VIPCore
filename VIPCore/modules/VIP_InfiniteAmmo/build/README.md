@@ -3,7 +3,12 @@
 # Config
 
 ### in vip.json
-`"InfiniteAmmo": 1 or 2 (1 - infinite clip, 2 - infinite reserve clip)`
+```json
+InfiniteAmmo: {
+"Type" : 1 or 2,  // 1- Infinite Ammo , 2 - Infinite Clips
+"DisabledGuns": ["weapon_name1","weapon_name2", etc] // a list a weapons where plugin will not do anything, if empty will work with every weapon
+}
+```
 
 # in lang (not necessarily)
 EN: `"InfiniteAmmo": "Infinite Ammo"`
