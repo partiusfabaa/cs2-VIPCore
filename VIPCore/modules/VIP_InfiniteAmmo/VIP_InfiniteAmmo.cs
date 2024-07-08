@@ -1,6 +1,7 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
+using Microsoft.Extensions.Logging;
 
 namespace VIP_InfiniteAmmo;
 
@@ -68,7 +69,11 @@ public class InfiniteAmmo : VipFeatureBase
             or IVipCoreApi.FeatureState.NoAccess) return;
 		
 		var featureValue = Api.GetFeatureValue<Dictionary<string, Dictionary<string, int>>?>(player, Feature);
-    	if (featureValue == null || !featureValue.ContainsKey("Type") || !featureValue.ContainsKey("DisabledGuns")) return;
+    	if (featureValue == null || !featureValue.ContainsKey("Type") || !featureValue.ContainsKey("DisabledGuns"))
+		{
+			Console.WriteLine($"[ERROR] Update the config for InfiniteAmmo as in the README.");
+			return;
+		}
 
 		int type = featureValue["Type"].First().Value;
     	var disabledGuns = featureValue["DisabledGuns"].Keys.ToList();
