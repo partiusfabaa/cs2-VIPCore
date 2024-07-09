@@ -35,11 +35,14 @@ public class VipInfiniteAmmo : BasePlugin
 public class InfiniteAmmo : VipFeatureBase
 {
 	public override string Feature => "InfiniteAmmo";
+	private Config _config;
 
 	public InfiniteAmmo(VipInfiniteAmmo vipAmmo, IVipCoreApi api) : base(api)
 	{
 		vipAmmo.RegisterEventHandler<EventWeaponFire>(OnWeaponFire);
 		vipAmmo.RegisterEventHandler<EventWeaponReload>(OnWeaponReload);
+
+		_config = new Config();
 	}
 
 	private HookResult OnWeaponFire(EventWeaponFire @event, GameEventInfo info)
@@ -68,29 +71,23 @@ public class InfiniteAmmo : VipFeatureBase
         if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
             or IVipCoreApi.FeatureState.NoAccess) return;
 		
-		var featureValue = Api.GetFeatureValue<Dictionary<string, Dictionary<string, int>>?>(player, Feature);
-    	if (featureValue == null || !featureValue.ContainsKey("Type") || !featureValue.ContainsKey("DisabledGuns"))
-		{
-			Console.WriteLine($"[ERROR] Update the config for InfiniteAmmo as in the README.");
-			return;
-		}
-
-		int type = featureValue["Type"].First().Value;
-    	var disabledGuns = featureValue["DisabledGuns"].Keys.ToList();
+		_config = GetFeatureValue<Config>(player);
 
 		var activeWeapon = player.PlayerPawn.Value?.WeaponServices?.ActiveWeapon?.Value;
 		if (activeWeapon == null) return;
 		
 		string weaponName = activeWeapon?.ToString() ?? string.Empty;
-		if (disabledGuns.Contains(weaponName)) return;
+		if (_config.DisabledGuns.Contains(weaponName)) return;
 		
-		switch (type)
+		switch (_config.Type)
 		{
 			case 1:
 				ApplyInfiniteClip(player);
 				break;
 			case 2:
 				ApplyInfiniteReserve(player);
+				break;
+			default:
 				break;
 		}
 	}
@@ -116,4 +113,10 @@ public class InfiniteAmmo : VipFeatureBase
             activeWeaponHandle.Value.ReserveAmmo[0] = 100;
         }
     }
+}
+
+public class Config
+{
+    public int Type { get; set; } = 1;
+	public List<string> DisabledGuns { get; set; } = new List<string>();
 }
