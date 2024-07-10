@@ -66,7 +66,7 @@ public class InfiniteAmmo : VipFeatureBase
 	private void ApplyInfiniteAmmo(CCSPlayerController? player)
 	{
 		if (player == null) return;
-
+		
 		if (!PlayerHasFeature(player)) return;
         if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
             or IVipCoreApi.FeatureState.NoAccess) return;
@@ -76,7 +76,8 @@ public class InfiniteAmmo : VipFeatureBase
 		var activeWeapon = player.PlayerPawn.Value?.WeaponServices?.ActiveWeapon?.Value;
 		if (activeWeapon == null) return;
 		
-		string weaponName = activeWeapon?.ToString() ?? string.Empty;
+		string weaponName = activeWeapon?.DesignerName ?? string.Empty;
+		
 		if (_config.DisabledGuns.Contains(weaponName)) return;
 		
 		switch (_config.Type)
