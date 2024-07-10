@@ -413,5 +413,14 @@ public class VipCoreApi : IVipCoreApi
             : null;
     }
 
-    private string GetCookieFilePath(ulong steamId64) => Path.Combine(CoreConfigDirectory, $"cookies/{steamId64}.json");
+    private string GetCookieFilePath(ulong steamId64)
+    {
+        var directoryPath = Path.Combine(CoreConfigDirectory, "cookies");
+    
+        if (!Directory.Exists(directoryPath))
+            Directory.CreateDirectory(directoryPath);
+
+        return Path.Combine(directoryPath, $"{steamId64}.json");
+    }
+
 }
