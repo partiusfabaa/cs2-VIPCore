@@ -58,12 +58,6 @@ public class VipCore : BasePlugin
         SetupTimers();
 
         AddCommand("css_vip", "command that opens the VIP MENU", (player, _) => CreateMenu(player));
-        AddCommand("css_vip_test", "", (player, _) =>
-        {
-            if (player is null) return;
-
-            Console.WriteLine($"Player is vip: {IsClientVip[player.Slot]}");
-        });
     }
 
     private void LoadConfig()
