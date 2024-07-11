@@ -77,9 +77,9 @@ public class InfiniteAmmo : VipFeatureBase
 		if (activeWeapon == null) return;
 		
 		string weaponName = activeWeapon?.DesignerName ?? string.Empty;
-		if (!_config.DisabledGuns.Contains(weaponName)) 
+		if (_config.DisabledGuns.Contains(weaponName)) 
 			return;
-			
+
 		switch (_config.Type)
 		{
 			case 1:
