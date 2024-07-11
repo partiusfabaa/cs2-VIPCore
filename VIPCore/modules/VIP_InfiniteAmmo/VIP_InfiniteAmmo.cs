@@ -77,24 +77,21 @@ public class InfiniteAmmo : VipFeatureBase
 		if (activeWeapon == null) return;
 		
 		string weaponName = activeWeapon?.DesignerName ?? string.Empty;
-		
 		if (!_config.DisabledGuns.Contains(weaponName)) 
-		{
-			switch (_config.Type)
-			{
-				case 1:
-					ApplyInfiniteClip(player);
-					break;
-				case 2:
-					ApplyInfiniteReserve(player);
-					break;
-				default:
-					Console.WriteLine("[InfiniteAmmo] Invalid type. Only value 1 or 2 are accepted.");
-					break;
-			}
-		}
-		else
 			return;
+			
+		switch (_config.Type)
+		{
+			case 1:
+				ApplyInfiniteClip(player);
+				break;
+			case 2:
+				ApplyInfiniteReserve(player);
+				break;
+			default:
+				Console.WriteLine("[InfiniteAmmo] Invalid type. Only value 1 or 2 are accepted.");
+				break;
+		}
 	}
 
 	private void ApplyInfiniteClip(CCSPlayerController? player)
