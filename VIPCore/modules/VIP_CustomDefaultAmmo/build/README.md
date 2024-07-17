@@ -32,3 +32,5 @@ EN:
 ```json
 "CustomDefaultAmmo" : "Custom Default Ammo"
 ```
+
+## Many thanks for the base to **https://github.com/1Mack/CS2-CustomDefaultAmmo**
