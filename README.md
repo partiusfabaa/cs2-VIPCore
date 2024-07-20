@@ -27,29 +27,32 @@ Located in the folder `addons/counterstrikesharp/configs/plugins/VIPCore`
 ### Core.json
 ```json
 {
-	"TimeMode": 0,		   // 0 - seconds | 1 - minutes | 2 - hours | 3 - days)
-	"ServerId": 0,		   // SERVER ID
-	"VipLogging": true,	   //Whether to log VIPCore | true - yes | false - no
-	"UseCenterHtmlMenu": true, //If `true`, the menu will be in the center, if `false`, it will be in the chat. Note that if you have another plugin that uses `CenterHtml`, server crashes may occur
-	"Connection": {
-		"Host": 	"host",
-		"Database": "database",
-		"User": 	"user",
-		"Password": "password"
-	}
+  "TimeMode": 0,		   // 0 - seconds | 1 - minutes | 2 - hours | 3 - days)
+  "ServerId": 0,		   // SERVER ID
+  "UseCenterHtmlMenu": true,	   //If `true`, the menu will be in the center, if `false`, it will be in the chat. Note that if you have another plugin that uses `CenterHtml`, server crashes may occur
+  "ReOpenMenuAfterItemClick": true,//Whether to reopen the menu after selecting an item | true - yes | false - no
+  "VipLogging": true,	   	   //Whether to log VIPCore | true - yes | false - no
+  "Connection": {
+	"Host": 	"host",
+	"Database": "database",
+	"User": 	"user",
+	"Password": "password",
+	"Port": 3306
+  }
 }
 ```
 ### vip.json
 ```json
 {
-	"Delay": 2.0
-	"Groups": {
-		"VIP1": {
-			"Values": {
-				"features": values
-			}
-		}
-	}
+  "Delay": 2.0
+  "Groups": {
+    "VIP1": {
+      "Values": {
+        "feature1": value1,
+	"feature2": value2
+      }
+    }
+  }
 }
 ```
 
@@ -87,7 +90,7 @@ public class VIPMyModule : BasePlugin
 
     public override void Unload(bool hotReload)
     {
-        _api.UnRegisterFeature(_myPlugin);
+        _api?.UnRegisterFeature(_myPlugin);
     }
 }
 
