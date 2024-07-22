@@ -44,29 +44,34 @@ public class CustomDefaultAmmo : VipFeatureBase
 
     public CustomDefaultAmmo(VipCustomDefaultAmmo vipCustomAmmo, IVipCoreApi api) : base(api)
     {
-        _config = new CustomDefaultAmmoConfig();
-        
         vipCustomAmmo.RegisterListener<Listeners.OnEntityCreated>(OnEntityCreated);
+        _config = new CustomDefaultAmmoConfig();
     }
     
     public void OnEntityCreated(CEntityInstance entity)
     {
-        if (entity == null || entity.Entity == null || !entity.IsValid || !entity.DesignerName.Contains("weapon_")) return;
+        CBasePlayerWeapon? weapon = new(entity.Entity.Handle);
+        if (weapon == null || !weapon.IsValid) return;
 
+        CCSPlayerController? player =  Utilities.GetPlayerFromSteamId((ulong)weapon.OriginalOwnerXuidLow);
+        if (player == null) return;
+        
+        _config = GetFeatureValue<CustomDefaultAmmoConfig>(player);
+        
+        if (entity == null || entity.Entity == null || !entity.IsValid || !entity.DesignerName.Contains("weapon_")) return;
+        
         foreach (var item in _config.WeaponSettings)
         {
             if (string.IsNullOrEmpty(item.Key) || item.Value == null) continue;
-
+            
             Server.NextFrame(() =>
             {
-                CBasePlayerWeapon weapon = new(entity.Entity.Handle);
-
                 if (!weapon.IsValid) return;
-
+                
                 string weaponName = item.Key.Trim();
-
+                
                 if (!CheckIfWeapon(weaponName, weapon.AttributeManager.Item.ItemDefinitionIndex)) return;
-
+                
                 CCSWeaponBase _weapon = weapon.As<CCSWeaponBase>();
                 if (_weapon == null) return;
 
@@ -143,15 +148,11 @@ public class CustomDefaultAmmo : VipFeatureBase
 
 public class CustomDefaultAmmoConfig
 {
-    [JsonPropertyName("CustomDefaultAmmo")]
-    public Dictionary<string, WeaponConfig> WeaponSettings { get; set; } = new();
-}
+    public Dictionary<string, WeaponSetting> WeaponSettings { get; set; } = new();
 
-public class WeaponConfig
-{
-    [JsonPropertyName("DefaultClip")]
-    public int DefaultClip { get; set; }
-
-    [JsonPropertyName("DefaultReserve")]
-    public int DefaultReserve { get; set; }
+    public class WeaponSetting
+    {
+        public int DefaultClip { get; set; } = -1;
+        public int DefaultReserve { get; set; } = -1;
+    }
 }
