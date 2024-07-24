@@ -13,10 +13,10 @@ public class VIPTag : BasePlugin
 {
     public override string ModuleAuthor => "Toil";
     public override string ModuleName => "[VIP] Tag";
-    public override string ModuleVersion => "v1.0.0";
+    public override string ModuleVersion => "v1.0.1";
 
     private IVipCoreApi? _api;
-    private Tag? _tag;
+    private Tag _tag;
 
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
@@ -31,16 +31,13 @@ public class VIPTag : BasePlugin
 
     public override void Unload(bool hotReload)
     {
-        if (_api != null && _tag != null)
-        {
-            _api?.UnRegisterFeature(_tag);
-        }
+        _api?.UnRegisterFeature(_tag);
     }
 }
 
 public class UserSettings
 {
-    public string Tag { get; set; } = "";
+    public string Tag { get; set; } = "\0";
     public ChatMenu Menu { get; set; } = new("Tag");
 }
 
@@ -58,16 +55,16 @@ public class Tag : VipFeatureBase
 
             _userSettings[slot + 1] = new UserSettings { Tag = cookie };
         });
+
         vipTag.RegisterEventHandler<EventPlayerDisconnect>((@event, info) =>
         {
             var player = @event.Userid;
-
             if (!IsClientVip(player))
             {
-                _userSettings[player.Index]!.Tag = "";
+                _userSettings[player.Index]!.Tag = "\0";
                 ChangeTag(player);
             }
-            
+
             _userSettings[player.Index] = null;
             return HookResult.Continue;
         });
@@ -78,15 +75,15 @@ public class Tag : VipFeatureBase
         if (_userSettings[player.Index] == null) return;
 
         var userTag = GetFeatureValue<List<string>>(player);
-        
+
         _userSettings[player.Index]!.Menu.MenuOptions.Clear();
         _userSettings[player.Index]!.Menu.AddMenuOption(GetTranslatedText("tag.Disable"), (controller, option) =>
         {
-            _userSettings[player.Index]!.Tag = "";
+            _userSettings[player.Index]!.Tag = "\0";
 
             PrintToChat(player, GetTranslatedText("tag.Off"));
             ChangeTag(controller);
-        }, _userSettings[player.Index]!.Tag == "");
+        }, _userSettings[player.Index]!.Tag == "\0");
         foreach (var tag in userTag)
         {
             _userSettings[player.Index]!.Menu.AddMenuOption(tag, (controller, option) =>
@@ -102,8 +99,7 @@ public class Tag : VipFeatureBase
 
     private void ChangeTag(CCSPlayerController player)
     {
-        if (player == null || !player.IsValid || player.IsBot || player.TeamNum == (int)CsTeam.Spectator) return;
-        if (_userSettings[player.Index] == null) return;
+        if (!(player != null && player.IsValid && !player.IsBot && !player.IsHLTV && _userSettings[player.Index]!.Tag != null)) return;
 
         var tag = _userSettings[player.Index]!.Tag;
         SetPlayerCookie(player.SteamID, "player_tag", tag);
@@ -115,7 +111,7 @@ public class Tag : VipFeatureBase
     {
         if (_userSettings[player.Index] == null) return;
         if (!PlayerHasFeature(player))
-            _userSettings[player.Index]!.Tag = "";
+            _userSettings[player.Index]!.Tag = "\0";
 
         ChangeTag(player);
     }
