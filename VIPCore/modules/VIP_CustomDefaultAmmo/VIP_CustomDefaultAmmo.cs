@@ -18,7 +18,7 @@ public class VipCustomDefaultAmmo : BasePlugin
     private IVipCoreApi? _api;
     private CustomDefaultAmmo? _CustomDefaultAmmoFeature;
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
-
+    
     public override void OnAllPluginsLoaded(bool hotReload)
     {
         _api = PluginCapability.Get();
@@ -27,7 +27,7 @@ public class VipCustomDefaultAmmo : BasePlugin
         _CustomDefaultAmmoFeature = new CustomDefaultAmmo(this, _api);
         _api.RegisterFeature(_CustomDefaultAmmoFeature);
     }
-
+    
     public override void Unload(bool hotReload)
     {
         if (_api != null && _CustomDefaultAmmoFeature != null)
@@ -53,7 +53,7 @@ public class CustomDefaultAmmo : VipFeatureBase
         CBasePlayerWeapon? weapon = new(entity.Entity.Handle);
         if (weapon == null || !weapon.IsValid) return;
 
-        CCSPlayerController? player =  Utilities.GetPlayerFromSteamId((ulong)weapon.OriginalOwnerXuidLow);
+        CCSPlayerController? player = Utilities.GetPlayerFromSteamId((ulong)weapon.OriginalOwnerXuidLow);
         if (player == null) return;
         
         _config = GetFeatureValue<CustomDefaultAmmoConfig>(player);
