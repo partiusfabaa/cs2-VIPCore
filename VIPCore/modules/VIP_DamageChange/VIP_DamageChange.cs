@@ -1,16 +1,18 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
+using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using VipCoreApi;
+using static VipCoreApi.IVipCoreApi;
 
 namespace VIP_DamageChange;
 
 public class VipDamageChange : BasePlugin
 {
-    public override string ModuleAuthor => "panda";
+    public override string ModuleAuthor => "panda.";
     public override string ModuleName => "[VIP] Damage Multiplier";
-    public override string ModuleVersion => "v1.0";
+    public override string ModuleVersion => "v1.1";
     private IVipCoreApi? _api;
     private DamageMultiplier? _damageMultiplier;
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
@@ -22,13 +24,16 @@ public class VipDamageChange : BasePlugin
 
         _damageMultiplier = new DamageMultiplier(_api);
         _api.RegisterFeature(_damageMultiplier);
+
+        VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(_damageMultiplier.OnTakeDamage, HookMode.Pre);
     }
 
     public override void Unload(bool hotReload)
     {
-        if(_api != null && _damageMultiplier != null)
+        if (_api != null && _damageMultiplier != null)
         {
             _api?.UnRegisterFeature(_damageMultiplier);
+            VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Unhook(_damageMultiplier.OnTakeDamage, HookMode.Pre);
         }
     }
 }
@@ -36,41 +41,53 @@ public class VipDamageChange : BasePlugin
 public class DamageMultiplier : VipFeatureBase
 {
     public override string Feature => "DamageMultiplier";
+
     public DamageMultiplier(IVipCoreApi api) : base(api)
     {
     }
 
     public HookResult OnTakeDamage(DynamicHook hook)
-    {   
-        CTakeDamageInfo damageInfo = hook.GetParam<CTakeDamageInfo>(1);
+    {
+        var damageInfo = hook.GetParam<CTakeDamageInfo>(1);
 
-        CCSPlayerController player = new CCSPlayerController(damageInfo.Attacker.Value.Handle);
-
-        if (!PlayerHasFeature(player)) return HookResult.Continue;
-        if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
-            or IVipCoreApi.FeatureState.NoAccess) return HookResult.Continue;
-
-        if (damageInfo.Attacker.Value is null)
+        var attacker = damageInfo.Attacker.Value;
+        if (attacker is null)
             return HookResult.Continue;
+
+        var pawnController = new CCSPlayerPawn(attacker.Handle).Controller.Value;
+        if (pawnController is null)
+            return HookResult.Continue;
+
+        var player = new CCSPlayerController(pawnController.Handle);
 
         if (player.IsValid)
         {
-            CCSWeaponBase? ccsWeaponBase = damageInfo.Ability.Value?.As<CCSWeaponBase>();
+            if (!PlayerHasFeature(player) || GetPlayerFeatureState(player) is not FeatureState.Enabled)
+                return HookResult.Continue;
 
-            if (ccsWeaponBase != null && ccsWeaponBase.IsValid)
+            var weaponBase = damageInfo.Ability.Value?.As<CCSWeaponBase>();
+
+            if (weaponBase != null && weaponBase.IsValid)
             {
-                CCSWeaponBaseVData? weaponData = ccsWeaponBase.VData;
+                var weaponData = weaponBase.VData;
 
                 if (weaponData == null)
                     return HookResult.Continue;
 
-                if (weaponData.GearSlot != gear_slot_t.GEAR_SLOT_RIFLE && weaponData.GearSlot != gear_slot_t.GEAR_SLOT_PISTOL)
+                if (weaponData.GearSlot != gear_slot_t.GEAR_SLOT_RIFLE &&
+                    weaponData.GearSlot != gear_slot_t.GEAR_SLOT_PISTOL)
                     return HookResult.Continue;
 
-                float damageModifierValue = GetFeatureValue<float>(player);
+                var damageModifierValue = GetFeatureValue<float>(player);
+
+                if (damageModifierValue < 1.0f)
+                    return HookResult.Continue;
+
                 damageInfo.Damage *= damageModifierValue;
+                return HookResult.Changed;
             }
         }
+        
         return HookResult.Continue;
     }
 }
