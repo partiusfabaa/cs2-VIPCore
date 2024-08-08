@@ -1,4 +1,4 @@
-# A plugin that allows you to take a VIP test for a certain period of time
+# A plugin gives a player RandomVip for a map
 
 # Config
 
