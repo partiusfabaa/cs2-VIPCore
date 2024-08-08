@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
@@ -122,39 +122,22 @@ public class VIP_Random : BasePlugin
         var player = GetRandomPlayer();
         if (player != null && player.IsValid)
         {
-            // Check if the player is already in a different VIP group
-            if (!IsInDifferentVipGroup(player))
+            // Check if the player is already a VIP
+            if (_vipApi != null && !_vipApi.IsClientVip(player))
             {
                 string localizedMessage = Localizer["vip.selected"];
                 string message = localizedMessage.Replace("{playerName}", player.PlayerName);
                 Server.PrintToChatAll(Localizer["prefix"] + message);
                 player.PrintToChat(Localizer["prefix"] + Localizer["vip.player.message"]);
 
-                if (_vipApi != null)
-                {
-                    _vipApi.GiveClientVip(player, _config.RandomVIPGroup, 1800); // Adding a duration parameter
-                    RandomVIP = player;
-                    _vipAssigned = true; // Set the flag to indicate a VIP has been assigned
-                }
+                _vipApi.GiveClientVip(player, _config.RandomVIPGroup, 1800); // Adding a duration parameter
+                RandomVIP = player;
+                _vipAssigned = true; // Set the flag to indicate a VIP has been assigned
             }
             else
             {
                 Server.PrintToChatAll(Localizer["prefix"] + Localizer["vip.already.vip"]);
             }
-        }
-    }
-
-    private bool IsInDifferentVipGroup(CCSPlayerController player)
-    {
-        try
-        {
-            string playerGroup = _vipApi.GetClientVipGroup(player);
-            return playerGroup != _config.RandomVIPGroup;
-        }
-        catch (InvalidOperationException)
-        {
-            // Handle the case where the player is not found or other exceptions
-            return false;
         }
     }
 
