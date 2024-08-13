@@ -2,6 +2,7 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
+using CounterStrikeSharp.API.Modules.Utils;
 using VipCoreApi;
 using static VipCoreApi.IVipCoreApi;
 
@@ -23,11 +24,8 @@ public class VipGravity : BasePlugin
         _api = PluginCapability.Get();
         if (_api == null) return;
 
-        _api.OnCoreReady += () =>
-        {
-            _gravity = new Gravity(this, _api);
-            _api.RegisterFeature(_gravity);
-        };
+        _gravity = new Gravity(this, _api);
+        _api.RegisterFeature(_gravity);
     }
 
     public override void Unload(bool hotReload)
@@ -39,9 +37,31 @@ public class VipGravity : BasePlugin
 public class Gravity : VipFeatureBase
 {
     public override string Feature => "Gravity";
-    
+
+    private readonly MoveType_t[] _oldMoveType = new MoveType_t[70];
+
     public Gravity(VipGravity vipGravity, IVipCoreApi api) : base(api)
     {
+        vipGravity.RegisterListener<Listeners.OnTick>(() =>
+        {
+            foreach (var player in Utilities.GetPlayers()
+                         .Where(u => u.IsValid &&
+                                     IsClientVip(u) &&
+                                     PlayerHasFeature(u) &&
+                                     GetPlayerFeatureState(u) is FeatureState.Enabled))
+            {
+                var playerPawn = player.PlayerPawn.Value;
+                if (playerPawn is null) return;
+
+                if (_oldMoveType[player.Slot] is MoveType_t.MOVETYPE_LADDER &&
+                    playerPawn.ActualMoveType is not MoveType_t.MOVETYPE_LADDER)
+                {
+                    playerPawn.GravityScale = GetFeatureValue<float>(player);
+                }
+
+                _oldMoveType[player.Slot] = playerPawn.ActualMoveType;
+            }
+        });
     }
 
     public override void OnPlayerSpawn(CCSPlayerController player)
@@ -52,15 +72,15 @@ public class Gravity : VipFeatureBase
         var playerPawnValue = player.PlayerPawn.Value;
 
         if (playerPawnValue == null) return;
-        
+
         playerPawnValue.GravityScale = GetFeatureValue<float>(player);
     }
-    
+
     public override void OnSelectItem(CCSPlayerController player, FeatureState state)
     {
         Console.WriteLine(state);
         var playerPawnValue = player.PlayerPawn.Value;
-        
+
         if (state == FeatureState.Disabled)
         {
             if (playerPawnValue != null)

@@ -21,11 +21,8 @@ public class VipArmor : BasePlugin
         _api = PluginCapability.Get();
         if (_api == null) return;
 
-        _api.OnCoreReady += () =>
-        {
-            _armor = new Armor(_api);
-            _api.RegisterFeature(_armor);
-        };
+        _armor = new Armor(_api);
+        _api.RegisterFeature(_armor);
     }
 
     public override void Unload(bool hotReload)
@@ -49,7 +46,6 @@ public class Armor : VipFeatureBase
         var playerPawn = player.PlayerPawn.Value;
 
         var armorValue = GetFeatureValue<int>(player);
-
         if (armorValue <= 0 || playerPawn == null) return;
 
         if (playerPawn.ItemServices != null)

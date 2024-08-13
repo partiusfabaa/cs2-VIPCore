@@ -1,6 +1,9 @@
-﻿using CounterStrikeSharp.API.Core;
+﻿using System.Text;
+using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Admin;
+using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -42,7 +45,7 @@ public class Flags : VipFeatureBase
     private readonly VipFlags _vipFlags;
     public override string Feature => "flags";
     private readonly Dictionary<ulong, List<string>> _flags = new();
-    private bool[] _clientDisconnected = new bool[70];
+    private readonly bool[] _clientDisconnected = new bool[70];
     
     public Flags(VipFlags vipFlags, IVipCoreApi api) : base(api)
     {
@@ -60,13 +63,6 @@ public class Flags : VipFeatureBase
             }
             
             return HookResult.Continue;
-        });
-        
-        vipFlags.AddCommand("css_testflag", "", (player, info) =>
-        {
-            if (player is null) return;
-            
-            player.PrintToChat($"{AdminManager.PlayerHasPermissions(player, "@css/viptestflag")}");
         });
     }
 
