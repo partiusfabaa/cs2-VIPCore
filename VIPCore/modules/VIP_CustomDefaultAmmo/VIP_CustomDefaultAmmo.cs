@@ -5,20 +5,22 @@ using CounterStrikeSharp.API.Core.Attributes;
 using VipCoreApi;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
+using System.Text.Json;
+using System.IO;
+using System.Linq;
 
 namespace VIP_CustomDefaultAmmo;
-
+    
 public class VipCustomDefaultAmmo : BasePlugin
 {
     public override string ModuleAuthor => "panda";
     public override string ModuleName => "[VIP] Custom Default Ammo";
     public override string ModuleVersion => "v1.0";
-
     private IVipCoreApi? _api;
     private CustomDefaultAmmo? _CustomDefaultAmmoFeature;
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
-    
+    public CustomDefaultAmmoConfig _config = null!;
+
     public override void OnAllPluginsLoaded(bool hotReload)
     {
         _api = PluginCapability.Get();
@@ -26,8 +28,10 @@ public class VipCustomDefaultAmmo : BasePlugin
 
         _CustomDefaultAmmoFeature = new CustomDefaultAmmo(this, _api);
         _api.RegisterFeature(_CustomDefaultAmmoFeature);
+
+        _config = LoadConfig();
     }
-    
+
     public override void Unload(bool hotReload)
     {
         if (_api != null && _CustomDefaultAmmoFeature != null)
@@ -35,70 +39,119 @@ public class VipCustomDefaultAmmo : BasePlugin
             _api?.UnRegisterFeature(_CustomDefaultAmmoFeature);
         }
     }
+
+    private CustomDefaultAmmoConfig LoadConfig()
+    {
+        if (_api == null) throw new InvalidOperationException("API is not initialized.");
+
+        var configPath = Path.Combine(_api.ModulesConfigDirectory, "vip_custom_default_ammo.json");
+
+        if (!File.Exists(configPath))
+        {
+            return CreateConfig(configPath);
+        }
+
+        var configJson = File.ReadAllText(configPath);
+        return JsonSerializer.Deserialize<CustomDefaultAmmoConfig>(configJson) ?? CreateConfig(configPath);
+    }
+    
+    private CustomDefaultAmmoConfig CreateConfig(string configPath)
+    {
+        var defaultConfig = new CustomDefaultAmmoConfig
+        {
+            WeaponSettings = new Dictionary<string, WeaponSettings>
+            {
+                { "weapon_awp", new WeaponSettings { DefaultClip = 50, DefaultReserve = 100 } },
+                { "weapon_ak47", new WeaponSettings { DefaultClip = 30, DefaultReserve = 120 } },
+                { "weapon_m4a1", new WeaponSettings { DefaultClip = 20, DefaultReserve = 90 } }
+                // Add more weapons as needed
+            }
+        };
+
+        File.WriteAllText(configPath, JsonSerializer.Serialize(defaultConfig, new JsonSerializerOptions { WriteIndented = true }));
+        return defaultConfig;
+    }
+
+    private void SaveConfig()
+    {
+        if (_api == null) throw new InvalidOperationException("API is not initialized.");
+
+        var configPath = Path.Combine(_api.ModulesConfigDirectory, "vip_custom_default_ammo.json");
+        File.WriteAllText(configPath, JsonSerializer.Serialize(_config, new JsonSerializerOptions { WriteIndented = true }));
+    }
 }
 
 public class CustomDefaultAmmo : VipFeatureBase
 {
     public override string Feature => "CustomDefaultAmmo";
-    private CustomDefaultAmmoConfig _config;
+    private readonly VipCustomDefaultAmmo _vipCustomAmmo;
 
     public CustomDefaultAmmo(VipCustomDefaultAmmo vipCustomAmmo, IVipCoreApi api) : base(api)
     {
+        _vipCustomAmmo = vipCustomAmmo;
         vipCustomAmmo.RegisterListener<Listeners.OnEntityCreated>(OnEntityCreated);
-        _config = new CustomDefaultAmmoConfig();
     }
-    
+
     public void OnEntityCreated(CEntityInstance entity)
     {
+        if (entity == null || entity.Entity == null || !entity.IsValid || !entity.DesignerName.Contains("weapon_"))
+            return;
+
         CBasePlayerWeapon? weapon = new(entity.Entity.Handle);
-        if (weapon == null || !weapon.IsValid) return;
+        if (weapon == null || !weapon.IsValid)
+            return;
 
-        CCSPlayerController? player = Utilities.GetPlayerFromSteamId((ulong)weapon.OriginalOwnerXuidLow);
-        if (player == null) return;
-        
-        _config = GetFeatureValue<CustomDefaultAmmoConfig>(player);
-        
-        if (entity == null || entity.Entity == null || !entity.IsValid || !entity.DesignerName.Contains("weapon_")) return;
-        
-        foreach (var item in _config.WeaponSettings)
+        var players = Utilities.GetPlayers().Where(x => x is { IsBot: false, Connected: PlayerConnectedState.PlayerConnected });
+
+        foreach (var player in players)
         {
-            if (string.IsNullOrEmpty(item.Key) || item.Value == null) continue;
+            if (player == null) return;
+
+            if (!PlayerHasFeature(player)) return;
+            if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled or IVipCoreApi.FeatureState.NoAccess) return;
             
-            Server.NextFrame(() =>
+            var config = _vipCustomAmmo._config;
+
+            foreach (var item in config.WeaponSettings)
             {
-                if (!weapon.IsValid) return;
-                
-                string weaponName = item.Key.Trim();
-                
-                if (!CheckIfWeapon(weaponName, weapon.AttributeManager.Item.ItemDefinitionIndex)) return;
-                
-                CCSWeaponBase _weapon = weapon.As<CCSWeaponBase>();
-                if (_weapon == null) return;
+                if (string.IsNullOrEmpty(item.Key) || item.Value == null) continue;
 
-                if (item.Value.DefaultClip != -1)
+                Server.NextFrame(() =>
                 {
-                    if (_weapon.VData != null)
+                    if (!weapon.IsValid) return;
+
+                    string weaponName = item.Key.Trim();
+
+                    if (!CheckIfWeapon(weaponName, weapon.AttributeManager.Item.ItemDefinitionIndex)) return;
+
+                    CCSWeaponBase? _weapon = weapon.As<CCSWeaponBase>();
+                    if (_weapon == null) return;
+
+                    if (item.Value.DefaultClip != -1)
                     {
-                        _weapon.VData.MaxClip1 = item.Value.DefaultClip;
-                        _weapon.VData.DefaultClip1 = item.Value.DefaultClip;
+                        if (_weapon.VData != null)
+                        {
+                            _weapon.VData.MaxClip1 = item.Value.DefaultClip;
+                            _weapon.VData.DefaultClip1 = item.Value.DefaultClip;
+                        }
+
+                        _weapon.Clip1 = item.Value.DefaultClip;
+
+                        Utilities.SetStateChanged(_weapon, "CBasePlayerWeapon", "m_iClip1");
                     }
-
-                    _weapon.Clip1 = item.Value.DefaultClip;
-
-                    Utilities.SetStateChanged(weapon.As<CCSWeaponBase>(), "CBasePlayerWeapon", "m_iClip1");
-                }
-
-                if (item.Value.DefaultReserve != -1)
-                {
-                    if (_weapon.VData != null)
+                    
+                    if (item.Value.DefaultReserve != -1)
                     {
-                        _weapon.VData.PrimaryReserveAmmoMax = item.Value.DefaultReserve;
+                        if (_weapon.VData != null)
+                        {
+                            _weapon.VData.PrimaryReserveAmmoMax = item.Value.DefaultReserve;
+                        }
+                        _weapon.ReserveAmmo[0] = item.Value.DefaultReserve;
+                        
+                        Utilities.SetStateChanged(_weapon, "CBasePlayerWeapon", "m_pReserveAmmo");
                     }
-                    _weapon.ReserveAmmo[0] = item.Value.DefaultReserve;
-
-                    Utilities.SetStateChanged(weapon.As<CCSWeaponBase>(), "CBasePlayerWeapon", "m_pReserveAmmo");
-                }
-            });
+                });
+            }
         }
     }
 
@@ -148,11 +201,11 @@ public class CustomDefaultAmmo : VipFeatureBase
 
 public class CustomDefaultAmmoConfig
 {
-    public Dictionary<string, WeaponSetting> WeaponSettings { get; set; } = new();
+    public Dictionary<string, WeaponSettings> WeaponSettings { get; set; } = new();
+}
 
-    public class WeaponSetting
-    {
-        public int DefaultClip { get; set; } = -1;
-        public int DefaultReserve { get; set; } = -1;
-    }
+public class WeaponSettings
+{
+    public int DefaultClip { get; init; }
+    public int DefaultReserve { get; init; }
 }

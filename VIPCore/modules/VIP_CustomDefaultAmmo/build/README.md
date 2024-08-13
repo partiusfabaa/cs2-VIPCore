@@ -4,24 +4,26 @@
 
 ### in vip.json
 ```json
-  "CustomDefaultAmmo": {
+  "CustomDefaultAmmo": true
+```
+### in configs/plugins/VIPCore/Modules/vip_custom_default_ammo.json
+```json
+{
+  "WeaponSettings": {
+    "weapon_awp": {
+      "DefaultClip": 50,
+      "DefaultReserve": 100
+    },
     "weapon_ak47": {
       "DefaultClip": 30,
       "DefaultReserve": 120
     },
     "weapon_m4a1": {
-      "DefaultClip": 30,
-      "DefaultReserve": 120
-    },
-    "weapon_awp": {
-      "DefaultClip": 10,
-      "DefaultReserve": 30
-    },
-    "weapon_deagle": {
-      "DefaultClip": 7,
-      "DefaultReserve": 35
+      "DefaultClip": 20,
+      "DefaultReserve": 90
     }
-    // Add more weapons as needed
+  }
+  //add more as needed
 }
 ```
 
