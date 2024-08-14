@@ -226,6 +226,13 @@ public interface IVipCoreApi
     /// <returns></returns>
     IMenu CreateMenu(string title);
 
+    
+    /// <summary>
+    /// Returns server id
+    /// </summary>
+    /// <returns>int</returns>
+    int GetServerId();
+
     /// <summary>
     /// Event triggered when a player is spawned.
     /// </summary>
