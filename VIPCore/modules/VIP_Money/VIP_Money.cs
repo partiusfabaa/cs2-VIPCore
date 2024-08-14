@@ -1,4 +1,5 @@
-﻿using CounterStrikeSharp.API.Core;
+﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
 using static VipCoreApi.IVipCoreApi;
@@ -22,11 +23,8 @@ public class VipMoney : BasePlugin
         _api = PluginCapability.Get();
         if (_api == null) return;
 
-        _api.OnCoreReady += () =>
-        {
-            _money = new Money(_api);
-            _api.RegisterFeature(_money);
-        };
+        _money = new Money(_api);
+        _api.RegisterFeature(_money);
     }
 
     public override void Unload(bool hotReload)
@@ -56,23 +54,22 @@ public class Money : VipFeatureBase
 
         if (string.IsNullOrWhiteSpace(moneyValue)) return;
 
-        int maxmoney = ConVar.Find("mp_maxmoney").GetPrimitiveValue<int>();
+        var maxMoney = ConVar.Find("mp_maxmoney")!.GetPrimitiveValue<int>();
 
         if (moneyValue.Contains("++"))
         {
             var money = int.Parse(moneyValue.Split("++")[1]);
-            if (moneyServices.Account + money  > maxmoney)
-                moneyServices.Account = maxmoney;
+            if (moneyServices.Account + money  > maxMoney)
+                moneyServices.Account = maxMoney;
             else
                 moneyServices.Account += money;
         }
         else
         {
             var money = int.Parse(moneyValue);
-            if (money > maxmoney)
-                moneyServices.Account = maxmoney;
-            else
-                moneyServices.Account = money;
+            moneyServices.Account = money > maxMoney ? maxMoney : money;
         }
+        
+        Utilities.SetStateChanged(player, "CCSPlayerController_InGameMoneyServices", "m_iAccount");
     }
 }

@@ -43,6 +43,8 @@ public class BuyTeamWeapon : VipFeatureBase
         basePlugin.AddCommand("css_ak47", "buy ak47", (player, _) => BuyWeapon(player, "weapon_ak47", 2700));
         basePlugin.AddCommand("css_m4a1", "buy m4a1", (player, _) => BuyWeapon(player, "weapon_m4a1_silencer", 2900));
         basePlugin.AddCommand("css_m4a4", "buy m4a4", (player, _) => BuyWeapon(player, "weapon_m4a1", 3000));
+        basePlugin.AddCommand("css_glock", "buy glock", (player, _) => BuyWeapon(player, "weapon_glock", 200));
+        basePlugin.AddCommand("css_usp", "buy usp", (player, _) => BuyWeapon(player, "weapon_usp_silencer", 200));
     }
     
     private HookResult EventRoundStart(EventRoundStart @event, GameEventInfo info)
@@ -52,8 +54,8 @@ public class BuyTeamWeapon : VipFeatureBase
             PrintToChat(player, 
                 GetTranslatedText("buyteamweapon.round_start", 
                     player.Team is CsTeam.Terrorist 
-                ? "!m4a1, !m4a4"
-                : "!ak47"));
+                ? "!m4a1, !m4a4, !glock"
+                : "!ak47, !usp"));
         }
 
         return HookResult.Continue;
