@@ -43,6 +43,7 @@ public class VipCoreApi : IVipCoreApi
         return  _vipCore.CoreConfig.ServerId;
     }
 
+
     public void RegisterFeature(VipFeatureBase vipFeatureBase, FeatureType featureType = FeatureType.Toggle)
     {
         foreach (var config in _vipCore.Config.Groups)

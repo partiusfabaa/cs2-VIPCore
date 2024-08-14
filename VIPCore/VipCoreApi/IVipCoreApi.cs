@@ -233,6 +233,7 @@ public interface IVipCoreApi
     /// <returns>int</returns>
     int GetServerId();
 
+
     /// <summary>
     /// Event triggered when a player is spawned.
     /// </summary>
