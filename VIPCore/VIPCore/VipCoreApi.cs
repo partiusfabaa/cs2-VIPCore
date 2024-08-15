@@ -39,6 +39,11 @@ public class VipCoreApi : IVipCoreApi
         OnCoreReady?.Invoke();
     }
 
+    public int GetServerId(){
+        return  _vipCore.CoreConfig.ServerId;
+    }
+
+
     public void RegisterFeature(VipFeatureBase vipFeatureBase, FeatureType featureType = FeatureType.Toggle)
     {
         foreach (var config in _vipCore.Config.Groups)
@@ -109,6 +114,9 @@ public class VipCoreApi : IVipCoreApi
     {
         return _vipCore.IsPlayerVip(player) && _vipCore.IsCoreEnableConVar.Value;
     }
+
+    
+
 
     public bool PlayerHasFeature(CCSPlayerController player, string feature)
     {
