@@ -89,7 +89,10 @@ public class Fov : VipFeatureBase
     private void ChangeFov(CCSPlayerController player)
     {
         var fov = (uint)_fovSettings[player.Slot];
-        SetPlayerCookie(player.SteamID, "player_fov", fov);
+        
+        if(IsClientVip(player))
+            SetPlayerCookie(player.SteamID, "player_fov", fov);
+        
         player.DesiredFOV = fov;
         Utilities.SetStateChanged(player, "CBasePlayerController", "m_iDesiredFOV");
     }
