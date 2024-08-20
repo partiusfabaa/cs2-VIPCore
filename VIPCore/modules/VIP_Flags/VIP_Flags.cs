@@ -72,7 +72,7 @@ public class Flags : VipFeatureBase
 
         timer = _vipFlags.AddTimer(1f, () =>
         {
-            if (player.Connected != PlayerConnectedState.PlayerConnected)
+            if (!player.IsValid || player.Connected != PlayerConnectedState.PlayerConnected)
                 return;
 
             if (!_flags.ContainsKey(player.SteamID))
