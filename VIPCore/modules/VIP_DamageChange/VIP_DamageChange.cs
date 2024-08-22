@@ -73,16 +73,16 @@ public class DamageMultiplier : VipFeatureBase
 
                 if (weaponData == null)
                     return HookResult.Continue;
-
+                
                 if (weaponData.GearSlot != gear_slot_t.GEAR_SLOT_RIFLE &&
                     weaponData.GearSlot != gear_slot_t.GEAR_SLOT_PISTOL)
                     return HookResult.Continue;
 
                 var damageModifierValue = GetFeatureValue<float>(player);
-
+                
                 if (damageModifierValue < 1.0f)
                     return HookResult.Continue;
-
+                
                 damageInfo.Damage *= damageModifierValue;
                 return HookResult.Changed;
             }
