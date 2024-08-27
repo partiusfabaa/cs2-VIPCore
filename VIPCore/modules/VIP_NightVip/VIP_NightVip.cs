@@ -5,6 +5,7 @@ using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Entities;
+using CounterStrikeSharp.API.Modules.Timers;
 using VipCoreApi;
 
 namespace VIP_NightVip;
@@ -15,8 +16,10 @@ public class VIP_NightVipConfig
     public string PluginStartTime { get; set; } = "20:00:00";
     public string PluginEndTime { get; set; } = "08:00:00";
     public string Timezone { get; set; } = "UTC";
+    public int CheckTimer { get; set;} = 10;
 }
-[MinimumApiVersion(233)]
+
+[MinimumApiVersion(240)]
 public class VIP_NightVip : BasePlugin
 {
     public override string ModuleAuthor => "panda.";
@@ -38,16 +41,35 @@ public class VIP_NightVip : BasePlugin
         RegisterEventHandler<EventPlayerConnectFull>((@event, info) =>
         {
             var player = @event.Userid;
-            if (player == null || !player.IsValid || player.IsBot || player.IsHLTV || !player.PlayerPawn.IsValid)
+            if (player == null || !player.IsValid || player.IsBot || player.IsHLTV || !player.PlayerPawn.IsValid || !player.PawnIsAlive)
                 return HookResult.Continue;
 
             GiveVIP(player);
 
             return HookResult.Continue;
         });
+
+        AddTimer(Config.CheckTimer, ()=>
+        {
+            CheckAndGiveVIP();
+        }, TimerFlags.REPEAT );
+
+    }
+    private void CheckAndGiveVIP()
+    {
+        if (_api == null) return;
+
+        foreach (var player in Utilities.GetPlayers())
+        {
+            if (player == null || !player.IsValid || player.IsBot || player.IsHLTV || !player.PlayerPawn.IsValid || !player.PawnIsAlive)
+                continue;
+
+            if (!_api.IsClientVip(player))
+                GiveVIP(player);
+        }
     }
 
-    private void GiveVIP(CCSPlayerController player)
+    private void GiveVIP(CCSPlayerController? player)
     {
         if (_api == null || player == null) return;
 
@@ -64,9 +86,11 @@ public class VIP_NightVip : BasePlugin
         else
             isVipTime = currentTimeInTimeZone.TimeOfDay >= startTime || currentTimeInTimeZone.TimeOfDay < endTime;
 
-        if (isVipTime && !_api.IsClientVip(player) && player.IsValid && !player.IsBot && !player.IsHLTV && player != null)
+        if (isVipTime && !_api.IsClientVip(player) && player.IsValid && !player.IsBot && !player.IsHLTV && player != null && player.PawnIsAlive)
         {
-            var remainingTime = (endTime > currentTimeInTimeZone.TimeOfDay) ? (endTime - currentTimeInTimeZone.TimeOfDay).TotalMinutes : (TimeSpan.FromHours(24) - currentTimeInTimeZone.TimeOfDay + endTime).TotalMinutes;
+            var remainingTime = (endTime > currentTimeInTimeZone.TimeOfDay) 
+            ? (endTime - currentTimeInTimeZone.TimeOfDay).TotalMinutes
+            : (TimeSpan.FromHours(24) - currentTimeInTimeZone.TimeOfDay + endTime).TotalMinutes;
 
             _api.GiveClientTemporaryVip(player, Config.VIPGroup, (int)remainingTime);
             _api.PrintToChat(player, $" \x02[NightVIP] \x01You are receiving \x06VIP\x01 because it's \x07VIP Night \x01time.");
@@ -80,15 +104,12 @@ public class VIP_NightVip : BasePlugin
             VIPGroup = "vip",
             PluginStartTime = "20:00:00",
             PluginEndTime = "08:00:00",
-            Timezone = "UTC"
+            Timezone = "UTC",
+            CheckTimer = 10
         };
 
         File.WriteAllText(configPath, JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true }));
 
         return config;
-    }
-
-    public override void Unload(bool hotReload)
-    {
     }
 }

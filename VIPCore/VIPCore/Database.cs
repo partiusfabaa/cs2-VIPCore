@@ -94,10 +94,7 @@ public class Database
                 @"SELECT * FROM vip_users WHERE account_id = @AccId AND sid = @sid",
                 new { AccId = accountId, sid = serverId });
 
-            if (existingUser != null) return existingUser;
-
-            _vipCore.PrintLogError("User not found");
-            return null;
+            return existingUser ?? null;
         }
         catch (Exception e)
         {
@@ -225,13 +222,13 @@ public class Database
 
     public async Task RemoveUserFromDb(int accId)
     {
-        var existingUser = await GetExistingUserFromDb(accId);
-
-        if (existingUser == null)
-            return;
-
         try
         {
+            var existingUser = await GetExistingUserFromDb(accId);
+
+            if (existingUser == null)
+                return;
+            
             await using var connection = new MySqlConnection(_dbConnectionString);
             await connection.OpenAsync();
             var serverId = await GetServerId(connection);

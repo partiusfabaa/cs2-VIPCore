@@ -1,6 +1,7 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
+using Microsoft.Extensions.Logging;
 
 namespace VIP_InfiniteAmmo;
 
@@ -8,7 +9,7 @@ public class VipInfiniteAmmo : BasePlugin
 {
 	public override string ModuleAuthor => "panda";
 	public override string ModuleName => "[VIP] Infinite Ammo";
-	public override string ModuleVersion => "v1.0.0";
+	public override string ModuleVersion => "v1.1";
 
 	private IVipCoreApi? _api;
 	private InfiniteAmmo? _infiniteAmmoFeature;
@@ -34,36 +35,52 @@ public class VipInfiniteAmmo : BasePlugin
 public class InfiniteAmmo : VipFeatureBase
 {
 	public override string Feature => "InfiniteAmmo";
+	private Config _config;
 
 	public InfiniteAmmo(VipInfiniteAmmo vipAmmo, IVipCoreApi api) : base(api)
 	{
 		vipAmmo.RegisterEventHandler<EventWeaponFire>(OnWeaponFire);
 		vipAmmo.RegisterEventHandler<EventWeaponReload>(OnWeaponReload);
+		
+		_config = new Config();
 	}
 
 	private HookResult OnWeaponFire(EventWeaponFire @event, GameEventInfo info)
 	{
-		CCSPlayerController player = @event.Userid;
+		CCSPlayerController? player = @event.Userid;
+		if (player == null) return HookResult.Continue;
+
 		ApplyInfiniteAmmo(player);
 		return HookResult.Continue;
 	}
 
 	private HookResult OnWeaponReload(EventWeaponReload @event, GameEventInfo info)
 	{
-		CCSPlayerController player = @event.Userid;
+		CCSPlayerController? player = @event.Userid;
+		if (player == null) return HookResult.Continue;
+
 		ApplyInfiniteAmmo(player);
 		return HookResult.Continue;
 	}
-
-	private void ApplyInfiniteAmmo(CCSPlayerController player)
+	
+	private void ApplyInfiniteAmmo(CCSPlayerController? player)
 	{
+		if (player == null) return;
+		
 		if (!PlayerHasFeature(player)) return;
         if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
             or IVipCoreApi.FeatureState.NoAccess) return;
+		
+		_config = GetFeatureValue<Config>(player);
 
-		int featureValue = Api.GetFeatureValue<int>(player, Feature);
+		var activeWeapon = player.PlayerPawn.Value?.WeaponServices?.ActiveWeapon?.Value;
+		if (activeWeapon == null) return;
+		
+		string weaponName = activeWeapon?.DesignerName ?? string.Empty;
+		if (_config.DisabledGuns.Contains(weaponName)) 
+			return;
 
-		switch (featureValue)
+		switch (_config.Type)
 		{
 			case 1:
 				ApplyInfiniteClip(player);
@@ -71,11 +88,16 @@ public class InfiniteAmmo : VipFeatureBase
 			case 2:
 				ApplyInfiniteReserve(player);
 				break;
+			default:
+				Console.WriteLine("[InfiniteAmmo] Invalid type. Only value 1 or 2 are accepted.");
+				break;
 		}
 	}
 
-	private void ApplyInfiniteClip(CCSPlayerController player)
+	private void ApplyInfiniteClip(CCSPlayerController? player)
     {
+		if (player == null) return;
+		
         var activeWeaponHandle = player.PlayerPawn.Value?.WeaponServices?.ActiveWeapon;
         if (activeWeaponHandle?.Value != null)
         {
@@ -83,12 +105,20 @@ public class InfiniteAmmo : VipFeatureBase
         }
     }
 
-    private void ApplyInfiniteReserve(CCSPlayerController player)
+    private void ApplyInfiniteReserve(CCSPlayerController? player)
     {
+		if (player == null) return;
+
         var activeWeaponHandle = player.PlayerPawn.Value?.WeaponServices?.ActiveWeapon;
         if (activeWeaponHandle?.Value != null)
         {
             activeWeaponHandle.Value.ReserveAmmo[0] = 100;
         }
     }
+}
+
+public class Config
+{
+    public int Type { get; set; } = 1;
+	public List<string> DisabledGuns { get; set; } = new List<string>();
 }

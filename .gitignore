@@ -2,6 +2,7 @@
 **/.idea
 **/bin
 **/obj
+.history
 
 VIPCore/ignoremodules/
 VIPCore/privatemodules/
@@ -24,3 +25,4 @@ VIPCore/modules/VIP_TestM/Class1.cs
 
 VIPCore/VIPCore.zip
 VIPCore-v1.2.2/
+VIPCore_/
