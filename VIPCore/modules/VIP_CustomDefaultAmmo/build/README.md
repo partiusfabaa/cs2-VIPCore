@@ -4,7 +4,7 @@
 
 ### in vip.json
 ```json
-  "CustomDefaultAmmo": true
+  "CustomDefaultAmmo": "VIPGroup1"
 ```
 ### in configs/plugins/VIPCore/Modules/vip_custom_default_ammo.json
 ```json
