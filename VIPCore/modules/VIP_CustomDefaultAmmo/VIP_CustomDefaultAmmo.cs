@@ -1,4 +1,4 @@
-﻿﻿﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Core.Attributes;
@@ -11,66 +11,85 @@ using System.IO;
 using System.Linq;
 
 namespace VIP_CustomDefaultAmmo;
-    
+
 public class VipCustomDefaultAmmo : BasePlugin
 {
     public override string ModuleAuthor => "panda";
     public override string ModuleName => "[VIP] Custom Default Ammo";
-    public override string ModuleVersion => "v1.0";
+    public override string ModuleVersion => "v1.1-dev";
+
     private IVipCoreApi? _api;
-    private CustomDefaultAmmo? _CustomDefaultAmmoFeature;
+    private CustomDefaultAmmo? _customDefaultAmmoFeature;
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
-    public CustomDefaultAmmoConfig _config = null!;
+    public Dictionary<string, Dictionary<string, WeaponSettings>> _ammoConfig = new();
 
     public override void OnAllPluginsLoaded(bool hotReload)
     {
         _api = PluginCapability.Get();
         if (_api == null) return;
 
-        _CustomDefaultAmmoFeature = new CustomDefaultAmmo(this, _api);
-        _api.RegisterFeature(_CustomDefaultAmmoFeature);
+        _customDefaultAmmoFeature = new CustomDefaultAmmo(this, _api);
+        _api.RegisterFeature(_customDefaultAmmoFeature);
 
-        _config = LoadConfig();
+        LoadConfig();
     }
 
     public override void Unload(bool hotReload)
     {
-        if (_api != null && _CustomDefaultAmmoFeature != null)
+        if (_api != null && _customDefaultAmmoFeature != null)
         {
-            _api?.UnRegisterFeature(_CustomDefaultAmmoFeature);
+            _api.UnRegisterFeature(_customDefaultAmmoFeature);
         }
     }
 
-    private CustomDefaultAmmoConfig LoadConfig()
+    private void LoadConfig()
     {
-        if (_api == null) throw new InvalidOperationException("API is not initialized.");
+        if (_api == null)
+        {
+            throw new InvalidOperationException("API is not initialized.");
+        }
 
         var configPath = Path.Combine(_api.ModulesConfigDirectory, "vip_custom_default_ammo.json");
 
         if (!File.Exists(configPath))
         {
-            return CreateConfig(configPath);
+            _ammoConfig = CreateConfig();
+            SaveConfig(configPath);
         }
-
-        var configJson = File.ReadAllText(configPath);
-        return JsonSerializer.Deserialize<CustomDefaultAmmoConfig>(configJson) ?? CreateConfig(configPath);
-    }
-    
-    private CustomDefaultAmmoConfig CreateConfig(string configPath)
-    {
-        var defaultConfig = new CustomDefaultAmmoConfig
+        else
         {
-            WeaponSettings = new Dictionary<string, WeaponSettings>
+            var configJson = File.ReadAllText(configPath);
+            _ammoConfig = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, WeaponSettings>>>(configJson) ?? CreateConfig();
+        }
+    }
+
+    private Dictionary<string, Dictionary<string, WeaponSettings>> CreateConfig()
+    {
+        return new Dictionary<string, Dictionary<string, WeaponSettings>>
+        {
             {
-                { "weapon_awp", new WeaponSettings { DefaultClip = 50, DefaultReserve = 100 } },
-                { "weapon_ak47", new WeaponSettings { DefaultClip = 30, DefaultReserve = 120 } },
-                { "weapon_m4a1", new WeaponSettings { DefaultClip = 20, DefaultReserve = 90 } }
+                "VIPGroup1", new Dictionary<string, WeaponSettings>
+                {
+                    { "weapon_awp", new WeaponSettings { DefaultClip = 50, DefaultReserve = 100 } },
+                    { "weapon_ak47", new WeaponSettings { DefaultClip = 35, DefaultReserve = 120 } }
+                }
+            },
+            {
+                "VIPGroup2", new Dictionary<string, WeaponSettings>
+                {
+                    { "weapon_awp", new WeaponSettings { DefaultClip = 30, DefaultReserve = 90 } },
+                    { "weapon_m4a1", new WeaponSettings { DefaultClip = 30, DefaultReserve = 90 } }
+                }
             }
         };
-
-        File.WriteAllText(configPath, JsonSerializer.Serialize(defaultConfig, new JsonSerializerOptions { WriteIndented = true }));
-        return defaultConfig;
     }
+
+    private void SaveConfig(string configPath)
+    {
+        var configJson = JsonSerializer.Serialize(_ammoConfig, new JsonSerializerOptions { WriteIndented = true });
+        File.WriteAllText(configPath, configJson);
+    }
+
 }
 
 public class CustomDefaultAmmo : VipFeatureBase
@@ -102,9 +121,12 @@ public class CustomDefaultAmmo : VipFeatureBase
 
             if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled) return;
             
-            var config = _vipCustomAmmo._config;
+            string groupName = GetFeatureValue<string>(player);
 
-            foreach (var item in config.WeaponSettings)
+            if (string.IsNullOrEmpty(groupName) || !_vipCustomAmmo._ammoConfig.TryGetValue(groupName, out var weaponSettings))
+                continue;
+            
+            foreach (var item in weaponSettings)
             {
                 if (string.IsNullOrEmpty(item.Key) || item.Value == null) continue;
 
@@ -131,7 +153,7 @@ public class CustomDefaultAmmo : VipFeatureBase
 
                         Utilities.SetStateChanged(_weapon, "CBasePlayerWeapon", "m_iClip1");
                     }
-                    
+
                     if (item.Value.DefaultReserve != -1)
                     {
                         if (_weapon.VData != null)
@@ -139,7 +161,7 @@ public class CustomDefaultAmmo : VipFeatureBase
                             _weapon.VData.PrimaryReserveAmmoMax = item.Value.DefaultReserve;
                         }
                         _weapon.ReserveAmmo[0] = item.Value.DefaultReserve;
-                        
+
                         Utilities.SetStateChanged(_weapon, "CBasePlayerWeapon", "m_pReserveAmmo");
                     }
                 });
@@ -150,7 +172,7 @@ public class CustomDefaultAmmo : VipFeatureBase
     public override void OnPlayerLoaded(CCSPlayerController player, string group)
     {
         if (!PlayerHasFeature(player)) return;
-        
+
         _customEnabled[player.Slot] = GetPlayerFeatureState(player) == FeatureState.Enabled;
     }
 
@@ -203,13 +225,8 @@ public class CustomDefaultAmmo : VipFeatureBase
     }
 }
 
-public class CustomDefaultAmmoConfig
-{
-    public Dictionary<string, WeaponSettings> WeaponSettings { get; set; } = new();
-}
-
 public class WeaponSettings
 {
-    public int DefaultClip { get; init; }
-    public int DefaultReserve { get; init; }
+    public int DefaultClip { get; set; }
+    public int DefaultReserve { get; set; }
 }
