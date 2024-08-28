@@ -1,4 +1,4 @@
-using CounterStrikeSharp.API;
+﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Core.Attributes;
@@ -119,7 +119,9 @@ public class CustomDefaultAmmo : VipFeatureBase
         {
             if (player == null) return;
 
-            if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled) return;
+            if (!PlayerHasFeature(player)) return;
+            if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
+            or IVipCoreApi.FeatureState.NoAccess) return;
             
             string groupName = GetFeatureValue<string>(player);
 
