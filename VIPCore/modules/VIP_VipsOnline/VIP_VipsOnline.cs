@@ -52,34 +52,38 @@ public class VIPVipsOnline : BasePlugin
         }
     }
 
-    private readonly Dictionary<string, char> _colorMap = new()
+        public static readonly Dictionary<string, char> ColorMap = new Dictionary<string, char>
     {
-        { "[default]", ChatColors.Default },
-        { "[white]", ChatColors.White },
-        { "[darkred]", ChatColors.DarkRed },
-        { "[green]", ChatColors.Green },
-        { "[lightyellow]", ChatColors.LightYellow },
-        { "[lightblue]", ChatColors.LightBlue },
-        { "[olive]", ChatColors.Olive },
-        { "[lime]", ChatColors.Lime },
-        { "[red]", ChatColors.Red },
-        { "[lightpurple]", ChatColors.LightPurple },
-        { "[purple]", ChatColors.Purple },
-        { "[grey]", ChatColors.Grey },
-        { "[yellow]", ChatColors.Yellow },
-        { "[gold]", ChatColors.Gold },
-        { "[silver]", ChatColors.Silver },
-        { "[blue]", ChatColors.Blue },
-        { "[darkblue]", ChatColors.DarkBlue },
-        { "[bluegrey]", ChatColors.BlueGrey },
-        { "[magenta]", ChatColors.Magenta },
-        { "[lightred]", ChatColors.LightRed },
-        { "[orange]", ChatColors.Orange }
+        { "{default}", ChatColors.Default },
+        { "{white}", ChatColors.White },
+        { "{darkred}", ChatColors.DarkRed },
+        { "{green}", ChatColors.Green },
+        { "{lightyellow}", ChatColors.LightYellow },
+        { "{lightblue}", ChatColors.LightBlue },
+        { "{olive}", ChatColors.Olive },
+        { "{lime}", ChatColors.Lime },
+        { "{red}", ChatColors.Red },
+        { "{lightpurple}", ChatColors.LightPurple },
+        { "{purple}", ChatColors.Purple },
+        { "{grey}", ChatColors.Grey },
+        { "{yellow}", ChatColors.Yellow },
+        { "{gold}", ChatColors.Gold },
+        { "{silver}", ChatColors.Silver },
+        { "{blue}", ChatColors.Blue },
+        { "{darkblue}", ChatColors.DarkBlue },
+        { "{bluegrey}", ChatColors.BlueGrey },
+        { "{magenta}", ChatColors.Magenta },
+        { "{lightred}", ChatColors.LightRed },
+        { "{orange}", ChatColors.Orange }
     };
 
-    private string ReplaceColorPlaceholders(string message)
+    public string ReplaceColorPlaceholders(string message)
     {
-        foreach (var colorPlaceholder in _colorMap)
+        if (!string.IsNullOrEmpty(message) && message[0] != ' ')
+        {
+            message = " " + message;
+        }
+        foreach (var colorPlaceholder in ColorMap)
         {
             message = message.Replace(colorPlaceholder.Key, colorPlaceholder.Value.ToString());
         }

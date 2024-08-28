@@ -1,0 +1,1 @@
+# Random message when VIP player connects
