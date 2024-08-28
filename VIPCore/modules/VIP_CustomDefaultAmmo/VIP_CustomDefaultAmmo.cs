@@ -16,7 +16,7 @@ public class VipCustomDefaultAmmo : BasePlugin
 {
     public override string ModuleAuthor => "panda";
     public override string ModuleName => "[VIP] Custom Default Ammo";
-    public override string ModuleVersion => "v1.1-dev";
+    public override string ModuleVersion => "v1.1";
 
     private IVipCoreApi? _api;
     private CustomDefaultAmmo? _customDefaultAmmoFeature;
