@@ -14,8 +14,7 @@ namespace VIPCore;
 public class VipCoreApi : IVipCoreApi
 {
     private readonly VipCore _vipCore;
-
-    //public event Action? OnCoreReady;
+    private readonly Dictionary<ulong, Dictionary<string, FeatureState>> _savedFeatureStates = new();
 
     public event Action<CCSPlayerController>? OnPlayerSpawn;
     public event Action<CCSPlayerController, string>? PlayerLoaded;
@@ -39,10 +38,10 @@ public class VipCoreApi : IVipCoreApi
         OnCoreReady?.Invoke();
     }
 
-    public int GetServerId(){
-        return  _vipCore.CoreConfig.ServerId;
+    public int GetServerId()
+    {
+        return _vipCore.CoreConfig.ServerId;
     }
-
 
     public void RegisterFeature(VipFeatureBase vipFeatureBase, FeatureType featureType = FeatureType.Toggle)
     {
@@ -110,16 +109,30 @@ public class VipCoreApi : IVipCoreApi
         user.FeatureState[feature] = newState;
     }
 
+    public void DisableAllFeatures()
+    {
+        _vipCore.ForcedDisabledFeatures.Clear();
+
+        foreach (var feature in _vipCore.Features.Keys)
+        {
+            _vipCore.ForcedDisabledFeatures.Add(feature);
+        }
+    }
+
+    public void EnableAllFeatures()
+    {
+        _vipCore.ForcedDisabledFeatures.Clear();
+    }
+
     public bool IsClientVip(CCSPlayerController player)
     {
         return _vipCore.IsPlayerVip(player) && _vipCore.IsCoreEnableConVar.Value;
     }
 
-    
-
-
     public bool PlayerHasFeature(CCSPlayerController player, string feature)
     {
+        if (_vipCore.ForcedDisabledFeatures.Contains(feature)) return false;
+        
         if (!_vipCore.Users.TryGetValue(player.SteamID, out var user)) return false;
 
         if (user is null or { group: null }) return false;
@@ -146,7 +159,6 @@ public class VipCoreApi : IVipCoreApi
 
         return groups.Keys.ToArray();
     }
-
 
     public void UpdateClientVip(CCSPlayerController player, string name = "", string group = "", int time = -1)
     {
@@ -400,9 +412,9 @@ public class VipCoreApi : IVipCoreApi
         {
             try
             {
-                var stringValue = jsonElement.ToString();
-                var deserializedValue = (T)Convert.ChangeType(stringValue, typeof(T))!;
-                return deserializedValue;
+                var stringValue = ((JsonElement)jsonElement).GetRawText();
+                var deserializedValue = JsonSerializer.Deserialize<T>(stringValue);
+                return deserializedValue!;
             }
             catch (Exception)
             {
@@ -424,11 +436,10 @@ public class VipCoreApi : IVipCoreApi
     private string GetCookieFilePath(ulong steamId64)
     {
         var directoryPath = Path.Combine(CoreConfigDirectory, "cookies");
-    
+
         if (!Directory.Exists(directoryPath))
             Directory.CreateDirectory(directoryPath);
 
         return Path.Combine(directoryPath, $"{steamId64}.json");
     }
-
 }

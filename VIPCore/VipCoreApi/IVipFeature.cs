@@ -60,6 +60,9 @@ public abstract class VipFeatureBase : IVipFeature
     public void SetPlayerFeatureState(CCSPlayerController player, FeatureState newState) =>
         Api.SetPlayerFeatureState(player, Feature, newState);
 
+    public void DisableAllFeatures() => Api.DisableAllFeatures();
+    public void EnableAllFeatures() => Api.EnableAllFeatures();
+
     public T GetFeatureValue<T>(CCSPlayerController player) => Api.GetFeatureValue<T>(player, Feature);
 
     public string GetClientVipGroup(CCSPlayerController player) => Api.GetClientVipGroup(player);
