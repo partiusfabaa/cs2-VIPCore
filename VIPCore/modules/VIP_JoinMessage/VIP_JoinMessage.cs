@@ -20,7 +20,10 @@ public class VIPJoinMessage : BasePlugin
     private JoinMessage? _join;
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
     private IStringLocalizer<JoinMessage> _localizer = null!;
-
+    public VIPJoinMessage(IStringLocalizer<JoinMessage> localizer)
+    {
+        _localizer = localizer ?? throw new ArgumentNullException(nameof(localizer));
+    }
     public override void OnAllPluginsLoaded(bool hotReload)
     {
         _api = PluginCapability.Get();
@@ -45,21 +48,21 @@ public class JoinMessage: VipFeatureBase
     public JoinMessage(VIPJoinMessage joinMessage, IVipCoreApi api, IStringLocalizer<JoinMessage> localizer) : base(api)
     {
         _localizer = localizer;
-        joinMessage.RegisterEventHandler<EventPlayerConnectFull>(OnPlayerConnectFull);
+        joinMessage.RegisterEventHandler<EventPlayerConnect>(OnPlayerConnect);
     }
-    private HookResult OnPlayerConnectFull(EventPlayerConnectFull @event, GameEventInfo info)
+    private HookResult OnPlayerConnect(EventPlayerConnect @event, GameEventInfo info)
     {
         CCSPlayerController? player = @event.Userid;
         if (player == null) return HookResult.Continue;
-
+        
         if (!PlayerHasFeature(player)) return HookResult.Continue;
         if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
             or IVipCoreApi.FeatureState.NoAccess) return HookResult.Continue;
         
         string message = GetRandomLocalizedMessage(player.PlayerName);
-        message = ReplaceColorPlaceholders(message);
-        Server.PrintToChatAll(message);
-
+        string color_message = ReplaceColorPlaceholders(message);
+        Server.PrintToChatAll(color_message);
+        
         return HookResult.Continue;   
     }
 
@@ -71,11 +74,11 @@ public class JoinMessage: VipFeatureBase
                                     .ToList();
         
         if (messageKeys.Count == 0)
-            return "{default}Welcome, {playerName}!";
+            return "{default}Welcome, {0}!";
         
         Random rand = new Random();
         int index = rand.Next(messageKeys.Count);
-        string selectedMessage = _localizer[messageKeys[index], playerName];
+        string selectedMessage = _localizer[messageKeys[index]];
         
         return string.Format(selectedMessage, playerName);
     }
