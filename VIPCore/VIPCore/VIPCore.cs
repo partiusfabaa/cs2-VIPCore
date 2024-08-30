@@ -19,7 +19,7 @@ public class VipCore : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Core";
-    public override string ModuleVersion => "v1.3.1";
+    public override string ModuleVersion => "v1.3.2";
 
     public Config Config { get; set; } = null!;
     public CoreConfig CoreConfig { get; set; } = null!;
@@ -31,6 +31,8 @@ public class VipCore : BasePlugin
     
     public readonly ConcurrentDictionary<ulong, User> Users = new();
     public readonly ConcurrentDictionary<string, Feature> Features = new();
+    
+    public readonly HashSet<string> ForcedDisabledFeatures = new();
     
     private readonly PluginCapability<IVipCoreApi> _pluginCapability = new("vipcore:core");
 
@@ -50,7 +52,7 @@ public class VipCore : BasePlugin
         LoadConfig();
 
         DbConnectionString = BuildConnectionString();
-        Database = new Database(this, DbConnectionString);
+        Database = new Database(this, Logger, DbConnectionString);
 
         Task.Run(() => Database.CreateTable());
 
@@ -428,7 +430,7 @@ public class VipCore : BasePlugin
                         {
                             CreateMenu(controller);
                         }
-                    }, featureState == FeatureState.NoAccess);
+                    }, featureState == FeatureState.NoAccess || ForcedDisabledFeatures.Contains(key));
             }
         }
 

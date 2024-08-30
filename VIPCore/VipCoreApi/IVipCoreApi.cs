@@ -79,8 +79,17 @@ public interface IVipCoreApi
     /// <param name="player"></param>
     /// <param name="feature"></param>
     /// <param name="newState"></param>
-    /// <returns></returns>
     void SetPlayerFeatureState(CCSPlayerController player, string feature, FeatureState newState);
+    
+    /// <summary>
+    /// Turns off all functions
+    /// </summary>
+    void DisableAllFeatures();
+    
+    /// /// <summary>
+    /// Turns on all the functions
+    /// </summary>
+    void EnableAllFeatures();
 
     /// <summary>
     /// Checks if a player is a VIP client.

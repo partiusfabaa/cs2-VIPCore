@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace VIPCore;
 
 public class Config
@@ -25,6 +27,8 @@ public class CoreConfig
     public int TimeMode { get; init; } = 0;
     public int ServerId { get; init; } = 0;
     public bool UseCenterHtmlMenu { get; init; } = true;
+    [JsonPropertyName("ServerIP")] public string ServerIp { get; init; } = "0.0.0.0";
+    public int ServerPort { get; init; } = 27015;
 
     //public bool DisplayUnavailableOptions { get; init; }
     public bool ReOpenMenuAfterItemClick { get; init; } = false;
