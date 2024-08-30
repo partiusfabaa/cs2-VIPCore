@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -11,9 +11,6 @@
     <Reference Include="VipCoreApi">
       <HintPath>..\..\VipCoreApi.dll</HintPath>
     </Reference>
-    <PackageReference Include="Microsoft.Extensions.Localization" Version="8.0.0" />
-    
-    <None Update="lang\**\*.*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
-  
+
 </Project>
