@@ -5,16 +5,16 @@ using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using VipCoreApi;
 
-namespace VIP_TemmatesHeal;
+namespace VIP_TeammatesHeal;
 
-public class VipTemmatesHeal : BasePlugin
+public class VipTeammatesHeal : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Teammates Heal";
     public override string ModuleVersion => "v1.0.0";
 
     private IVipCoreApi? _api;
-    private TemmatesHeal? _flags;
+    private TeammatesHeal? _flags;
 
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
@@ -24,7 +24,7 @@ public class VipTemmatesHeal : BasePlugin
 
         if (_api == null) return;
 
-        _flags = new TemmatesHeal(_api);
+        _flags = new TeammatesHeal(_api);
         _api.RegisterFeature(_flags);
     }
 
@@ -44,14 +44,14 @@ public class Config
     public int HealPerShot { get; set; } = 25;
 }
 
-public class TemmatesHeal : VipFeatureBase, IDisposable
+public class TeammatesHeal : VipFeatureBase, IDisposable
 {
     public override string Feature => "TeammatesHeal";
 
     private readonly Config _config;
     private readonly float[] _healPercentages = new float[70];
 
-    public TemmatesHeal(IVipCoreApi api) : base(api)
+    public TeammatesHeal(IVipCoreApi api) : base(api)
     {
         VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(OnTakeDamage, HookMode.Pre);
         _config = LoadConfig<Config>("vip_teammates_heal");
