@@ -1,4 +1,4 @@
 {
-    "vip.NoVipsOnline": "[yellow]Niciun jucător VIP nu este online.",
-    "vip.OnlineVips": "[green]Jucători VIP online: [default]{0}."
+    "vip.NoVipsOnline": "{yellow}Niciun jucător VIP nu este online.",
+    "vip.OnlineVips": "{green}Jucători VIP online: {default}{0}."
 }
