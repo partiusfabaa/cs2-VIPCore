@@ -1,6 +1,7 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
+using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Text.Json;
@@ -13,7 +14,7 @@ public class VipWeaponsMenu : BasePlugin
 {
     public override string ModuleAuthor => "daffyy";
     public override string ModuleName => "[VIP] WeaponsMenu";
-    public override string ModuleVersion => "v1.0.0";
+    public override string ModuleVersion => "v1.0.1";
     
     private WeaponsMenu _weaponsMenu;
     private IVipCoreApi? _api;
@@ -99,6 +100,9 @@ public class WeaponsMenu : VipFeatureBase
         {
             menu.AddMenuOption($"{GetTranslatedText("weaponsmenu.fromround", package.Value.Round)} {package.Key}", (_, _) =>
             {
+                if (_gameRules != null && _gameRules.BuyTimeEnded)
+                    return;
+
                 RemoveWeapons(player);
 
                 package.Value.Weapons.ForEach(w =>
