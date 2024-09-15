@@ -31,7 +31,7 @@
                       },
                       "SCOUT + DEAGLE": {
                           "Weapons": [
-                              "weapon_scout",
+                              "weapon_ssg08",
                               "weapon_deagle"
                           ],
                           "Round": 1

@@ -3,7 +3,6 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
-using Microsoft.Extensions.Options;
 using System.Text.Json;
 using VipCoreApi;
 using static VipCoreApi.IVipCoreApi;
@@ -67,7 +66,7 @@ public class WeaponsMenu : VipFeatureBase
         if (player == null || !player.IsValid || player.IsBot || player.TeamNum < 2)
             return HookResult.Continue;
 
-        CreateMenu(player);
+        _weaponsMenu.AddTimer(1.0f, () => CreateMenu(player));
 
         return HookResult.Continue;
     }
@@ -88,29 +87,29 @@ public class WeaponsMenu : VipFeatureBase
 
         if (WeaponsSettings == null) return;
 
-        var menu = new ChatMenu(GetTranslatedText("weaponsmenu.title"));
-        int actualRound = ActualRound();
+        var menu = new ChatMenu(GetTranslatedText("weaponsmenu.title"))
+        {
+            ExitButton = true,
+            PostSelectAction = PostSelectAction.Close
+        };
+
+        int actualRound = _gameRules?.RoundsPlayedThisPhase+1 ?? 1;
 
         foreach (var package in player.Team == CsTeam.Terrorist ? WeaponsSettings.T : WeaponsSettings.CT)
         {
-            menu.AddMenuOption($"{GetTranslatedText("weaponsmenu.fromround", package.Value.Round)} {package.Key}", (controller, _) =>
+            menu.AddMenuOption($"{GetTranslatedText("weaponsmenu.fromround", package.Value.Round)} {package.Key}", (_, _) =>
             {
-                RemoveWeapons(controller);
+                RemoveWeapons(player);
 
                 package.Value.Weapons.ForEach(w =>
                 {
-                    controller.GiveNamedItem(w);
+                    player.GiveNamedItem(w);
                 });
 
             }, actualRound < package.Value.Round);
         }
 
         menu.Open(player);
-    }
-
-    private static int ActualRound()
-    {
-        return _gameRules?.RoundsPlayedThisPhase ?? 0;
     }
 
     private void RemoveWeapons(CCSPlayerController player)
@@ -120,17 +119,17 @@ public class WeaponsMenu : VipFeatureBase
 
         var weapons = player.PlayerPawn.Value.WeaponServices.MyWeapons;
 
-        if (weapons.Count == 0)
+        if (weapons == null || weapons.Count == 0)
             return;
-        if (player.Team is CsTeam.None or CsTeam.Spectator)
-            return;
+
+        player.ExecuteClientCommand("slot1");
+        player.ExecuteClientCommand("slot2");
 
         foreach (var weapon in weapons)
         {
             if (!weapon.IsValid || weapon.Value == null ||
-                !weapon.Value.IsValid || !weapon.Value.DesignerName.Contains("weapon_"))
+                !weapon.Value.IsValid)
                 continue;
-
 
             if (weapon.Value.Entity == null) continue;
 
