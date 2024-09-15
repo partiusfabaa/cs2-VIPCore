@@ -1,0 +1,12 @@
+{
+  "not.Vip": "You are not a VIP player.",
+  "no.Pack": "No packs available at this time.",
+  "pack.menu_title": "Select a Gun Pack",
+  "pack_description": "{0} - ({1})",
+  "no.Permission": "You do not have permission to access this pack.",
+  "received.Pack": "You have received the {0}",
+  "invalid.Pack": "Invalid pack selection. Please choose a valid pack number.",
+  "available.Packs": "Available packs:",
+  "usage.LimitReached": "You have reached the usage limit for this command."
+
+}
