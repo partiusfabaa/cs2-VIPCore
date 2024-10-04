@@ -14,7 +14,6 @@ namespace VIPCore;
 public class VipCoreApi : IVipCoreApi
 {
     private readonly VipCore _vipCore;
-    private readonly Dictionary<ulong, Dictionary<string, FeatureState>> _savedFeatureStates = new();
 
     public event Action<CCSPlayerController>? OnPlayerSpawn;
     public event Action<CCSPlayerController, string>? PlayerLoaded;
@@ -132,7 +131,7 @@ public class VipCoreApi : IVipCoreApi
     public bool PlayerHasFeature(CCSPlayerController player, string feature)
     {
         if (_vipCore.ForcedDisabledFeatures.Contains(feature)) return false;
-        
+
         if (!_vipCore.Users.TryGetValue(player.SteamID, out var user)) return false;
 
         if (user is null or { group: null }) return false;

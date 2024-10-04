@@ -54,7 +54,7 @@ public class NoFallDamage : VipFeatureBase, IDisposable
         
         var damageInfo = hook.GetParam<CTakeDamageInfo>(1);
 
-        if ((damageInfo.BitsDamageType & (int)DamageTypes_t.DMG_FALL) != 0 
+        if (damageInfo.BitsDamageType.HasFlag(DamageTypes_t.DMG_FALL) 
             && IsClientVip(player) 
             && PlayerHasFeature(player) 
             && GetFeatureValue<bool>(player)
