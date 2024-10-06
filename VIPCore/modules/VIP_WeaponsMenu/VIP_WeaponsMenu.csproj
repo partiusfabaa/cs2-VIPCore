@@ -10,7 +10,7 @@
     <PackageReference Include="CounterStrikeSharp.API" Version="1.0.276" />
 
     <Reference Include="VipCoreApi">
-      <HintPath>VipCoreApi.dll</HintPath>
+      <HintPath>..\..\VipCoreApi.dll</HintPath>
     </Reference>
   </ItemGroup>
 
