@@ -46,4 +46,11 @@ EN:
 ```json
 	"weaponsmenu.title": "Select weapons package:",
 	"weaponsmenu.fromround": "[From round {0}]",
+    "weaponsmenu.wanttosave": "Do you want to save this set?",
+    "weaponsmenu.wanttosave.yes": "Yes",
+    "weaponsmenu.wanttosave.no": "No",
+    "weaponsmenu.saved": "Your free set has been saved, you will receive it when possible!",
+    "weaponsmenu.resetinfo.reset": "Your free set has been reset, choose a new one in the next round!",
+    "weaponsmenu.resetinfo.info": "Do you want to change your set? Use the command {orange}!vwmenu{default} to select a new one in the next round.",
+    "weaponsmenu.notsaved": "Your free set was not saved, you will be able to choose a new one in the next round."
 ```
