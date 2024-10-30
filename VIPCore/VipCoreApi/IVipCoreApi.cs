@@ -261,4 +261,9 @@ public interface IVipCoreApi
     /// Event checks if the core is loaded
     /// </summary>
     event Action? OnCoreReady;
+
+    /// <summary>
+    /// Event for prevent toggle use of VIP menu.
+    /// </summary>
+    event Func<CCSPlayerController, string, FeatureState, FeatureType, HookResult?> OnPlayerUseFeature;
 }
