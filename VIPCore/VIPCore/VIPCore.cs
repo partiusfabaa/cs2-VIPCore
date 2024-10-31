@@ -350,7 +350,9 @@ public class VipCore : BasePlugin
         if (target == null) return;
         if (target.AuthorizedSteamID == null) return;
 
-        Task.Run(async () => await OnClientAuthorizedAsync(target, target.AuthorizedSteamID));
+        var steamid = target.AuthorizedSteamID;
+
+        Task.Run(async () => await OnClientAuthorizedAsync(target, steamid));
     }
 
     [RequiresPermissions("@css/root")]
