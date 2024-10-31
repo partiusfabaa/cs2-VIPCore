@@ -350,7 +350,9 @@ public class VipCore : BasePlugin
         if (target == null) return;
         if (target.AuthorizedSteamID == null) return;
 
-        OnClientAuthorizedAsync(target, target.AuthorizedSteamID);
+        var steamid = target.AuthorizedSteamID;
+
+        Task.Run(async () => await OnClientAuthorizedAsync(target, steamid));
     }
 
     [RequiresPermissions("@css/root")]
@@ -409,6 +411,14 @@ public class VipCore : BasePlugin
                         : $" [{value}]"),
                     (controller, _) =>
                     {
+                        var result = VipApi.PlayerUseFeature(player, key, featureState, featureType);
+
+                        if(result == HookResult.Handled || result == HookResult.Stop)
+                        {
+                            CreateMenu(player);
+                            return;
+                        }
+
                         var returnState = featureState;
                         if (featureType != FeatureType.Selectable)
                         {
