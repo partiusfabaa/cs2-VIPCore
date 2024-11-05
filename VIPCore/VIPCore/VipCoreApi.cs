@@ -19,7 +19,7 @@ public class VipCoreApi : IVipCoreApi
     public event Action<CCSPlayerController, string>? PlayerLoaded;
     public event Action<CCSPlayerController, string>? PlayerRemoved;
     public event Action? OnCoreReady;
-    public event Func<CCSPlayerController, string, FeatureState, FeatureType, HookResult?> OnPlayerUseFeature;
+    public event Func<CCSPlayerController, string, FeatureState, FeatureType, HookResult?>? OnPlayerUseFeature;
 
     public string GetTranslatedText(string name, params object[] args) => _vipCore.Localizer[name, args];
 
@@ -321,7 +321,7 @@ public class VipCoreApi : IVipCoreApi
 
     public HookResult? PlayerUseFeature(CCSPlayerController player, string feature, FeatureState state, FeatureType type)
     {
-        return OnPlayerUseFeature.Invoke(player, feature, state, type);
+        return OnPlayerUseFeature?.Invoke(player, feature, state, type);
     }
 
     public T GetFeatureValue<T>(CCSPlayerController player, string feature)

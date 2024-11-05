@@ -265,5 +265,5 @@ public interface IVipCoreApi
     /// <summary>
     /// Event for prevent toggle use of VIP menu.
     /// </summary>
-    event Func<CCSPlayerController, string, FeatureState, FeatureType, HookResult?> OnPlayerUseFeature;
+    event Func<CCSPlayerController, string, FeatureState, FeatureType, HookResult?>? OnPlayerUseFeature;
 }
