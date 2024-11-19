@@ -28,12 +28,12 @@ public class VipCore : BasePlugin
     public Database Database = null!;
 
     public readonly bool[] IsClientVip = new bool[70];
-    
+
     public readonly ConcurrentDictionary<ulong, User> Users = new();
     public readonly ConcurrentDictionary<string, Feature> Features = new();
-    
+
     public readonly HashSet<string> ForcedDisabledFeatures = new();
-    
+
     private readonly PluginCapability<IVipCoreApi> _pluginCapability = new("vipcore:core");
 
     public readonly FakeConVar<bool> IsCoreEnableConVar = new("css_vip_enable", "", true);
@@ -85,6 +85,14 @@ public class VipCore : BasePlugin
             if (player is null || !player.IsValid) return;
 
             Task.Run(() => OnClientAuthorizedAsync(player, id));
+        });
+
+        RegisterListener<Listeners.OnMapStart>(_ => VipApi.LoadCookies());
+        RegisterListener<Listeners.OnMapEnd>(() => VipApi.SaveCookies());
+        RegisterEventHandler<EventServerShutdown>((@event, info) =>
+        {
+            VipApi.SaveCookies();
+            return HookResult.Continue;
         });
 
         RegisterEventHandler<EventPlayerDisconnect>(EventPlayerDisconnect);
@@ -265,7 +273,7 @@ public class VipCore : BasePlugin
 
         Users.TryAdd(player.SteamID, user);
         IsClientVip[player.Slot] = true;
-        
+
         SetClientFeature(player.SteamID, user.group);
         VipApi.OnPlayerLoaded(player, user.group);
     }
@@ -292,7 +300,7 @@ public class VipCore : BasePlugin
         if (player != null)
         {
             VipApi.OnPlayerRemoved(player, Users[player.SteamID].group);
-            
+
             Users.TryRemove(player.SteamID, out _);
             IsClientVip[player.Slot] = false;
         }
@@ -413,7 +421,7 @@ public class VipCore : BasePlugin
                     {
                         var result = VipApi.PlayerUseFeature(player, key, featureState, featureType);
 
-                        if(result == HookResult.Handled || result == HookResult.Stop)
+                        if (result == HookResult.Handled || result == HookResult.Stop)
                         {
                             CreateMenu(player);
                             return;

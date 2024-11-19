@@ -14,6 +14,7 @@ namespace VIPCore;
 public class VipCoreApi : IVipCoreApi
 {
     private readonly VipCore _vipCore;
+    private Dictionary<ulong, PlayerCookie> _playersCookie = [];
 
     public event Action<CCSPlayerController>? OnPlayerSpawn;
     public event Action<CCSPlayerController, string>? PlayerLoaded;
@@ -319,7 +320,8 @@ public class VipCoreApi : IVipCoreApi
         PlayerRemoved?.Invoke(player, group);
     }
 
-    public HookResult? PlayerUseFeature(CCSPlayerController player, string feature, FeatureState state, FeatureType type)
+    public HookResult? PlayerUseFeature(CCSPlayerController player, string feature, FeatureState state,
+        FeatureType type)
     {
         return OnPlayerUseFeature?.Invoke(player, feature, state, type);
     }
@@ -388,63 +390,77 @@ public class VipCoreApi : IVipCoreApi
 
     public void SetPlayerCookie<T>(ulong steamId64, string key, T value)
     {
-        var cookie = LoadCookie(steamId64);
-
-        if (value == null) return;
-
-        if (cookie != null)
-        {
-            cookie.Features[key] = value;
-        }
-        else
+        if (!_playersCookie.TryGetValue(steamId64, out var cookie))
         {
             cookie = new PlayerCookie
             {
                 SteamId64 = steamId64,
-                Features = new Dictionary<string, object> { { key, value } }
+                Features = new Dictionary<string, object>()
             };
+
+            _playersCookie[steamId64] = cookie;
         }
 
-        File.WriteAllText(GetCookieFilePath(steamId64),
-            JsonSerializer.Serialize(cookie, new JsonSerializerOptions { WriteIndented = true }));
+        cookie.Features[key] = value!;
     }
 
     public T GetPlayerCookie<T>(ulong steamId64, string key)
     {
-        var cookie = LoadCookie(steamId64);
-
-        if (cookie != null && cookie.Features.TryGetValue(key, out var jsonElement))
+        if (_playersCookie.TryGetValue(steamId64, out var cookie) &&
+            cookie.Features.TryGetValue(key, out var featureValue))
         {
             try
             {
-                var stringValue = ((JsonElement)jsonElement).GetRawText();
-                var deserializedValue = JsonSerializer.Deserialize<T>(stringValue);
-                return deserializedValue!;
+                switch (featureValue)
+                {
+                    case T typedValue:
+                        return typedValue;
+                    case JsonElement jsonElement:
+                        return jsonElement.Deserialize<T>()!;
+                }
+
+                var jsonString = featureValue.ToString();
+                if (jsonString != null)
+                {
+                    return JsonSerializer.Deserialize<T>(jsonString)!;
+                }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                _vipCore.PrintLogError($"Failed to deserialize feature '{key}' value.");
+                _vipCore.PrintLogError($"Failed to deserialize cookie value: {key}, {e}");
             }
         }
 
         return default!;
     }
 
-    private PlayerCookie? LoadCookie(ulong steamId64)
+
+    public void LoadCookies()
     {
-        var filePath = GetCookieFilePath(steamId64);
-        return File.Exists(filePath)
-            ? JsonSerializer.Deserialize<PlayerCookie>(File.ReadAllText(filePath))
-            : null;
+        var filePath = Path.Combine(CoreConfigDirectory, "vip_core_cookie.json");
+
+        if (!File.Exists(filePath))
+        {
+            File.WriteAllText(filePath, "[]");
+            return;
+        }
+
+        var fileContent = File.ReadAllText(filePath);
+        var cookies = JsonSerializer.Deserialize<List<PlayerCookie>>(fileContent);
+
+        if (cookies != null)
+        {
+            _playersCookie = cookies.ToDictionary(c => c.SteamId64, c => c);
+        }
     }
 
-    private string GetCookieFilePath(ulong steamId64)
+    public void SaveCookies()
     {
-        var directoryPath = Path.Combine(CoreConfigDirectory, "cookies");
+        var filePath = Path.Combine(CoreConfigDirectory, "vip_core_cookie.json");
 
-        if (!Directory.Exists(directoryPath))
-            Directory.CreateDirectory(directoryPath);
+        var cookiesList = _playersCookie.Values.ToList();
+        var jsonContent = JsonSerializer.Serialize(cookiesList, new JsonSerializerOptions { WriteIndented = true });
 
-        return Path.Combine(directoryPath, $"{steamId64}.json");
+        File.WriteAllText(filePath, jsonContent);
     }
 }
