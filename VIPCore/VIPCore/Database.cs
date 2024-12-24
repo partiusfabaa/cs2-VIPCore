@@ -33,17 +33,16 @@ public class Database(VipCore vipCore, ILogger logger, string dbConnectionString
 
             await dbConnection.ExecuteAsync(createVipUsersTable);
 
-             const string createVipServersTable = """
-
-                                                  CREATE TABLE IF NOT EXISTS `vip_servers` (
-                                                      `serverId` BIGINT NOT NULL,
-                                                      `serverIp` VARCHAR(45) NOT NULL,
-                                                      `port` INT NOT NULL,
-                                                      `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                                      `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                                                      PRIMARY KEY (`serverId`)
-                                                  );
-                                                  """;
+            const string createVipServersTable = """
+                                                 CREATE TABLE IF NOT EXISTS `vip_servers` (
+                                                     `serverId` BIGINT NOT NULL,
+                                                     `serverIp` VARCHAR(45) NOT NULL,
+                                                     `port` INT NOT NULL,
+                                                     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                                     `updated_at` TIMESTAMP,
+                                                     PRIMARY KEY (`serverId`)
+                                                 );
+                                                 """;
 
             await dbConnection.ExecuteAsync(createVipServersTable);
 
