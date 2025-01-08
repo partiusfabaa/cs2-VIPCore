@@ -17,5 +17,7 @@ Place the configuration file at `addons/counterstrikesharp/configs/plugins/VIPCo
   "PluginStartTime": "20:00:00",
   "PluginEndTime": "06:00:00",
   "Timezone": "UTC", //default, see timezones.txt for all possible time zones, will also work with "UTC+2" format
-  "CheckTimer": 10 
+  "CheckTimer": 10,
+  "VipGrantedMessage": "You are receiving VIP because it's VIP Night time.",
+  "Tag": "[NightVIP]"  
 }
