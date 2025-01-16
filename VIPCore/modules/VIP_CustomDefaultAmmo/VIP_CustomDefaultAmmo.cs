@@ -2,6 +2,7 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Core.Attributes;
+using CounterStrikeSharp.API.Core.Attributes.Registration;
 using VipCoreApi;
 using static VipCoreApi.IVipCoreApi;
 using Microsoft.Extensions.Logging;
@@ -16,7 +17,7 @@ public class VipCustomDefaultAmmo : BasePlugin
 {
     public override string ModuleAuthor => "panda";
     public override string ModuleName => "[VIP] Custom Default Ammo";
-    public override string ModuleVersion => "v1.1";
+    public override string ModuleVersion => "v1.2";
 
     private IVipCoreApi? _api;
     private CustomDefaultAmmo? _customDefaultAmmoFeature;
@@ -171,18 +172,50 @@ public class CustomDefaultAmmo : VipFeatureBase
         }
     }
 
-    public override void OnPlayerLoaded(CCSPlayerController player, string group)
+    public override void OnPlayerLoaded(CCSPlayerController? player, string group)
     {
+        if (player == null || !player.IsValid) return;
         if (!PlayerHasFeature(player)) return;
 
         _customEnabled[player.Slot] = GetPlayerFeatureState(player) == FeatureState.Enabled;
     }
 
-    public override void OnSelectItem(CCSPlayerController player, FeatureState state)
+    public override void OnSelectItem(CCSPlayerController? player, FeatureState state)
     {
+        if (player == null || !player.IsValid) return;
         _customEnabled[player.Slot] = state == FeatureState.Enabled;
     }
+    
+    [GameEventHandler(HookMode.Pre)]
+    public HookResult OnClientDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
+    {
+        var player = @event.Userid;
+        if (player == null || !player.IsValid) return HookResult.Continue;
 
+        _customEnabled[player.Slot] = GetPlayerFeatureState(player) == FeatureState.Disabled;
+        return HookResult.Continue;
+    }
+    
+    [GameEventHandler(HookMode.Pre)]
+    public HookResult OnPlayerDeath(EventPlayerDeath @event, GameEventInfo info)
+    {
+        var player = @event.Userid;
+        if (player == null || !player.IsValid) return HookResult.Continue;
+        
+        _customEnabled[player.Slot] = GetPlayerFeatureState(player) == FeatureState.Disabled;
+        return HookResult.Continue;
+    }
+
+    [GameEventHandler]
+    public HookResult OnPlayerSpawn(EventPlayerSpawn @event, GameEventInfo info)
+    {
+        var player = @event.Userid;
+        if (player == null || !player.IsValid ||) return HookResult.Continue;
+        if (!PlayerHasFeature(player)) return HookResult.Continue;
+        
+        _customEnabled[player.Slot] = GetPlayerFeatureState(player) == FeatureState.Enabled;
+        return HookResult.Continue;
+    }
     public bool CheckIfWeapon(string weaponName, int weaponDefIndex)
     {
         Dictionary<int, string> WeaponDefindex = new()
