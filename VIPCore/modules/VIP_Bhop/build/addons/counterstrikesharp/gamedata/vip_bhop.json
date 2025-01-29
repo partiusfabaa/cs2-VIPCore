@@ -1,0 +1,9 @@
+﻿{
+  "CCSPlayer_MovementServices_ProcessMovement": {
+    "signatures": {
+      "library": "server",
+      "windows": "40 56 57 48 81 EC ? ? ? ? 4C 8B 49",
+      "linux": "55 48 89 E5 41 57 41 56 41 55 41 54 49 89 FC 53 48 83 EC ? 48 8B 7F 30"
+    }
+  }
+}
