@@ -16,15 +16,17 @@ public class VIP_NightVipConfig
     public string PluginStartTime { get; set; } = "20:00:00";
     public string PluginEndTime { get; set; } = "08:00:00";
     public string Timezone { get; set; } = "UTC";
-    public int CheckTimer { get; set;} = 10;
+    public int CheckTimer { get; set; } = 10;
+    public string VipGrantedMessage { get; set; } = "You are receiving VIP because it's VIP Night time.";
+    public string Tag { get; set; } = "[NightVIP]";
 }
 
-[MinimumApiVersion(240)]
+[MinimumApiVersion(276)]
 public class VIP_NightVip : BasePlugin
 {
     public override string ModuleAuthor => "panda.";
     public override string ModuleName => "[VIP] Night VIP";
-    public override string ModuleVersion => "v1.0";
+    public override string ModuleVersion => "v1.2";
     public override string ModuleDescription => "Gives VIP between a certain period of time.";
     private IVipCoreApi? _api;
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
@@ -36,33 +38,29 @@ public class VIP_NightVip : BasePlugin
         _api = PluginCapability.Get();
         if (_api == null) return;
 
-        Config = _api.LoadConfig<VIP_NightVipConfig>("vip_night");
+        Config = _api.LoadConfig<VIP_NightVipConfig>("vip_night") ?? CreateConfig("vip_night");
+
+        Console.WriteLine($"Configuration loaded: {JsonSerializer.Serialize(Config)}");
 
         RegisterEventHandler<EventPlayerConnectFull>((@event, info) =>
         {
             var player = @event.Userid;
-            if (player == null || !player.IsValid || player.IsBot || player.IsHLTV || !player.PlayerPawn.IsValid || !player.PawnIsAlive)
-                return HookResult.Continue;
+            if (!IsPlayerValid(player)) return HookResult.Continue;
 
             GiveVIP(player);
-
             return HookResult.Continue;
         });
 
-        AddTimer(Config.CheckTimer, ()=>
-        {
-            CheckAndGiveVIP();
-        }, TimerFlags.REPEAT );
-
+        AddTimer(Config.CheckTimer, CheckAndGiveVIP, TimerFlags.REPEAT);
     }
+
     private void CheckAndGiveVIP()
     {
         if (_api == null) return;
 
         foreach (var player in Utilities.GetPlayers())
         {
-            if (player == null || !player.IsValid || player.IsBot || player.IsHLTV || !player.PlayerPawn.IsValid || !player.PawnIsAlive)
-                continue;
+            if (!IsPlayerValid(player)) continue;
 
             if (!_api.IsClientVip(player))
                 GiveVIP(player);
@@ -71,30 +69,56 @@ public class VIP_NightVip : BasePlugin
 
     private void GiveVIP(CCSPlayerController? player)
     {
-        if (_api == null || player == null) return;
+
+        if (_api == null || !IsPlayerValid(player) || player == null) return;
 
         var currentTime = DateTime.UtcNow;
-        var timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(Config.Timezone);
-        var currentTimeInTimeZone = TimeZoneInfo.ConvertTimeFromUtc(currentTime, timeZoneInfo);
+        TimeZoneInfo timeZoneInfo;
+        try
+        {
+            timeZoneInfo = TimeZoneInfo.FindSystemTimeZoneById(Config.Timezone);
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            Console.WriteLine($"Invalid timezone: {Config.Timezone}. Defaulting to UTC.");
+            timeZoneInfo = TimeZoneInfo.Utc;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Unexpected error with timezone: {ex.Message}. Defaulting to UTC.");
+            timeZoneInfo = TimeZoneInfo.Utc;
+        }
 
+        var currentTimeInTimeZone = TimeZoneInfo.ConvertTimeFromUtc(currentTime, timeZoneInfo);
         var startTime = TimeSpan.Parse(Config.PluginStartTime);
         var endTime = TimeSpan.Parse(Config.PluginEndTime);
 
-        bool isVipTime;
-        if (startTime < endTime)
-            isVipTime = currentTimeInTimeZone.TimeOfDay >= startTime && currentTimeInTimeZone.TimeOfDay < endTime;
-        else
-            isVipTime = currentTimeInTimeZone.TimeOfDay >= startTime || currentTimeInTimeZone.TimeOfDay < endTime;
+        bool isVipTime = startTime < endTime
+            ? currentTimeInTimeZone.TimeOfDay >= startTime && currentTimeInTimeZone.TimeOfDay < endTime
+            : currentTimeInTimeZone.TimeOfDay >= startTime || currentTimeInTimeZone.TimeOfDay < endTime;
 
-        if (isVipTime && !_api.IsClientVip(player) && player.IsValid && !player.IsBot && !player.IsHLTV && player != null && player.PawnIsAlive)
-        {
-            var remainingTime = (endTime > currentTimeInTimeZone.TimeOfDay) 
-            ? (endTime - currentTimeInTimeZone.TimeOfDay).TotalMinutes
-            : (TimeSpan.FromHours(24) - currentTimeInTimeZone.TimeOfDay + endTime).TotalMinutes;
+        if (!isVipTime || _api.IsClientVip(player)) return;
 
-            _api.GiveClientTemporaryVip(player, Config.VIPGroup, (int)remainingTime);
-            _api.PrintToChat(player, $" \x02[NightVIP] \x01You are receiving \x06VIP\x01 because it's \x07VIP Night \x01time.");
-        }
+        var remainingTime = CalculateRemainingVipTime(endTime, currentTimeInTimeZone.TimeOfDay);
+        _api.GiveClientTemporaryVip(player, Config.VIPGroup, (int)remainingTime);
+        _api.PrintToChat(player, $" \x02{Config.Tag} \x01{Config.VipGrantedMessage}");
+    }
+
+    private double CalculateRemainingVipTime(TimeSpan endTime, TimeSpan currentTime)
+    {
+        return endTime > currentTime
+            ? (endTime - currentTime).TotalMinutes
+            : (TimeSpan.FromHours(24) - currentTime + endTime).TotalMinutes;
+    }
+
+    private bool IsPlayerValid(CCSPlayerController? player)
+    {
+        return player != null
+            && player.IsValid
+            && !player.IsBot
+            && !player.IsHLTV
+            && player.PlayerPawn.IsValid
+            && player.PawnIsAlive;
     }
 
     private VIP_NightVipConfig CreateConfig(string configPath)
@@ -105,10 +129,19 @@ public class VIP_NightVip : BasePlugin
             PluginStartTime = "20:00:00",
             PluginEndTime = "08:00:00",
             Timezone = "UTC",
-            CheckTimer = 10
+            CheckTimer = 10,
+            VipGrantedMessage = "You are receiving VIP because it's VIP Night time.",
+            Tag = "[NightVIP]"
         };
 
-        File.WriteAllText(configPath, JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true }));
+        try
+        {
+            File.WriteAllText(configPath, JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true }));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to write configuration file: {ex.Message}");
+        }
 
         return config;
     }
