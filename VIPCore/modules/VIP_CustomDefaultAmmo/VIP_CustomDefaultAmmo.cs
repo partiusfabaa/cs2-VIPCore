@@ -114,12 +114,13 @@ public class CustomDefaultAmmo : VipFeatureBase
         if (weapon == null || !weapon.IsValid)
             return;
 
-        var players = Utilities.GetPlayers().Where(x => x is { IsBot: false, Connected: PlayerConnectedState.PlayerConnected } && PlayerHasFeature(x) && _customEnabled[x.Slot]);
+        var players = Utilities.GetPlayers().Where(x => x is { IsBot: false, Connected: PlayerConnectedState.PlayerConnected} && PlayerHasFeature(x) && _customEnabled[x.Slot]);
 
         foreach (var player in players)
         {
             if (player == null) return;
-
+            
+            if (!IsClientVip(player)) return;
             if (!PlayerHasFeature(player)) return;
             if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
             or IVipCoreApi.FeatureState.NoAccess) return;
@@ -210,7 +211,7 @@ public class CustomDefaultAmmo : VipFeatureBase
     public HookResult OnPlayerSpawn(EventPlayerSpawn @event, GameEventInfo info)
     {
         var player = @event.Userid;
-        if (player == null || !player.IsValid ||) return HookResult.Continue;
+        if (player == null || !player.IsValid) return HookResult.Continue;
         if (!PlayerHasFeature(player)) return HookResult.Continue;
         
         _customEnabled[player.Slot] = GetPlayerFeatureState(player) == FeatureState.Enabled;
