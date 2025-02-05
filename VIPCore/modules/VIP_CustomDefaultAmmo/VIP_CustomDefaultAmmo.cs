@@ -145,28 +145,31 @@ public class CustomDefaultAmmo : VipFeatureBase
                     CCSWeaponBase? _weapon = weapon.As<CCSWeaponBase>();
                     if (_weapon == null) return;
 
-                    if (item.Value.DefaultClip != -1)
+                    if (IsClientVip(player) && PlayerHasFeature(player))
                     {
-                        if (_weapon.VData != null)
+                        if (item.Value.DefaultClip != -1)
                         {
-                            _weapon.VData.MaxClip1 = item.Value.DefaultClip;
-                            _weapon.VData.DefaultClip1 = item.Value.DefaultClip;
+                            if (_weapon.VData != null)
+                            {
+                                _weapon.VData.MaxClip1 = item.Value.DefaultClip;
+                                _weapon.VData.DefaultClip1 = item.Value.DefaultClip;
+                            }
+
+                            _weapon.Clip1 = item.Value.DefaultClip;
+
+                            Utilities.SetStateChanged(_weapon, "CBasePlayerWeapon", "m_iClip1");
                         }
 
-                        _weapon.Clip1 = item.Value.DefaultClip;
-
-                        Utilities.SetStateChanged(_weapon, "CBasePlayerWeapon", "m_iClip1");
-                    }
-
-                    if (item.Value.DefaultReserve != -1)
-                    {
-                        if (_weapon.VData != null)
+                        if (item.Value.DefaultReserve != -1)
                         {
-                            _weapon.VData.PrimaryReserveAmmoMax = item.Value.DefaultReserve;
-                        }
-                        _weapon.ReserveAmmo[0] = item.Value.DefaultReserve;
+                            if (_weapon.VData != null)
+                            {
+                                _weapon.VData.PrimaryReserveAmmoMax = item.Value.DefaultReserve;
+                            }
+                            _weapon.ReserveAmmo[0] = item.Value.DefaultReserve;
 
-                        Utilities.SetStateChanged(_weapon, "CBasePlayerWeapon", "m_pReserveAmmo");
+                            Utilities.SetStateChanged(_weapon, "CBasePlayerWeapon", "m_pReserveAmmo");
+                        }
                     }
                 });
             }
