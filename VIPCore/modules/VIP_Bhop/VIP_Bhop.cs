@@ -102,7 +102,7 @@ public class Bhop : VipFeatureBase, IDisposable
     {
         if (_autobunnyhopping?.GetPrimitiveValue<bool>() == true) return HookResult.Continue;
 
-        var gamerules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules;
+        var gamerules = GetGameRules();
         if (gamerules == null || gamerules.WarmupPeriod)
             return HookResult.Continue;
 
@@ -110,7 +110,7 @@ public class Bhop : VipFeatureBase, IDisposable
                      .Where(player => player is { IsValid: true, IsBot: false, PawnIsAlive: true }))
         {
             SetBunnyhop(player, false);
-            
+
             if (!IsClientVip(player) ||
                 !PlayerHasFeature(player) ||
                 GetPlayerFeatureState(player) is not FeatureState.Enabled) continue;
@@ -213,6 +213,14 @@ public class Bhop : VipFeatureBase, IDisposable
         }
 
         return _isBhopActive[slot.Value].Active;
+    }
+
+    private CCSGameRules? GetGameRules()
+    {
+        var gameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").ToList();
+        if (gameRules.Count < 1) return null;
+
+        return gameRules.First(g => g.IsValid).GameRules;
     }
 
     public void Dispose()
