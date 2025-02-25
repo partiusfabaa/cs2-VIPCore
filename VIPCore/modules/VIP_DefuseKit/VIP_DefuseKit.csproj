@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+		<OutputPath>bin\Release\addons\counterstrikesharp\plugins\VIP_DefuseKit\</OutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+		<Configuration>Release</Configuration>
+		<DebugType>none</DebugType>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CounterStrikeSharp.API" Version="1.0.305" />
+  </ItemGroup>
+
+    <ItemGroup>
+    <Reference Include="VipCoreApi">
+      <HintPath>..\..\VipCoreApi.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
