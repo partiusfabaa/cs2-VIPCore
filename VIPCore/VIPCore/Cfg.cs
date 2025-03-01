@@ -26,7 +26,7 @@ public class CoreConfig
 {
     public int TimeMode { get; init; } = 0;
     public int ServerId { get; init; } = 0;
-    public bool UseCenterHtmlMenu { get; init; } = true;
+    public string MenuType { get; set; } = "screen";
     [JsonPropertyName("ServerIP")] public string ServerIp { get; init; } = "0.0.0.0";
     public int ServerPort { get; init; } = 27015;
 
