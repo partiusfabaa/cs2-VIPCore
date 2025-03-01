@@ -5,6 +5,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Menu;
+using CS2ScreenMenuAPI.Internal;
 using Microsoft.Extensions.Logging;
 using VipCoreApi;
 using static VipCoreApi.IVipCoreApi;
@@ -365,7 +366,7 @@ public class VipCoreApi : IVipCoreApi
             File.WriteAllText(configFilePath,
                 JsonSerializer.Serialize(defaultConfig,
                     new JsonSerializerOptions
-                        { WriteIndented = true, ReadCommentHandling = JsonCommentHandling.Skip }));
+                    { WriteIndented = true, ReadCommentHandling = JsonCommentHandling.Skip }));
             return defaultConfig;
         }
 
@@ -383,11 +384,14 @@ public class VipCoreApi : IVipCoreApi
         return LoadConfig<T>(name, ModulesConfigDirectory);
     }
 
-    public IMenu CreateMenu(string title)
+    public IMenu CreateHtmlMenu(string title)
     {
-        return _vipCore.CoreConfig.UseCenterHtmlMenu ? new CenterHtmlMenu(title, _vipCore) : new ChatMenu(title);
+        return new CenterHtmlMenu(title, _vipCore);
     }
-
+    public ScreenMenu CreateScreenMenu(string title)
+    {
+        return new ScreenMenu(title, _vipCore);
+    }
     public void SetPlayerCookie<T>(ulong steamId64, string key, T value)
     {
         if (!_playersCookie.TryGetValue(steamId64, out var cookie))
