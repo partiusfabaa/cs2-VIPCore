@@ -1,5 +1,6 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Menu;
+using CS2ScreenMenuAPI.Internal;
 using static VipCoreApi.IVipCoreApi;
 
 namespace VipCoreApi;
@@ -23,7 +24,7 @@ public abstract class VipFeatureBase : IVipFeature
     public string ModulesConfigDirectory => Api.ModulesConfigDirectory;
 
     public string GetDatabaseConnectionString => Api.GetDatabaseConnectionString;
-    
+
     protected VipFeatureBase(IVipCoreApi api)
     {
         Api = api;
@@ -44,7 +45,7 @@ public abstract class VipFeatureBase : IVipFeature
     public virtual void OnPlayerRemoved(CCSPlayerController player, string group)
     {
     }
-    
+
     public virtual void OnSelectItem(CCSPlayerController player, FeatureState state)
     {
     }
@@ -91,7 +92,8 @@ public abstract class VipFeatureBase : IVipFeature
 
     public T LoadConfig<T>(string name) => Api.LoadConfig<T>(name);
 
-    public IMenu CreateMenu(string title) => Api.CreateMenu(title);
+    public IMenu CreatHtmlMenu(string title) => Api.CreateHtmlMenu(title);
+    public ScreenMenu CreateScreenMenu(string title) => Api.CreateScreenMenu(title);
 
     public void PrintToChat(CCSPlayerController player, string message) => Api.PrintToChat(player, message);
 
