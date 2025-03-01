@@ -1,5 +1,6 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Menu;
+using CS2ScreenMenuAPI.Internal;
 
 namespace VipCoreApi;
 
@@ -80,12 +81,12 @@ public interface IVipCoreApi
     /// <param name="feature"></param>
     /// <param name="newState"></param>
     void SetPlayerFeatureState(CCSPlayerController player, string feature, FeatureState newState);
-    
+
     /// <summary>
     /// Turns off all functions
     /// </summary>
     void DisableAllFeatures();
-    
+
     /// /// <summary>
     /// Turns on all the functions
     /// </summary>
@@ -228,14 +229,21 @@ public interface IVipCoreApi
     /// <returns></returns>
     T LoadConfig<T>(string name);
 
+
     /// <summary>
-    /// Returns a menu depending on the UseCenterHtmlMenu parameter from the config.
+    /// Returns an HTML menu.
     /// </summary>
     /// <param name="title"></param>
     /// <returns></returns>
-    IMenu CreateMenu(string title);
+    IMenu CreateHtmlMenu(string title);
 
-    
+    /// <summary>
+    /// Returns a screen menu.
+    /// </summary>
+    /// <param name="title"></param>
+    /// <returns></returns>
+    ScreenMenu CreateScreenMenu(string title);
+
     /// <summary>
     /// Returns server id
     /// </summary>

@@ -8,6 +8,8 @@ using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Timers;
+using CS2ScreenMenuAPI;
+using CS2ScreenMenuAPI.Internal;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
 using VipCoreApi;
@@ -59,7 +61,25 @@ public class VipCore : BasePlugin
         RegisterEventHandlers();
         SetupTimers();
 
-        AddCommand("css_vip", "command that opens the VIP MENU", (player, _) => CreateMenu(player));
+        AddCommand("css_vip", "command that opens the VIP MENU", (player, _) =>
+        {
+            switch (CoreConfig.MenuType)
+            {
+                case "html":
+                case "center":
+                    CreateHtmlMenu(player);
+                    break;
+
+                case "screen":
+                case "worldtext":
+                    CreateScreenMenu(player);
+                    break;
+
+                default:
+                    Logger.LogError($"Invalid menu type: {CoreConfig.MenuType}. Please choose between: [html, center, screen]");
+                    break;
+            }
+        });
     }
 
     private void LoadConfig()
@@ -373,8 +393,86 @@ public class VipCore : BasePlugin
 
         ReplyToCommand(controller, msg);
     }
+    private void CreateScreenMenu(CCSPlayerController? player)
+    {
+        if (player == null)
+            return;
 
-    private void CreateMenu(CCSPlayerController? player)
+        if (!IsClientVip[player.Slot])
+        {
+            PrintToChat(player, Localizer["vip.NoAcces"]);
+            return;
+        }
+
+        if (!Users.TryGetValue(player.SteamID, out var user))
+            return;
+
+        ScreenMenu menu = VipApi.CreateScreenMenu(Localizer["menu.Title", user.group]);
+
+        if (Config.Groups.TryGetValue(user.group, out var vipGroup))
+        {
+            var sortedFeatures = Features
+                .Where(setting => setting.Value.FeatureType is not FeatureType.Hide)
+                .OrderBy(setting => Array.IndexOf(_sortedItems, setting.Key))
+                .ThenBy(setting => setting.Key);
+
+            foreach (var (key, feature) in sortedFeatures)
+            {
+                if (!vipGroup.Values.TryGetValue(key, out var featureValue)) continue;
+                if (string.IsNullOrEmpty(featureValue.ToString())) continue;
+                if (!user.FeatureState.TryGetValue(key, out var currentState)) continue;
+
+                string icon = string.Empty;
+                if (feature.FeatureType == FeatureType.Toggle)
+                {
+                    icon = currentState switch
+                    {
+                        FeatureState.Enabled => "[✔]",
+                        FeatureState.Disabled => "[✘]",
+                        FeatureState.NoAccess => "[✘]",
+                        _ => ""
+                    };
+                }
+
+                string optionText = Localizer[key] + (feature.FeatureType == FeatureType.Selectable ? string.Empty : $" {icon}");
+
+                menu.AddOption(optionText, (p, option) =>
+                {
+                    var state = user.FeatureState[key];
+                    var result = VipApi.PlayerUseFeature(player, key, state, feature.FeatureType);
+
+                    if (feature.FeatureType == FeatureType.Toggle)
+                    {
+                        var newState = state switch
+                        {
+                            FeatureState.Enabled => FeatureState.Disabled,
+                            FeatureState.Disabled => FeatureState.Enabled,
+                            _ => state
+                        };
+                        user.FeatureState[key] = newState;
+
+                        var newIcon = newState switch
+                        {
+                            FeatureState.Enabled => "[✔]",
+                            FeatureState.Disabled => "[✘]",
+                            _ => "[✘]"
+                        };
+
+                        option.Text = Localizer[key] + $" {newIcon}";
+                        MenuAPI.GetActiveMenu(player)?.Display();
+
+                        VipApi.PrintToChat(player,
+                            $"{Localizer[key]}: {(newState == FeatureState.Enabled ? $"{Localizer["chat.Enabled"]}" : $"{Localizer["chat.Disabled"]}")}");
+
+                        feature.OnSelectItem?.Invoke(p, newState);
+                    }
+                }, currentState == FeatureState.NoAccess || ForcedDisabledFeatures.Contains(key));
+            }
+        }
+        MenuAPI.OpenMenu(this, player, menu);
+
+    }
+    private void CreateHtmlMenu(CCSPlayerController? player)
     {
         if (player == null) return;
 
@@ -386,7 +484,7 @@ public class VipCore : BasePlugin
 
         if (!Users.TryGetValue(player.SteamID, out var user)) return;
 
-        var menu = VipApi.CreateMenu(Localizer["menu.Title", user.group]);
+        var menu = VipApi.CreateHtmlMenu(Localizer["menu.Title", user.group]);
         if (Config.Groups.TryGetValue(user.group, out var vipGroup))
         {
             var sortedFeatures = Features.Where(setting => setting.Value.FeatureType is not FeatureType.Hide)
@@ -423,7 +521,7 @@ public class VipCore : BasePlugin
 
                         if (result == HookResult.Handled || result == HookResult.Stop)
                         {
-                            CreateMenu(player);
+                            CreateHtmlMenu(player);
                             return;
                         }
 
@@ -446,7 +544,7 @@ public class VipCore : BasePlugin
 
                         if (CoreConfig.ReOpenMenuAfterItemClick && featureType != FeatureType.Selectable)
                         {
-                            CreateMenu(controller);
+                            CreateHtmlMenu(controller);
                         }
                     }, featureState == FeatureState.NoAccess || ForcedDisabledFeatures.Contains(key));
             }
