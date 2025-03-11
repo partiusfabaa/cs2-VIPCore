@@ -339,7 +339,9 @@ public class VipCoreApi : IVipCoreApi
                     "Checking feature: {feature} - {value}", feature, value);
                 try
                 {
-                    return ((JsonElement)value).Deserialize<T>()!;
+                    return ((JsonElement)value).Deserialize<T>(new JsonSerializerOptions {
+                        ReadCommentHandling = JsonCommentHandling.Skip
+                    })!;
                 }
                 catch (JsonException)
                 {
@@ -418,13 +420,17 @@ public class VipCoreApi : IVipCoreApi
                     case T typedValue:
                         return typedValue;
                     case JsonElement jsonElement:
-                        return jsonElement.Deserialize<T>()!;
+                        return jsonElement.Deserialize<T>(new JsonSerializerOptions {
+                            ReadCommentHandling = JsonCommentHandling.Skip
+                        })!;
                 }
 
                 var jsonString = featureValue.ToString();
                 if (jsonString != null)
                 {
-                    return JsonSerializer.Deserialize<T>(jsonString)!;
+                    return JsonSerializer.Deserialize<T>(jsonString, new JsonSerializerOptions {
+                        ReadCommentHandling = JsonCommentHandling.Skip
+                    })!;
                 }
             }
             catch (Exception e)
@@ -448,7 +454,9 @@ public class VipCoreApi : IVipCoreApi
         }
 
         var fileContent = File.ReadAllText(filePath);
-        var cookies = JsonSerializer.Deserialize<List<PlayerCookie>>(fileContent);
+        var cookies = JsonSerializer.Deserialize<List<PlayerCookie>>(fileContent, new JsonSerializerOptions {
+            ReadCommentHandling = JsonCommentHandling.Skip
+        });
 
         if (cookies != null)
         {
