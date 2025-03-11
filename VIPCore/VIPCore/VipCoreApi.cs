@@ -365,12 +365,14 @@ public class VipCoreApi : IVipCoreApi
             File.WriteAllText(configFilePath,
                 JsonSerializer.Serialize(defaultConfig,
                     new JsonSerializerOptions
-                        { WriteIndented = true, ReadCommentHandling = JsonCommentHandling.Skip }));
+                        { WriteIndented = true, ReadCommentHandling = JsonCommentHandling.Allow }));
             return defaultConfig;
         }
 
         var configJson = File.ReadAllText(configFilePath);
-        var config = JsonSerializer.Deserialize<T>(configJson);
+        var config = JsonSerializer.Deserialize<T>(configJson, new JsonSerializerOptions {
+            ReadCommentHandling = JsonCommentHandling.Skip
+        });
 
         if (config == null)
             throw new FileNotFoundException($"File {name}.json not found or cannot be deserialized");

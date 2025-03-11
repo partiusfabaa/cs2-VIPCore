@@ -27,7 +27,11 @@ public class VIP_Random : BasePlugin
         RegisterEventHandler<EventRoundStart>(OnRoundStart);
         RegisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnect);
         RegisterListener<Listeners.OnMapStart>(OnMapStart);
+    }
 
+    public override void OnAllPluginsLoaded(bool hotReload)
+    {
+        base.OnAllPluginsLoaded(hotReload);
         _vipApi = PluginCapability.Get();
         if (_vipApi == null)
         {
