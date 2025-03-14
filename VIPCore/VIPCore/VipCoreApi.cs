@@ -27,6 +27,10 @@ public class VipCoreApi : IVipCoreApi
     public string CoreConfigDirectory { get; }
     public string ModulesConfigDirectory => Path.Combine(CoreConfigDirectory, "Modules/");
     public string GetDatabaseConnectionString => _vipCore.DbConnectionString;
+    private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions { 
+        ReadCommentHandling = JsonCommentHandling.Skip,
+        WriteIndented = true
+    };
 
     public VipCoreApi(VipCore vipCore)
     {
@@ -339,7 +343,7 @@ public class VipCoreApi : IVipCoreApi
                     "Checking feature: {feature} - {value}", feature, value);
                 try
                 {
-                    return ((JsonElement)value).Deserialize<T>()!;
+                    return ((JsonElement)value).Deserialize<T>(_jsonSerializerOptions)!;
                 }
                 catch (JsonException)
                 {
@@ -363,14 +367,12 @@ public class VipCoreApi : IVipCoreApi
             var defaultConfig = Activator.CreateInstance<T>();
 
             File.WriteAllText(configFilePath,
-                JsonSerializer.Serialize(defaultConfig,
-                    new JsonSerializerOptions
-                        { WriteIndented = true, ReadCommentHandling = JsonCommentHandling.Skip }));
+                JsonSerializer.Serialize(defaultConfig, _jsonSerializerOptions));
             return defaultConfig;
         }
 
         var configJson = File.ReadAllText(configFilePath);
-        var config = JsonSerializer.Deserialize<T>(configJson);
+        var config = JsonSerializer.Deserialize<T>(configJson, _jsonSerializerOptions);
 
         if (config == null)
             throw new FileNotFoundException($"File {name}.json not found or cannot be deserialized");
@@ -416,13 +418,13 @@ public class VipCoreApi : IVipCoreApi
                     case T typedValue:
                         return typedValue;
                     case JsonElement jsonElement:
-                        return jsonElement.Deserialize<T>()!;
+                        return jsonElement.Deserialize<T>(_jsonSerializerOptions)!;
                 }
 
                 var jsonString = featureValue.ToString();
                 if (jsonString != null)
                 {
-                    return JsonSerializer.Deserialize<T>(jsonString)!;
+                    return JsonSerializer.Deserialize<T>(jsonString, _jsonSerializerOptions)!;
                 }
             }
             catch (Exception e)
@@ -446,7 +448,7 @@ public class VipCoreApi : IVipCoreApi
         }
 
         var fileContent = File.ReadAllText(filePath);
-        var cookies = JsonSerializer.Deserialize<List<PlayerCookie>>(fileContent);
+        var cookies = JsonSerializer.Deserialize<List<PlayerCookie>>(fileContent, _jsonSerializerOptions);
 
         if (cookies != null)
         {
@@ -459,7 +461,7 @@ public class VipCoreApi : IVipCoreApi
         var filePath = Path.Combine(CoreConfigDirectory, "vip_core_cookie.json");
 
         var cookiesList = _playersCookie.Values.ToList();
-        var jsonContent = JsonSerializer.Serialize(cookiesList, new JsonSerializerOptions { WriteIndented = true });
+        var jsonContent = JsonSerializer.Serialize(cookiesList, _jsonSerializerOptions);
 
         File.WriteAllText(filePath, jsonContent);
     }
