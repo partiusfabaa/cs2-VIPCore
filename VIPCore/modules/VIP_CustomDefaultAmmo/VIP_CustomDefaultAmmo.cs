@@ -102,8 +102,7 @@ public class CustomDefaultAmmo : VipFeatureBase
 
     public void OnEntityCreated(CEntityInstance entity)
     {
-        if (entity == null || entity.Entity == null || !entity.IsValid || !entity.DesignerName.Contains("weapon_"))
-            return;
+        if (entity == null || entity.Entity == null || !entity.IsValid || !entity.DesignerName.Contains("weapon_")) return;
 
         var players = Utilities.GetPlayers().Where(x => x is { IsBot: false, Connected: PlayerConnectedState.PlayerConnected} && IsClientVip(x) && PlayerHasFeature(x));
         foreach (var player in players)
@@ -114,7 +113,7 @@ public class CustomDefaultAmmo : VipFeatureBase
             if (featureState is IVipCoreApi.FeatureState.Disabled or IVipCoreApi.FeatureState.NoAccess) return;
 
             string groupName = GetFeatureValue<string>(player);
-            if (string.IsNullOrEmpty(groupName) || !_vipCustomAmmo._ammoConfig.TryGetValue(groupName, out var weaponSettings)) return;
+            if (string.IsNullOrEmpty(groupName) || !_vipCustomAmmo._ammoConfig.TryGetValue(groupName, out var weaponSettings)) continue;
 
             CBasePlayerWeapon? weapon = new(entity.Handle);
             if (weapon == null || !weapon.IsValid) return;
