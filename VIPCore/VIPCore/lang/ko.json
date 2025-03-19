@@ -1,14 +1,60 @@
 ﻿{
   "menu.Title": "[VIP Menu - {0}]",
   "vip.Prefix": "[{blue}VIP{default}]",
-  "vip.NoAccess": "이 명령어에 대한 접근 권한이 없습니다!",
 
-  "vip.WelcomeToTheServer": "안녕하세요, {blue}{0}{default}! VIP 플레이어입니다.",
-  "vip.Expires": "귀하의 {blue}{0}{default} 상태는 {blue}{1}에 만료됩니다.",
-  "vip.Expired": "귀하의 {blue}{0}{default} 상태가 만료되었습니다.",
-  "vip.NoLongerVIPPlayer": "더 이상 VIP 플레이어가 아닙니다.",
+  "vip.WelcomeToTheServer": "안녕하세요, {blue}{0}{default}! 당신은 VIP 플레이어입니다. ",
+  "vip.Expires": "당신의 {blue}{0}{default} 상태는 {blue}{1}에 만료됩니다.",
+  "vip.Expired": "당신의 {blue}{0}{default} 상태가 만료되었습니다.",
+  "vip.NoLongerVIPPlayer": "당신은 더 이상 VIP 플레이어가 아닙니다.",
+  "vip.NoAccess": "당신은 이 명령에 접근할 수 없습니다!",
+
+  "vip.AlreadyVipPrivileges": "당신은 이미 VIP 권한을 가지고 있습니다.",
 
   "FeatureState.Enabled": "[<font color='green'>켜짐</font>]",
   "FeatureState.Disabled": "[<font color='red'>꺼짐</font>]",
-  "FeatureState.NoAccess": "[<font color='gray'>접근 불가</font>]"
+  "FeatureState.NoAccess": "[<font color='gray'>접근 불가</font>]",
+
+  //Modules
+  "Health": "체력",
+  "Armor": "방어구",
+  "Gravity": "중력",
+  "SmokeColor": "연기 색깔",
+  "Jumps": "추가 점프",
+  "Healthshot": "체력 주사",
+  "Antiflash": "섬광 방지",
+  "DecoyTp": "유인 텔레포트",
+  "Items": "아이템",
+  "Killscreen": "처치 화면 효과",
+  "Money": "돈",
+  "RainbowModel": "무지개 모델",
+  "ArmorRegen": "방어구 재생",
+  "HealthRegen": "체력 재생",
+  "vip.ResetDeaths": "당신의 사망 횟수가 초기화되었습니다!",
+  "Vampirism": "흡혈",
+  "endurance": "지구력",
+
+  "Respawn": "부활",
+  "respawn.Limit": "부활 제한 횟수 초과!",
+  "respawn.InTeam": "당신은 팀에 있어야 합니다!",
+  "respawn.IsAlive": "당신은 죽어 있어야 합니다!",
+  "respawn.Success": "당신은 성공적으로 부활했습니다!",
+
+  "Bhop": "바니합",
+  "bhop.TimeToActivation": "바니합은 {red}{0}{default}초 후에 활성화됩니다.",
+  "bhop.Activated": "바니합 활성화!",
+
+  "fov.Disable": "비활성화",
+  "fov.On": "당신은 {blue}FOV{default}를 {red}{0}으로 설정했습니다.",
+  "fov.Off": "당신은 {blue}FOV{default}를 껐습니다.",
+
+  "viptest.YouCanNoLongerTakeTheVip": "당신은 더 이상 VIP 테스트를 받을 수 없습니다.",
+  "viptest.RetakenThrough": "당신은 {0} 후에 VIP 테스트를 다시 받을 수 있습니다.",
+  "viptest.SuccessfullyPassed": "당신은 'VIP 테스트'를 성공적으로 통과했습니다! 만료일: {0}",
+
+  "tag.Disable": "비활성화",
+  "tag.On": "당신은 {blue}태그{default}를 {red}{0}으로 설정했습니다.",
+  "tag.Off": "당신은 {blue}태그{default}를 껐습니다.",
+
+  "vip.OnlineVips": "{blue}{0}, ",
+  "vip.NoVipsOnline": "온라인 VIP 플레이어 없음"
 }

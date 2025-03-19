@@ -1,5 +1,6 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Menu;
+using CS2ScreenMenuAPI.Internal;
 using VipCoreApi.Enums;
 
 namespace VipCoreApi;
@@ -179,6 +180,14 @@ public abstract class VipFeature : IDisposable
         => Api.CreateMenu(title);
 
     /// <summary>
+    /// Creates a screen menu with the specified title.
+    /// </summary>
+    /// <param name="title">The title of the screen menu.</param>
+    /// <returns>An instance of <see cref="ScreenMenu"/> representing the created screen menu.</returns>
+    public ScreenMenu CreateScreenMenu(string title)
+        => Api.CreateScreenMenu(title);
+
+    /// <summary>
     /// Checks if the player is valid for using this feature, i.e. is VIP, has access to the feature, and the feature is enabled.
     /// </summary>
     /// <param name="player">The player to check.</param>
@@ -220,6 +229,73 @@ public abstract class VipFeature : IDisposable
         => Api.GetPlayerFeatureState(player, Name);
 
     /// <summary>
+    /// Sets the state of this feature for the specified player.
+    /// </summary>
+    /// <param name="player">The player for whom the feature state is being set.</param>
+    /// <param name="newState">The new feature state.</param>
+    public void SetPlayerFeatureState(CCSPlayerController player, FeatureState newState)
+        => Api.SetPlayerFeatureState(player, Name, newState);
+
+    /// <summary>
+    /// Gets the VIP group of the specified player.
+    /// </summary>
+    /// <param name="player">The player whose VIP group is requested.</param>
+    /// <returns>The VIP group as a string.</returns>
+    public string GetPlayerVipGroup(CCSPlayerController player)
+        => Api.GetPlayerVipGroup(player);
+
+    /// <summary>
+    /// Gets the VIP groups defined in the vip.json file.
+    /// </summary>
+    /// <returns>An array of strings representing the VIP groups.</returns>
+    public string[] GetVipGroups()
+        => Api.GetVipGroups();
+
+    /// <summary>
+    /// Updates the VIP information for the specified player.
+    /// </summary>
+    /// <param name="player">The player for whom the VIP information is updated.</param>
+    /// <param name="name">The name of the player (if an update is needed).</param>
+    /// <param name="group">The VIP group to set (if an update is needed).</param>
+    /// <param name="time">The duration for which VIP status is valid (for example, in minutes). A value of -1 indicates no change.</param>
+    public void UpdatePlayerVip(CCSPlayerController player, string name = "", string group = "", int time = -1)
+        => Api.UpdatePlayerVip(player, name, group, time);
+
+    /// <summary>
+    /// Sets the VIP status for the specified player.
+    /// </summary>
+    /// <param name="player">The player for whom VIP status is set.</param>
+    /// <param name="group">The VIP group to assign.</param>
+    /// <param name="time">The duration for the VIP status.</param>
+    public void SetPlayerVip(CCSPlayerController player, string group, int time)
+        => Api.SetPlayerVip(player, group, time);
+
+    /// <summary>
+    /// Grants VIP status to the specified player.
+    /// </summary>
+    /// <param name="player">The player to whom VIP status is granted.</param>
+    /// <param name="group">The VIP group to assign.</param>
+    /// <param name="time">The duration for the VIP status.</param>
+    public void GivePlayerVip(CCSPlayerController player, string group, int time)
+        => Api.GivePlayerVip(player, group, time);
+
+    /// <summary>
+    /// Grants temporary VIP status (for one game session) to the specified player.
+    /// </summary>
+    /// <param name="player">The player to whom temporary VIP status is granted.</param>
+    /// <param name="group">The VIP group to assign.</param>
+    /// <param name="time">The duration for the temporary VIP status.</param>
+    public void GivePlayerTemporaryVip(CCSPlayerController player, string group, int time)
+        => Api.GivePlayerTemporaryVip(player, group, time);
+
+    /// <summary>
+    /// Removes the VIP status from the specified player.
+    /// </summary>
+    /// <param name="player">The player whose VIP status is removed.</param>
+    public void RemovePlayerVip(CCSPlayerController player)
+        => Api.RemovePlayerVip(player);
+
+    /// <summary>
     /// Saves a cookie value for the specified player.
     /// </summary>
     /// <typeparam name="T">The type of the cookie value.</typeparam>
@@ -247,9 +323,23 @@ public abstract class VipFeature : IDisposable
     public void PrintToChat(CCSPlayerController controller, string msg)
         => Api.PrintToChat(controller, msg);
 
+    /// <summary>
+    /// Sends a message to the in-game chat for all players.
+    /// </summary>
+    /// <param name="message">The message text.</param>
+    public void PrintToChatAll(string message)
+        => Api.PrintToChatAll(message);
+
+    /// <summary>
+    /// Checks if the current game round is a pistol round.
+    /// </summary>
+    /// <returns><c>true</c> if it is a pistol round; otherwise, <c>false</c>.</returns>
+    public bool IsPistolRound()
+        => Api.IsPistolRound();
+
     public T LoadConfig<T>(string name)
         => Api.LoadConfig<T>(name);
-    
+
     public T LoadConfig<T>(string name, string path)
         => Api.LoadConfig<T>(name, path);
 

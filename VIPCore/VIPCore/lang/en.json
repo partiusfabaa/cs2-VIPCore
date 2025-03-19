@@ -1,14 +1,60 @@
 ﻿{
   "menu.Title": "[VIP Menu - {0}]",
   "vip.Prefix": "[{blue}VIP{default}]",
-  "vip.NoAccess": "You do not have access to this command!",
 
-  "vip.WelcomeToTheServer": "Hello, {blue}{0}{default}! You are a VIP player.",
-  "vip.Expires": "Your {blue}{0}{default} status expires on {blue}{1}.",
+  "vip.WelcomeToTheServer": "Hello, {blue}{0}{default}! You are a VIP player. ",
+  "vip.Expires": "Your {blue}{0}{default} status expires {blue}{1}",
   "vip.Expired": "Your {blue}{0}{default} status has expired.",
   "vip.NoLongerVIPPlayer": "You are no longer a VIP player.",
+  "vip.NoAccess": "You do not have access to this command!",
+
+  "vip.AlreadyVipPrivileges": "You already have VIP privileges.",
 
   "FeatureState.Enabled": "[<font color='green'>ON</font>]",
   "FeatureState.Disabled": "[<font color='red'>OFF</font>]",
-  "FeatureState.NoAccess": "[<font color='gray'>NO ACCESS</font>]"
+  "FeatureState.NoAccess": "[<font color='gray'>NO ACCESS</font>]",
+
+  //Modules
+  "Health": "Health",
+  "Armor": "Armor",
+  "Gravity": "Gravity",
+  "SmokeColor": "Smoke Color",
+  "Jumps": "Extra Jumps",
+  "Healthshot": "Healthshot",
+  "Antiflash": "Anti-Flash",
+  "DecoyTp": "Decoy Teleport",
+  "Items": "Items",
+  "Killscreen": "Killscreen Effect",
+  "Money": "Money",
+  "RainbowModel": "Rainbow Model",
+  "ArmorRegen": "Armor Regeneration",
+  "HealthRegen": "Health Regeneration",
+  "vip.ResetDeaths": "Your deaths have been reset!",
+  "Vampirism": "Vampirism",
+  "endurance": "Endurance",
+
+  "Respawn": "Respawn",
+  "respawn.Limit": "Respawn limit reached!",
+  "respawn.InTeam": "You must be in a team!",
+  "respawn.IsAlive": "You must be dead!",
+  "respawn.Success": "You have successfully respawned!",
+
+  "Bhop": "Bunny Hop",
+  "bhop.TimeToActivation": "Bunny hop will be active in {red}{0}{default} seconds",
+  "bhop.Activated": "Bunny hop activated!",
+
+  "fov.Disable": "Disable",
+  "fov.On": "You have set the {blue}FOV {default} to {red}{0}",
+  "fov.Off": "You have turned off {blue}FOV",
+
+  "viptest.YouCanNoLongerTakeTheVip": "You can no longer take the VIP Test",
+  "viptest.RetakenThrough": "You can retake the VIP Test in: {0}",
+  "viptest.SuccessfullyPassed": "You have successfully passed the 'VIP-Test'! Expires in: {0}",
+
+  "tag.Disable": "Disable",
+  "tag.On": "You have set the {blue}Tag {default} to {red}{0}",
+  "tag.Off": "You have turned off {blue}Tag",
+
+  "vip.OnlineVips": "{blue}{0}, ",
+  "vip.NoVipsOnline": "No VIP players online"
 }

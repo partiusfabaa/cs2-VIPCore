@@ -1,14 +1,60 @@
 ﻿{
   "menu.Title": "[VIP Menu - {0}]",
   "vip.Prefix": "[{blue}VIP{default}]",
+
+  "vip.WelcomeToTheServer": "Salut, {blue}{0}{default}! Esti un jucator VIP! ",
+  "vip.Expires": "{blue}{0}-ul{default} tau expira in {blue}{1}",
+  "vip.Expired": "{blue}{0}-ul{default} a expirat.",
+  "vip.NoLongerVIPPlayer": "Nu mai ești un jucător VIP.",
   "vip.NoAccess": "Nu aveți acces la această comandă!",
 
-  "vip.WelcomeToTheServer": "Salut, {blue}{0}{default}! Ești un jucător VIP.",
-  "vip.Expires": "Statutul tău {blue}{0}{default} expiră pe {blue}{1}.",
-  "vip.Expired": "Statutul tău {blue}{0}{default} a expirat.",
-  "vip.NoLongerVIPPlayer": "Nu mai ești un jucător VIP.",
+  "vip.AlreadyVipPrivileges": "Ai deja beneficiile de VIP.",
 
-  "FeatureState.Enabled": "[<font color='green'>ACTIV</font>]",
-  "FeatureState.Disabled": "[<font color='red'>INACTIV</font>]",
-  "FeatureState.NoAccess": "[<font color='gray'>FĂRĂ ACCES</font>]"
+  "FeatureState.Enabled": "[<font color='green'>ACTIVAT</font>]",
+  "FeatureState.Disabled": "[<font color='red'>DEZACTIVAT</font>]",
+  "FeatureState.NoAccess": "[<font color='gray'>FĂRĂ ACCES</font>]",
+
+  //Modules
+  "Health": "Viata",
+  "Armor": "Armor",
+  "Gravity": "Gravitate",
+  "SmokeColor": "Culoare Smoke",
+  "Jumps": "Jumps",
+  "Healthshot": "Healthshot",
+  "Antiflash": "Anti-Flash",
+  "DecoyTp": "Teleport Granaten",
+  "Items": "Items",
+  "Killscreen": "Kill Effect",
+  "Money": "Money",
+  "RainbowModel": "Rainbow Model",
+  "ArmorRegen": "Armor Regeneration",
+  "HealthRegen": "Health Regeneration",
+  "vip.ResetDeaths": "Your deaths are reset!",
+  "Vampirism": "Vampirism",
+  "endurance": "Endurance",
+
+  "Respawn": "Respawn",
+  "respawn.Limit": "Respawn limit reached!",
+  "respawn.InTeam": "You must be in a team!",
+  "respawn.IsAlive": "You must be dead!",
+  "respawn.Success": "Respawn successful!",
+
+  "Bhop": "BunnyHop",
+  "bhop.TimeToActivation": "BunnyHop will be active in {red}{0}{default} seconds",
+  "bhop.Activated": "BunnyHop activated!",
+
+  "fov.Disable": "Disable",
+  "fov.On": "You have set {blue}FOV {default} to {red}{0}",
+  "fov.Off": "You have turned off {blue}FOV",
+
+  "viptest.YouCanNoLongerTakeTheVip": "Nu mai poti avea VIP Test.",
+  "viptest.RetakenThrough": "VIP Test poate fi reluat doar prin: {0}",
+  "viptest.SuccessfullyPassed": "Ai primit cu succes 'VIP Test'! Expira in: {0}",
+
+  "tag.Disable": "Disable",
+  "tag.On": "You have set {blue}Tag {default} to {red}{0}",
+  "tag.Off": "You've disabled the {blue}Tag",
+
+  "vip.OnlineVips": "{blue}{0}, ",
+  "vip.NoVipsOnline": "Nu sunt jucători VIP"
 }

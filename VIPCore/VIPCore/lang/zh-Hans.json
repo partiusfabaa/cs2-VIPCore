@@ -1,14 +1,60 @@
 ﻿{
-  "menu.Title": "[VIP Menu - {0}]",
+  "menu.Title": "[VIP 菜单 - {0}]",
   "vip.Prefix": "[{blue}VIP{default}]",
-  "vip.NoAccess": "您无权使用此命令！",
 
   "vip.WelcomeToTheServer": "您好，{blue}{0}{default}！您是 VIP 玩家。",
-  "vip.Expires": "您的 {blue}{0}{default} 身份将在 {blue}{1} 过期。",
-  "vip.Expired": "您的 {blue}{0}{default} 身份已过期。",
-  "vip.NoLongerVIPPlayer": "您不再是 VIP 玩家。",
+  "vip.Expires": "您的 {blue}{0}{default} 状态将于 {blue}{1} 过期",
+  "vip.Expired": "您的 {blue}{0}{default} 状态已过期。",
+  "vip.NoLongerVIPPlayer": "您已不再是 VIP 玩家。",
+  "vip.NoAccess": "您没有权限使用此命令！",
+
+  "vip.AlreadyVipPrivileges": "您已拥有 VIP 权限。",
 
   "FeatureState.Enabled": "[<font color='green'>开启</font>]",
   "FeatureState.Disabled": "[<font color='red'>关闭</font>]",
-  "FeatureState.NoAccess": "[<font color='gray'>无权限</font>]"
+  "FeatureState.NoAccess": "[<font color='gray'>无权限</font>]",
+
+  //Modules
+  "Health": "生命值",
+  "Armor": "护甲",
+  "Gravity": "重力",
+  "SmokeColor": "烟雾颜色",
+  "Jumps": "额外跳跃",
+  "Healthshot": "医疗针",
+  "Antiflash": "反闪光",
+  "DecoyTp": "诱饵传送",
+  "Items": "物品",
+  "Killscreen": "击杀特效",
+  "Money": "金钱",
+  "RainbowModel": "彩虹模型",
+  "ArmorRegen": "护甲恢复",
+  "HealthRegen": "生命恢复",
+  "vip.ResetDeaths": "您的死亡数已重置！",
+  "Vampirism": "吸血鬼",
+  "endurance": "耐力",
+
+  "Respawn": "重生",
+  "respawn.Limit": "重生次数已达上限！",
+  "respawn.InTeam": "您必须在队伍中！",
+  "respawn.IsAlive": "您必须处于死亡状态！",
+  "respawn.Success": "您已成功重生！",
+
+  "Bhop": "连跳",
+  "bhop.TimeToActivation": "连跳将在 {red}{0}{default} 秒后激活",
+  "bhop.Activated": "连跳已激活！",
+
+  "fov.Disable": "禁用",
+  "fov.On": "您已将 {blue}FOV {default} 设置为 {red}{0}",
+  "fov.Off": "您已关闭 {blue}FOV",
+
+  "viptest.YouCanNoLongerTakeTheVip": "您无法再次领取 VIP 测试",
+  "viptest.RetakenThrough": "您可以在 {0} 后再次领取 VIP 测试",
+  "viptest.SuccessfullyPassed": "您已成功通过“VIP 测试”！将于 {0} 后到期",
+
+  "tag.Disable": "禁用",
+  "tag.On": "您已将 {blue}Tag {default} 设置为 {red}{0}",
+  "tag.Off": "您已关闭 {blue}Tag",
+
+  "vip.OnlineVips": "{blue}{0}, ",
+  "vip.NoVipsOnline": "没有在线 VIP 玩家"
 }

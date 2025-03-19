@@ -20,7 +20,7 @@ public class Plugin : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Core";
-    public override string ModuleVersion => $"v{Assembly.GetAssembly(typeof(Plugin))?.GetName().Version}"; 
+    public override string ModuleVersion => $"v{Assembly.GetAssembly(typeof(Plugin))?.GetName().Version?.ToString(3)}"; 
 
     private readonly Config<GroupsConfig> _groupsConfig;
     private readonly Config<VipConfig> _vipConfig;
