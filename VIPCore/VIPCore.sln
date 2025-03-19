@@ -6,49 +6,49 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VipCoreApi", "VipCoreApi\Vi
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{28A7915F-33C0-4296-9773-7FE4F3BDC8CD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Health", "Modules\VIP_Health\VIP_Health.csproj", "{7D183ADA-71AC-4D49-8FD5-4DE8104F6B5C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Health", "VIPModules\VIP_Health\VIP_Health.csproj", "{7D183ADA-71AC-4D49-8FD5-4DE8104F6B5C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Armor", "Modules\VIP_Armor\VIP_Armor.csproj", "{5C0DFDD9-1687-4DDC-8C02-BA4B271A2B2C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Armor", "VIPModules\VIP_Armor\VIP_Armor.csproj", "{5C0DFDD9-1687-4DDC-8C02-BA4B271A2B2C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Jumps", "Modules\VIP_Jumps\VIP_Jumps.csproj", "{D8EB99CB-A157-4CB9-B9AD-AA810C069750}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Jumps", "VIPModules\VIP_Jumps\VIP_Jumps.csproj", "{D8EB99CB-A157-4CB9-B9AD-AA810C069750}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_FastDefuse", "Modules\VIP_FastDefuse\VIP_FastDefuse.csproj", "{5B8BDA5E-461D-4584-93E0-AA2F966AFC78}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_FastDefuse", "VIPModules\VIP_FastDefuse\VIP_FastDefuse.csproj", "{5B8BDA5E-461D-4584-93E0-AA2F966AFC78}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_FastPlant", "Modules\VIP_FastPlant\VIP_FastPlant.csproj", "{B76DFB26-1F44-4540-A424-DD6E5F0B3781}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_FastPlant", "VIPModules\VIP_FastPlant\VIP_FastPlant.csproj", "{B76DFB26-1F44-4540-A424-DD6E5F0B3781}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Bhop", "Modules\VIP_Bhop\VIP_Bhop.csproj", "{A22CE9E9-F833-44EC-83BC-8A3441E050C3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Bhop", "VIPModules\VIP_Bhop\VIP_Bhop.csproj", "{A22CE9E9-F833-44EC-83BC-8A3441E050C3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_BuyTeamWeapon", "Modules\VIP_BuyTeamWeapon\VIP_BuyTeamWeapon.csproj", "{12089F50-950F-47F8-A3DB-FC3509CC54EF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_BuyTeamWeapon", "VIPModules\VIP_BuyTeamWeapon\VIP_BuyTeamWeapon.csproj", "{12089F50-950F-47F8-A3DB-FC3509CC54EF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_CustomDefaultAmmo", "Modules\VIP_CustomDefaultAmmo\VIP_CustomDefaultAmmo.csproj", "{6AE6E35C-54C9-419E-83F5-11A69B35DBBA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_CustomDefaultAmmo", "VIPModules\VIP_CustomDefaultAmmo\VIP_CustomDefaultAmmo.csproj", "{6AE6E35C-54C9-419E-83F5-11A69B35DBBA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Endurance", "Modules\VIP_Endurance\VIP_Endurance.csproj", "{B6908108-2A38-48FE-814E-FF42A3839B38}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Endurance", "VIPModules\VIP_Endurance\VIP_Endurance.csproj", "{B6908108-2A38-48FE-814E-FF42A3839B38}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Fov", "Modules\VIP_Fov\VIP_Fov.csproj", "{5DC66FCF-3274-4C4A-991A-350CA73C0EA1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Fov", "VIPModules\VIP_Fov\VIP_Fov.csproj", "{5DC66FCF-3274-4C4A-991A-350CA73C0EA1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Gravity", "Modules\VIP_Gravity\VIP_Gravity.csproj", "{1847889F-F83C-439E-AA94-FDE4816A13F7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Gravity", "VIPModules\VIP_Gravity\VIP_Gravity.csproj", "{1847889F-F83C-439E-AA94-FDE4816A13F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_KillScreen", "Modules\VIP_KillScreen\VIP_KillScreen.csproj", "{3CCBF63F-37FC-4E43-97BF-D7D95B02EBAA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_KillScreen", "VIPModules\VIP_KillScreen\VIP_KillScreen.csproj", "{3CCBF63F-37FC-4E43-97BF-D7D95B02EBAA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_SmokeColor", "Modules\VIP_SmokeColor\VIP_SmokeColor.csproj", "{335ACDAA-C551-4B02-B946-8DBABCE8CD1D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_SmokeColor", "VIPModules\VIP_SmokeColor\VIP_SmokeColor.csproj", "{335ACDAA-C551-4B02-B946-8DBABCE8CD1D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_DamageChange", "Modules\VIP_DamageChange\VIP_DamageChange.csproj", "{37C34EB0-C971-4737-9B86-3BDAD7C6374D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_DamageChange", "VIPModules\VIP_DamageChange\VIP_DamageChange.csproj", "{37C34EB0-C971-4737-9B86-3BDAD7C6374D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Flags", "Modules\VIP_Flags\VIP_Flags.csproj", "{F988D0E7-390A-49E6-A759-8D02789A1C25}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Flags", "VIPModules\VIP_Flags\VIP_Flags.csproj", "{F988D0E7-390A-49E6-A759-8D02789A1C25}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Healthshot", "Modules\VIP_Healthshot\VIP_Healthshot.csproj", "{3E88C468-D3A4-478E-A9DA-CEBF31E551D5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Healthshot", "VIPModules\VIP_Healthshot\VIP_Healthshot.csproj", "{3E88C468-D3A4-478E-A9DA-CEBF31E551D5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Defuser", "Modules\VIP_Defuser\VIP_Defuser.csproj", "{A840E19D-1031-423E-BEAD-9381E679CCF7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Defuser", "VIPModules\VIP_Defuser\VIP_Defuser.csproj", "{A840E19D-1031-423E-BEAD-9381E679CCF7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Test", "Modules\VIP_Test\VIP_Test.csproj", "{E7A9F433-5D57-40E3-959E-DB7D263106B2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Test", "VIPModules\VIP_Test\VIP_Test.csproj", "{E7A9F433-5D57-40E3-959E-DB7D263106B2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Vampirism", "Modules\VIP_Vampirism\VIP_Vampirism.csproj", "{8E8A4E1C-4EBC-439E-961D-525E75EA4062}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_Vampirism", "VIPModules\VIP_Vampirism\VIP_Vampirism.csproj", "{8E8A4E1C-4EBC-439E-961D-525E75EA4062}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_VipsOnline", "Modules\VIP_VipsOnline\VIP_VipsOnline.csproj", "{30328CC9-0CB5-4FFC-98C4-CD0E95D6115B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_VipsOnline", "VIPModules\VIP_VipsOnline\VIP_VipsOnline.csproj", "{30328CC9-0CB5-4FFC-98C4-CD0E95D6115B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_TeammatesHeal", "Modules\VIP_TeammatesHeal\VIP_TeammatesHeal.csproj", "{1DC39E1D-D767-44B2-BFE0-18F1E92B3E28}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_TeammatesHeal", "VIPModules\VIP_TeammatesHeal\VIP_TeammatesHeal.csproj", "{1DC39E1D-D767-44B2-BFE0-18F1E92B3E28}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_RainbowModel", "Modules\VIP_RainbowModel\VIP_RainbowModel.csproj", "{602828C8-7519-4293-806B-E833BC99181B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VIP_RainbowModel", "VIPModules\VIP_RainbowModel\VIP_RainbowModel.csproj", "{602828C8-7519-4293-806B-E833BC99181B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
