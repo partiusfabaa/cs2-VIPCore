@@ -60,7 +60,7 @@ public class VipCustomDefaultAmmo : BasePlugin
             _ammoConfig = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, WeaponSettings>>>(configJson) ?? CreateConfig();
         }
     }
-
+    
     private Dictionary<string, Dictionary<string, WeaponSettings>> CreateConfig()
     {
         return new Dictionary<string, Dictionary<string, WeaponSettings>>
@@ -105,10 +105,10 @@ public class CustomDefaultAmmo : VipFeatureBase
         if (entity == null || entity.Entity == null || !entity.IsValid || !entity.DesignerName.Contains("weapon_"))
             return;
 
-        var players = Utilities.GetPlayers().Where(x => x is { IsBot: false, Connected: PlayerConnectedState.PlayerConnected} && PlayerHasFeature(x));
+        var players = Utilities.GetPlayers().Where(x => x is { IsBot: false, Connected: PlayerConnectedState.PlayerConnected} && IsClientVip(x) && PlayerHasFeature(x));
         foreach (var player in players)
         {
-            if (player == null || !IsClientVip(player) || !PlayerHasFeature(player)) return;
+            if (player == null || !IsClientVip(player) || !PlayerHasFeature(player)) continue;
 
             var featureState = GetPlayerFeatureState(player);
             if (featureState is IVipCoreApi.FeatureState.Disabled or IVipCoreApi.FeatureState.NoAccess) return;
@@ -119,47 +119,49 @@ public class CustomDefaultAmmo : VipFeatureBase
             CBasePlayerWeapon? weapon = new(entity.Handle);
             if (weapon == null || !weapon.IsValid) return;
 
-            foreach (var item in weaponSettings)
+            if(IsClientVip(player) && PlayerHasFeature(player))
             {
-                if (string.IsNullOrEmpty(item.Key) || item.Value == null) continue;
-
-                Server.NextFrame(() => ApplyWeaponSettings(player, weapon, item));
+                foreach (var item in weaponSettings)
+                {
+                    if (string.IsNullOrEmpty(item.Key) || item.Value == null) continue;
+                    
+                    Server.NextFrame(() => ApplyWeaponSettings(player, weapon, item));
+                }
             }
         }
     }
 
-    private void ApplyWeaponSettings(CCSPlayerController? player, CBasePlayerWeapon weapon, KeyValuePair<string, WeaponSettings> item)
+    private void ApplyWeaponSettings(CCSPlayerController? player, CBasePlayerWeapon? weapon, KeyValuePair<string, WeaponSettings> item)
     {
         if (player == null || !player.IsValid || weapon == null || !weapon.IsValid) return;
 
+        if(!IsClientVip(player) || !PlayerHasFeature(player)) return;
+
         string weaponName = item.Key.Trim();
         if (!CheckIfWeapon(weaponName, weapon.AttributeManager.Item.ItemDefinitionIndex)) return;
-
+        
         CCSWeaponBase? _weapon = weapon.As<CCSWeaponBase>();
         if (_weapon == null) return;
-
-        if (IsClientVip(player) && PlayerHasFeature(player))
+        
+        if (item.Value.DefaultClip != -1)
         {
-            if (item.Value.DefaultClip != -1)
+            if (_weapon.VData != null)
             {
-                if (_weapon.VData != null)
-                {
-                    _weapon.VData.MaxClip1 = item.Value.DefaultClip;
-                    _weapon.VData.DefaultClip1 = item.Value.DefaultClip;
-                }
-                _weapon.Clip1 = item.Value.DefaultClip;
-                Utilities.SetStateChanged(_weapon, "CBasePlayerWeapon", "m_iClip1");
+                _weapon.VData.MaxClip1 = item.Value.DefaultClip;
+                _weapon.VData.DefaultClip1 = item.Value.DefaultClip;
             }
-            
-            if (item.Value.DefaultReserve != -1)
+            _weapon.Clip1 = item.Value.DefaultClip;
+            Utilities.SetStateChanged(_weapon, "CBasePlayerWeapon", "m_iClip1");
+        }
+        
+        if (item.Value.DefaultReserve != -1)
+        {
+            if (_weapon.VData != null)
             {
-                if (_weapon.VData != null)
-                {
-                    _weapon.VData.PrimaryReserveAmmoMax = item.Value.DefaultReserve;
-                }
-                _weapon.ReserveAmmo[0] = item.Value.DefaultReserve;
-                Utilities.SetStateChanged(_weapon, "CBasePlayerWeapon", "m_pReserveAmmo");
+                _weapon.VData.PrimaryReserveAmmoMax = item.Value.DefaultReserve;
             }
+            _weapon.ReserveAmmo[0] = item.Value.DefaultReserve;
+            Utilities.SetStateChanged(_weapon, "CBasePlayerWeapon", "m_pReserveAmmo");
         }
     }   
     
