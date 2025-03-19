@@ -1,0 +1,14 @@
+﻿{
+  "menu.Title": "[VIP Menu - {0}]",
+  "vip.Prefix": "[{blue}VIP{default}]",
+  "vip.NoAccess": "이 명령어에 대한 접근 권한이 없습니다!",
+
+  "vip.WelcomeToTheServer": "안녕하세요, {blue}{0}{default}! VIP 플레이어입니다.",
+  "vip.Expires": "귀하의 {blue}{0}{default} 상태는 {blue}{1}에 만료됩니다.",
+  "vip.Expired": "귀하의 {blue}{0}{default} 상태가 만료되었습니다.",
+  "vip.NoLongerVIPPlayer": "더 이상 VIP 플레이어가 아닙니다.",
+
+  "FeatureState.Enabled": "[<font color='green'>켜짐</font>]",
+  "FeatureState.Disabled": "[<font color='red'>꺼짐</font>]",
+  "FeatureState.NoAccess": "[<font color='gray'>접근 불가</font>]"
+}

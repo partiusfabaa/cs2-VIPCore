@@ -1,269 +1,298 @@
 ﻿using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Menu;
+using CS2ScreenMenuAPI.Internal;
+using VipCoreApi.Enums;
 
 namespace VipCoreApi;
 
 /// <summary>
-/// Api for VIP Core plugin
+/// API interface for the VIP Core plugin. Provides access to configuration directories, VIP functions, and event handlers.
 /// </summary>
 public interface IVipCoreApi
 {
     /// <summary>
-    /// Represents the state of a feature (Enabled, Disabled, NoAccess).
+    /// Gets the plugin capability for VIP Core API.
     /// </summary>
-    enum FeatureState
-    {
-        Enabled,
-        Disabled,
-        NoAccess
-    }
+    public static PluginCapability<IVipCoreApi> Capability => new("vipcore:core");
 
     /// <summary>
-    /// Represents the type of a feature (Toggle, Selectable, Hide).
-    /// </summary>
-    enum FeatureType
-    {
-        Toggle,
-        Selectable,
-        Hide
-    }
-
-    /// <summary>
-    /// Returns the directory for core configuration.
+    /// Gets the directory for core configuration files.
     /// </summary>
     string CoreConfigDirectory { get; }
 
     /// <summary>
-    /// Returns the directory for modules configuration.
+    /// Gets the directory for module configuration files.
     /// </summary>
     string ModulesConfigDirectory { get; }
 
     /// <summary>
-    /// Returns the database connection string
+    /// Gets the database connection string.
     /// </summary>
-    string GetDatabaseConnectionString { get; }
+    string DatabaseConnectionString { get; }
 
     /// <summary>
-    /// Registers a VIP feature with specified parameters.
+    /// Gets the server identifier.
     /// </summary>
-    /// <param name="vipFeatureBase"></param>
-    /// <param name="featureType"></param>
-    void RegisterFeature(VipFeatureBase vipFeatureBase, FeatureType featureType = FeatureType.Toggle);
-
-    ///// <param name="selectItem"></param>
-    // void RegisterFeature(VipFeatureBase vipFeatureBase, FeatureType featureType = FeatureType.Toggle,
-    //     Action<CCSPlayerController, FeatureState>? selectItem = null); 
+    int ServerId { get; }
 
     /// <summary>
-    ///  Unregisters a VIP feature.
+    /// Gets the feature manager instance.
     /// </summary>
-    /// <param name="vipFeatureBase"></param>
-    void UnRegisterFeature(VipFeatureBase vipFeatureBase);
+    IFeatureManager FeatureManager { get; }
 
     /// <summary>
-    ///  Gets all registered functions
+    /// Gets the current state of a specified feature for the given player.
     /// </summary>
-    IEnumerable<(string feature, object value)> GetAllRegisteredFeatures();
-
-    /// <summary>
-    /// Gets the state of a feature for a specific player.
-    /// </summary>
-    /// <param name="player"></param>
-    /// <param name="feature"></param>
-    /// <returns></returns>
+    /// <param name="player">The player whose feature state is requested.</param>
+    /// <param name="feature">The name of the feature.</param>
+    /// <returns>The current feature state (<see cref="FeatureState"/>).</returns>
     FeatureState GetPlayerFeatureState(CCSPlayerController player, string feature);
 
     /// <summary>
-    /// Sets the state of the function for a specific player.
+    /// Sets the state of a specified feature for the given player.
     /// </summary>
-    /// <param name="player"></param>
-    /// <param name="feature"></param>
-    /// <param name="newState"></param>
+    /// <param name="player">The player for whom the feature state is being set.</param>
+    /// <param name="feature">The name of the feature.</param>
+    /// <param name="newState">The new feature state.</param>
     void SetPlayerFeatureState(CCSPlayerController player, string feature, FeatureState newState);
-    
-    /// <summary>
-    /// Turns off all functions
-    /// </summary>
-    void DisableAllFeatures();
-    
-    /// /// <summary>
-    /// Turns on all the functions
-    /// </summary>
-    void EnableAllFeatures();
 
     /// <summary>
-    /// Checks if a player is a VIP client.
+    /// Checks whether the specified player is a VIP.
     /// </summary>
-    /// <param name="player"></param>
-    /// <returns></returns>
-    bool IsClientVip(CCSPlayerController player);
+    /// <param name="player">The player to check.</param>
+    /// <returns><c>true</c> if the player is VIP; otherwise, <c>false</c>.</returns>
+    bool IsPlayerVip(CCSPlayerController player);
 
     /// <summary>
-    /// Checks if a player has a specific feature.
+    /// Checks if the player has access to the specified feature.
     /// </summary>
-    /// <param name="player"></param>
-    /// <param name="feature"></param>
-    /// <returns></returns>
+    /// <param name="player">The player to check.</param>
+    /// <param name="feature">The name of the feature.</param>
+    /// <returns><c>true</c> if the player has access; otherwise, <c>false</c>.</returns>
     bool PlayerHasFeature(CCSPlayerController player, string feature);
 
     /// <summary>
-    /// Gets the value of a feature for a specific player.
+    /// Gets the value associated with a feature for the specified player.
     /// </summary>
-    /// <param name="player"></param>
-    /// <param name="feature"></param>
-    /// <typeparam name="T"></typeparam>
-    /// <returns></returns>
-    T GetFeatureValue<T>(CCSPlayerController player, string feature);
+    /// <typeparam name="T">The expected type of the feature value.</typeparam>
+    /// <param name="player">The player whose feature value is requested.</param>
+    /// <param name="feature">The name of the feature.</param>
+    /// <returns>The feature value of type <typeparamref name="T"/> if it exists; otherwise, <c>null</c>.</returns>
+    T? GetFeatureValue<T>(CCSPlayerController player, string feature);
 
     /// <summary>
-    /// Gets the VIP group of a player
+    /// Gets the VIP group of the specified player.
     /// </summary>
-    /// <param name="player"></param>
-    /// <returns></returns>
-    string GetClientVipGroup(CCSPlayerController player);
+    /// <param name="player">The player whose VIP group is requested.</param>
+    /// <returns>The VIP group as a string.</returns>
+    string GetPlayerVipGroup(CCSPlayerController player);
 
     /// <summary>
-    /// Gets the VIP groups from the vip.json file
+    /// Gets the VIP groups defined in the vip.json file.
     /// </summary>
-    /// <returns></returns>
+    /// <returns>An array of strings representing the VIP groups.</returns>
     string[] GetVipGroups();
 
     /// <summary>
-    /// Updates VIP information for a player.
+    /// Updates the VIP information for the specified player.
     /// </summary>
-    /// <param name="player"></param>
-    /// <param name="name"></param>
-    /// <param name="group"></param>
-    /// <param name="time"></param>
-    void UpdateClientVip(CCSPlayerController player, string name = "", string group = "", int time = -1);
+    /// <param name="player">The player for whom the VIP information is updated.</param>
+    /// <param name="name">The name of the player (if an update is needed).</param>
+    /// <param name="group">The VIP group to set (if an update is needed).</param>
+    /// <param name="time">
+    /// The duration for which VIP status is valid (for example, in minutes). 
+    /// A value of -1 indicates no change.
+    /// </param>
+    void UpdatePlayerVip(CCSPlayerController player, string name = "", string group = "", int time = -1);
 
     /// <summary>
-    /// Manage VIP status for a player.
+    /// Sets the VIP status for the specified player.
     /// </summary>
-    /// <param name="player"></param>
-    /// <param name="group"></param>
-    /// <param name="time"></param>
-    void SetClientVip(CCSPlayerController player, string group, int time);
+    /// <param name="player">The player for whom VIP status is set.</param>
+    /// <param name="group">The VIP group to assign.</param>
+    /// <param name="time">The duration for the VIP status.</param>
+    void SetPlayerVip(CCSPlayerController player, string group, int time);
 
     /// <summary>
-    /// Manage VIP status for a player.
+    /// Grants VIP status to the specified player.
     /// </summary>
-    /// <param name="player"></param>
-    /// <param name="group"></param>
-    /// <param name="time"></param>
-    void GiveClientVip(CCSPlayerController player, string group, int time);
+    /// <param name="player">The player to whom VIP status is granted.</param>
+    /// <param name="group">The VIP group to assign.</param>
+    /// <param name="time">The duration for the VIP status.</param>
+    void GivePlayerVip(CCSPlayerController player, string group, int time);
 
     /// <summary>
-    /// Gives VIP player for 1 game session
+    /// Grants temporary VIP status (for one game session) to the specified player.
     /// </summary>
-    /// <param name="player"></param>
-    /// <param name="group"></param>
-    /// <param name="time"></param>
-    void GiveClientTemporaryVip(CCSPlayerController player, string group, int time);
+    /// <param name="player">The player to whom temporary VIP status is granted.</param>
+    /// <param name="group">The VIP group to assign.</param>
+    /// <param name="time">The duration for the temporary VIP status.</param>
+    void GivePlayerTemporaryVip(CCSPlayerController player, string group, int time);
 
     /// <summary>
-    /// Remove VIP status for a player.
+    /// Removes the VIP status from the specified player.
     /// </summary>
-    /// <param name="player"></param>
-    void RemoveClientVip(CCSPlayerController player);
+    /// <param name="player">The player whose VIP status is removed.</param>
+    void RemovePlayerVip(CCSPlayerController player);
 
     /// <summary>
-    /// Saves the player's cookie
+    /// Saves a cookie value for the player based on their SteamID.
     /// </summary>
-    /// <param name="steamId64"></param>
-    /// <param name="key"></param>
-    /// <param name="value"></param>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">The type of the cookie value.</typeparam>
+    /// <param name="player">The player for whom the cookie is set.</param>
+    /// <param name="key">The key of the cookie.</param>
+    /// <param name="value">The value to be saved.</param>
+    void SetPlayerCookie<T>(CCSPlayerController player, string key, T value) => SetPlayerCookie(player.SteamID, key, value);
+
+    /// <summary>
+    /// Saves a cookie value for the player using their SteamID.
+    /// </summary>
+    /// <typeparam name="T">The type of the cookie value.</typeparam>
+    /// <param name="steamId64">The SteamID of the player.</param>
+    /// <param name="key">The key of the cookie.</param>
+    /// <param name="value">The value to be saved.</param>
     void SetPlayerCookie<T>(ulong steamId64, string key, T value);
 
     /// <summary>
-    /// Returns the player's cookie
+    /// Retrieves a cookie value for the player based on their SteamID.
     /// </summary>
-    /// <param name="steamId64"></param>
-    /// <param name="key"></param>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">The expected type of the cookie value.</typeparam>
+    /// <param name="player">The player whose cookie is requested.</param>
+    /// <param name="key">The key of the cookie.</param>
+    /// <returns>The cookie value of type <typeparamref name="T"/> if it exists; otherwise, <c>null</c>.</returns>
+    T GetPlayerCookie<T>(CCSPlayerController player, string key) => GetPlayerCookie<T>(player.SteamID, key);
+
+    /// <summary>
+    /// Retrieves a cookie value for the player using their SteamID.
+    /// </summary>
+    /// <typeparam name="T">The expected type of the cookie value.</typeparam>
+    /// <param name="steamId64">The SteamID of the player.</param>
+    /// <param name="key">The key of the cookie.</param>
+    /// <returns>The cookie value of type <typeparamref name="T"/> if it exists; otherwise, <c>null</c>.</returns>
     T GetPlayerCookie<T>(ulong steamId64, string key);
 
     /// <summary>
-    /// Prints messages to the in-game chat.
+    /// Sends a message to the in-game chat for the specified player.
     /// </summary>
-    /// <param name="player"></param>
-    /// <param name="message"></param>
+    /// <param name="player">The player to whom the message is sent.</param>
+    /// <param name="message">The message text.</param>
     void PrintToChat(CCSPlayerController player, string message);
 
     /// <summary>
-    /// Prints messages to the in-game chat.
+    /// Sends a message to the in-game chat for all players.
     /// </summary>
-    /// <param name="message"></param>
+    /// <param name="message">The message text.</param>
     void PrintToChatAll(string message);
 
     /// <summary>
-    /// Retrieves translated text based on a name and optional arguments.
+    /// Retrieves the translated text for the specified key and optional format arguments for a given player.
     /// </summary>
-    /// <param name="name"></param>
-    /// <param name="args"></param>
-    /// <returns></returns>
+    /// <param name="player">The player for whom the translation is requested.</param>
+    /// <param name="name">The key or name for the translation.</param>
+    /// <param name="args">Optional arguments for formatting the text.</param>
+    /// <returns>A localized string based on the provided key and arguments.</returns>
+    string GetTranslatedText(CCSPlayerController player, string name, params object[] args);
+
+    /// <summary>
+    /// Retrieves the translated text for the specified key and optional format arguments.
+    /// </summary>
+    /// <param name="name">The key or name for the translation.</param>
+    /// <param name="args">Optional arguments for formatting the text.</param>
+    /// <returns>A localized string based on the provided key and arguments.</returns>
     string GetTranslatedText(string name, params object[] args);
 
     /// <summary>
-    /// Checks if it's a pistol round.
+    /// Checks if the current game round is a pistol round.
     /// </summary>
-    /// <returns></returns>
+    /// <returns><c>true</c> if it is a pistol round; otherwise, <c>false</c>.</returns>
     bool IsPistolRound();
 
     /// <summary>
-    /// Loads a configuration file.
+    /// Loads a configuration file from the specified path.
     /// </summary>
-    /// <param name="name"></param>
-    /// <param name="path"></param>
-    /// <typeparam name="T"></typeparam>
-    /// <returns></returns>
+    /// <typeparam name="T">The type of the configuration object.</typeparam>
+    /// <param name="name">The name of the configuration file.</param>
+    /// <param name="path">The path to the configuration file directory.</param>
+    /// <returns>An object of type <typeparamref name="T"/> representing the configuration.</returns>
     T LoadConfig<T>(string name, string path);
 
     /// <summary>
-    /// Loads a configuration file.
+    /// Loads a configuration file from the standard directory.
     /// </summary>
-    /// <param name="name"></param>
-    /// <typeparam name="T"></typeparam>
-    /// <returns></returns>
+    /// <typeparam name="T">The type of the configuration object.</typeparam>
+    /// <param name="name">The name of the configuration file.</param>
+    /// <returns>An object of type <typeparamref name="T"/> representing the configuration.</returns>
     T LoadConfig<T>(string name);
 
     /// <summary>
-    /// Returns a menu depending on the UseCenterHtmlMenu parameter from the config.
+    /// Creates a menu based on the configuration settings.
     /// </summary>
-    /// <param name="title"></param>
-    /// <returns></returns>
+    /// <param name="title">The title of the menu.</param>
+    /// <returns>An instance of <see cref="IMenu"/> representing the created menu.</returns>
     IMenu CreateMenu(string title);
-
-    
+        
     /// <summary>
-    /// Returns server id
+    /// Creates a menu based on the configuration settings.
     /// </summary>
-    /// <returns>int</returns>
-    int GetServerId();
+    /// <param name="title">The title of the menu.</param>
+    /// <returns>An instance of <see cref="IMenu"/> representing the created menu.</returns>
+    ScreenMenu CreateScreenMenu(string title);
+        
 
     /// <summary>
-    /// Event triggered when a player is spawned.
+    /// Event triggered when a player is authorized.
     /// </summary>
-    event Action<CCSPlayerController>? OnPlayerSpawn;
+    event OnPlayerAuthorizedDelegate? OnPlayerAuthorized;
 
     /// <summary>
-    /// Event triggered when a player is loaded.
+    /// Event triggered when a player disconnects.
     /// </summary>
-    event Action<CCSPlayerController, string>? PlayerLoaded;
+    event OnPlayerDisconnectDelegate? OnPlayerDisconnect;
 
     /// <summary>
-    /// Event triggered when a player is removed.
+    /// Event triggered when a player spawns.
     /// </summary>
-    event Action<CCSPlayerController, string>? PlayerRemoved;
+    event OnPlayerSpawnDelegate? OnPlayerSpawn;
 
     /// <summary>
-    /// Event checks if the core is loaded
+    /// Event triggered when a player uses a feature.
+    /// </summary>
+    event OnPlayerUseFeatureDelegate? OnPlayerUseFeature;
+
+    /// <summary>
+    /// Event triggered when the core module is ready.
     /// </summary>
     event Action? OnCoreReady;
-
-    /// <summary>
-    /// Event for prevent toggle use of VIP menu.
-    /// </summary>
-    event Func<CCSPlayerController, string, FeatureState, FeatureType, HookResult?>? OnPlayerUseFeature;
 }
+
+/// <summary>
+/// Delegate for handling the player authorization event.
+/// </summary>
+/// <param name="player">The player who has been authorized.</param>
+public delegate void OnPlayerAuthorizedDelegate(CCSPlayerController player, string group);
+
+/// <summary>
+/// Delegate for handling the player disconnect event.
+/// </summary>
+/// <param name="player">The player who disconnected.</param>
+public delegate void OnPlayerDisconnectDelegate(CCSPlayerController player, bool vip);
+
+/// <summary>
+/// Delegate for handling the player spawn event.
+/// </summary>
+/// <param name="player">The player who spawned.</param>
+/// <param name="vip"><c>true</c> if the player is VIP; otherwise, <c>false</c>.</param>
+public delegate void OnPlayerSpawnDelegate(CCSPlayerController player, bool vip);
+
+/// <summary>
+/// Delegate for handling the event when a player uses a feature.
+/// </summary>
+/// <param name="args">The event arguments of type <see cref="PlayerUseFeatureEventArgs"/>.</param>
+public delegate void OnPlayerUseFeatureDelegate(PlayerUseFeatureEventArgs args);
+
+/// <summary>
+/// Delegate for handling the event when a feature is displayed.
+/// </summary>
+/// <param name="args">The event arguments of type <see cref="FeatureDisplayArgs"/>.</param>
+public delegate void OnFeatureDisplayDelegate(FeatureDisplayArgs args);

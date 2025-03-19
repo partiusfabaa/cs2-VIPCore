@@ -7,22 +7,10 @@
 VIPCore/ignoremodules/
 VIPCore/privatemodules/
 VIPCore/addons/
-VIPCoreForModularityPlugin/
+
 *.user
 *.xml
 *.editorconfig
 
-VIPCore/modules/VIP_Hook/Vectors.cs
-VIPCore/modules/VIP_Hook/VIP_Hook.cs
-VIPCore/modules/VIP_Hook/VIP_Hook.csproj
-
-VIPCore/modules/VIP_Tracers/VIP_Tracers.cs
-VIPCore/modules/VIP_Tracers/VIP_Tracers.csproj
-VIPCore/modules/VIP_Money/build/addons/counterstrikesharp/plugins/ModularityPlugin/plugins/VIP_Money/VIP_Money.deps.json
-
-VIPCore/modules/VIP_TestM/VIP_TestM.csproj
-VIPCore/modules/VIP_TestM/Class1.cs
-
-VIPCore/VIPCore.zip
-VIPCore-v1.2.2/
-VIPCore_/
+VIPCore/build/
+VIPCore/build

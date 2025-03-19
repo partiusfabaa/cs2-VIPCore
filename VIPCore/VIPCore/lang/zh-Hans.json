@@ -1,0 +1,14 @@
+﻿{
+  "menu.Title": "[VIP Menu - {0}]",
+  "vip.Prefix": "[{blue}VIP{default}]",
+  "vip.NoAccess": "您无权使用此命令！",
+
+  "vip.WelcomeToTheServer": "您好，{blue}{0}{default}！您是 VIP 玩家。",
+  "vip.Expires": "您的 {blue}{0}{default} 身份将在 {blue}{1} 过期。",
+  "vip.Expired": "您的 {blue}{0}{default} 身份已过期。",
+  "vip.NoLongerVIPPlayer": "您不再是 VIP 玩家。",
+
+  "FeatureState.Enabled": "[<font color='green'>开启</font>]",
+  "FeatureState.Disabled": "[<font color='red'>关闭</font>]",
+  "FeatureState.NoAccess": "[<font color='gray'>无权限</font>]"
+}

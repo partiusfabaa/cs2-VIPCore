@@ -1,21 +1,33 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>VIPCore</RootNamespace>
+        <Version>2.0.0</Version>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="CounterStrikeSharp.API" Version="1.0.304" />
-    <PackageReference Include="Dapper" Version="2.1.21" />
-    <PackageReference Include="Microsoft.Extensions.Localization" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
-    <PackageReference Include="MySqlConnector" Version="2.3.0" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="CounterStrikeSharp.API" Version="1.0.305"/>
+        <PackageReference Include="Dapper" Version="2.1.66" />
+        <PackageReference Include="MySqlConnector" Version="2.3.7" />
+        <PackageReference Include="CS2ScreenMenuAPI" Version="3.0.1" />
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\VipCoreApi\VipCoreApi.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\VipCoreApi\VipCoreApi.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="lang\en.json" CopyToOutputDirectory="Always"/>
+        <None Update="lang\ko.json" CopyToOutputDirectory="Always"/>
+        <None Update="lang\ru.json" CopyToOutputDirectory="Always"/>
+        <None Update="lang\zh-Hans.json" CopyToOutputDirectory="Always"/>
+        <None Update="lang\de.json" CopyToOutputDirectory="Always"/>
+        <None Update="lang\pt-BR.json" CopyToOutputDirectory="Always"/>
+        <None Update="lang\ro.json" CopyToOutputDirectory="Always"/>
+        <None Update="lang\ua.json" CopyToOutputDirectory="Always"/>
+    </ItemGroup>
 
 </Project>

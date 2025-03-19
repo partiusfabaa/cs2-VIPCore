@@ -1,8 +1,0 @@
-{
-  "prefix": "[ {blue}VIP{default} ] ",
-  "vip.selected": "{red}RandomVip{default} has been selected: {lime}{playerName}",
-  "vip.not.enough": "Not enough players for {blue}VIP{default} selection",
-  "vip.player.message": "You've been selected as {blue}VIP{default} for this map. Your {blue}VIP{default} ends when the current {lime}map{default} change!",
-  "vip.already.vip": "You already have VIP privileges."
-
-}

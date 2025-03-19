@@ -1,0 +1,70 @@
+<Project>
+    <PropertyGroup>
+        <OutputPath>$(MSBuildThisFileDirectory)build\</OutputPath>
+
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+        <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(MSBuildProjectName)' == 'VIPCore'">
+        <OutputPath>$(OutputPath)plugins\VIPCore\</OutputPath>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(MSBuildProjectName)' == 'VipCoreApi'">
+        <OutputPath>$(OutputPath)shared\VipCoreApi\</OutputPath>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$([System.String]::new('$(MSBuildProjectDirectory)').ToLower().Contains('modules')) AND '$(MSBuildProjectName)' != 'VipCoreApi'">
+        <OutputPath>$(OutputPath)plugins\$(MSBuildProjectName)\</OutputPath>
+    </PropertyGroup>
+
+    <Target Name="CopyDependencies" AfterTargets="Publish">
+        <ItemGroup>
+            <HasMySqlConnector Include="@(PackageReference)" Condition="'%(Identity)' == 'MySqlConnector'"/>
+            <HasDapper Include="@(PackageReference)" Condition="'%(Identity)' == 'Dapper'"/>
+        </ItemGroup>
+
+        <ItemGroup Condition="'@(HasMySqlConnector)' != ''">
+            <Dependencies Include="$(NuGetPackageRoot)\mysqlconnector\2.3.7\lib\net8.0\MySqlConnector.dll"/>
+        </ItemGroup>
+
+        <ItemGroup Condition="'@(HasDapper)' != ''">
+            <Dependencies Include="$(NuGetPackageRoot)\dapper\2.1.66\lib\net8.0\Dapper.dll"/>
+        </ItemGroup>
+
+        <Copy
+                SourceFiles="@(Dependencies)"
+                DestinationFolder="$(MSBuildThisFileDirectory)build\plugins\$(MSBuildProjectName)\"
+                SkipUnchangedFiles="true"
+                Condition="@(Dependencies->Count()) != 0"/>
+    </Target>
+
+    <Target Name="CopyGameData" AfterTargets="Publish">
+        <ItemGroup>
+            <GameDataFiles Include="$(MSBuildProjectDirectory)\gamedata\**\*.*"
+                           Condition="Exists('$(MSBuildProjectDirectory)\gamedata')"/>
+        </ItemGroup>
+
+        <Copy
+                SourceFiles="@(GameDataFiles)"
+                DestinationFiles="@(GameDataFiles->'$(MSBuildThisFileDirectory)build\gamedata\%(RecursiveDir)%(Filename)%(Extension)')"
+                OverwriteReadOnlyFiles="true"
+                SkipUnchangedFiles="true"/>
+    </Target>
+
+    <Target Name="RemovePublishFolder" AfterTargets="Publish">
+        <RemoveDir Directories="$(OutputPath)publish"/>
+    </Target>
+
+    <Target Name="CleanVipCoreApiFromPlugins" AfterTargets="Publish">
+        <ItemGroup>
+            <VipCoreApiToDelete Include="$(MSBuildThisFileDirectory)build\plugins\**\VipCoreApi.dll"/>
+            <VipCoreApiToDeletePdb Include="$(MSBuildThisFileDirectory)build\plugins\**\VipCoreApi.pdb"/>
+            <PluginGameDataDirs Include="$(MSBuildThisFileDirectory)build\plugins\**\gamedata"/>
+        </ItemGroup>
+        <Delete Files="@(VipCoreApiToDelete)"/>
+        <Delete Files="@(VipCoreApiToDeletePdb)"/>
+        <RemoveDir Directories="$(PluginGameDataDirs)"/>
+    </Target>
+</Project>
