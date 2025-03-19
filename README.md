@@ -1,4 +1,6 @@
-![GitHub all releases](https://img.shields.io/github/downloads/partiusfabaa/cs2-VIPCore/total?style=social)
+![GitHub all releases](https://img.shields.io/github/downloads/partiusfabaa/cs2-VIPCore/total?style=social&label=Downloads)
+![GitHub stars](https://img.shields.io/github/stars/partiusfabaa/cs2-VIPCore?style=social)
+![NuGet Version](https://img.shields.io/nuget/vpre/VipCoreApi)
 
 <div align="center">
   <strong>VIPCore</strong>
@@ -12,19 +14,19 @@
 ## Installation
 1. Install [CounterStrike Sharp](https://github.com/roflmuffin/CounterStrikeSharp), [Metamod:Source](https://www.sourcemm.net/downloads.php/?branch=master)
 3. Download [VIPCore](https://github.com/partiusfabaa/cs2-VIPCore/releases)
-4. Unpack the archive and upload it to the game server **(example path: `addons/counterstrikesharp/plugins`)**
+4. Unpack the archive and upload it to the game server
 
 ### Put the modules in this path `addons/counterstrikesharp/plugins`
 
 ## Commands 
 
-| **Command**                             | **Description**                                               |
-|-------------------------------------|-----------------------------------------------------------|
-| **`css_vip`** or **`!vip`** | Opens the VIP menu |
-| **`css_vip_reload` or `!vip_reload`**    | Reloads the configuration **(`@css/root`)** |
-| **`css_vip_adduser <steamid or accountid> <vipgroup> <time or 0 permanently>`** | Adds a VIP player |
-| **`css_vip_deleteuser <steamid or accountid>`** | Allows you to delete a player by SteamID identifier |
-| **`css_vip_updateuser <steamid or accountid> <group or -s> <time or -s>`** | Updates the player's VIP |
+| **Command** | **Description** | **FLAG** |
+|-|-|-|
+| **`css_vip`** or **`!vip`** | Opens the VIP menu | **-**  |
+| **`css_vip_reload` or `!vip_reload`**    | Reloads the configuration | **@css/root**  |
+| **`css_vip_adduser <steamid or accountid> <vipgroup> <time or 0 permanently>`** | Adds a VIP player | **@css/root**  |
+| **`css_vip_deleteuser <steamid or accountid>`** | Allows you to delete a player by SteamID identifier | **@css/root**  |
+| **`css_vip_updateuser <steamid or accountid> <group or -s> <time or -s>`** | Updates the player's VIP | **@css/root**  |
 
 ## Configs
 Located in the folder `addons/counterstrikesharp/configs/plugins/VIPCore`
