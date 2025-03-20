@@ -17,12 +17,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Reference Include="CS2MenuManager">
-        <HintPath>..\..\CS2MenuManager.dll</HintPath>
-      </Reference>
-    </ItemGroup>
-
-    <ItemGroup>
       <None Update="README.md">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>

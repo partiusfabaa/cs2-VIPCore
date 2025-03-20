@@ -10,6 +10,7 @@
 
     <ItemGroup>
         <PackageReference Include="CounterStrikeSharp.API" Version="1.0.305"/>
+        <PackageReference Include="CS2MenuManager" Version="1.0.1" />
         <PackageReference Include="Dapper" Version="2.1.66" />
         <PackageReference Include="MySqlConnector" Version="2.3.7" />
     </ItemGroup>
@@ -27,12 +28,6 @@
         <None Update="lang\pt-BR.json" CopyToOutputDirectory="Always"/>
         <None Update="lang\ro.json" CopyToOutputDirectory="Always"/>
         <None Update="lang\ua.json" CopyToOutputDirectory="Always"/>
-    </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="CS2MenuManager">
-        <HintPath>..\CS2MenuManager.dll</HintPath>
-      </Reference>
     </ItemGroup>
 
 </Project>
