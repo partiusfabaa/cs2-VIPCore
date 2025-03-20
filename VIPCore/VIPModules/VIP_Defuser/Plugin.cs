@@ -39,7 +39,7 @@ public class Defuser(IVipCoreApi api) : VipFeature<bool>("Defuser", api)
 
         foreach (var weapon in pawn.WeaponServices.MyWeapons)
         {
-            if (weapon?.Value?.IsValid == true && weapon.Value.DesignerName?.Contains(weaponName) == true)
+            if (weapon.Value?.IsValid == true && weapon.Value.DesignerName?.Contains(weaponName) == true)
             {
                 return true;
             }

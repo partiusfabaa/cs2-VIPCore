@@ -49,7 +49,7 @@ public class Health(IVipCoreApi api) : VipFeature<int>("Health", api)
     {
         if (args.State == FeatureState.Enabled)
         {
-            args.Display = $"[+{GetValue(args.Controller)}]";
+            args.Display = $"[{GetValue(args.Controller)}]";
         }
     }
 }

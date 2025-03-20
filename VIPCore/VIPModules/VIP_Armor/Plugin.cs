@@ -45,7 +45,7 @@ public class Armor(IVipCoreApi api) : VipFeature<int>("Armor", api)
     {
         if (args.State == FeatureState.Enabled)
         {
-            args.Display = $"[+{GetValue(args.Controller)}]";
+            args.Display = $"[{GetValue(args.Controller)}]";
         }
     }
 }
