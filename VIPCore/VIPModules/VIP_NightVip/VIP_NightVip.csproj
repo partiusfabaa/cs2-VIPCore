@@ -15,9 +15,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Reference Include="CS2MenuManager">
-        <HintPath>..\..\CS2MenuManager.dll</HintPath>
-      </Reference>
+      <None Update="timezones.txt">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>

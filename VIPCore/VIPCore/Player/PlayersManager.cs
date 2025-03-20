@@ -195,11 +195,17 @@ public class PlayersManager
     public void AddUser(CCSPlayerController? player, VipData data)
     {
         Task.Run(() => _databaseManager.AddUserAsync(data));
+        AddTemporaryUser(player, data);
+    }
 
+    public void AddTemporaryUser(CCSPlayerController? player, VipData data)
+    {
         if (player != null && TryGetPlayer(player, out var vipPlayer))
         {
             vipPlayer.Data = data;
             vipPlayer.Group = _groupsConfig.Value[data.Group];
+
+            SetClientFeature(vipPlayer);
 
             PrintToChat(player, _plugin.Localizer.ForPlayer(player, "vip.WelcomeToTheServer", data.Name) +
                                 (data.Expires == 0
@@ -207,8 +213,11 @@ public class PlayersManager
                                     : _plugin.Localizer.ForPlayer(player, "vip.Expires",
                                         data.Group,
                                         DateTimeOffset.FromUnixTimeSeconds(data.Expires).ToString("G"))));
+
+            return;
         }
     }
+    
 
     public void RemoveUser(CCSPlayerController? player, int accountId)
     {

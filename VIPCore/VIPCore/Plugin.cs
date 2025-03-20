@@ -4,7 +4,6 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Timers;
-using CS2ScreenMenuAPI;
 using FabiusTimer.Configs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -20,7 +19,7 @@ public class Plugin : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Core";
-    public override string ModuleVersion => $"v{Assembly.GetAssembly(typeof(Plugin))?.GetName().Version?.ToString(3)}"; 
+    public override string ModuleVersion => $"v{Assembly.GetAssembly(typeof(Plugin))?.GetName().Version?.ToString(3)}";
 
     private readonly Config<GroupsConfig> _groupsConfig;
     private readonly Config<VipConfig> _vipConfig;
@@ -64,7 +63,7 @@ public class Plugin : BasePlugin
 
         AddTimer(300.0f, () => { Task.Run(() => _databaseManager.PurgeExpiredUsersAsync()); }, TimerFlags.REPEAT);
     }
-    
+
     private HookResult EventPlayerSpawn(EventPlayerSpawn @event, GameEventInfo info)
     {
         var player = @event.Userid;
@@ -87,9 +86,10 @@ public class Plugin : BasePlugin
         }
 
         var features = new List<(string, VipFeature, FeatureState)>();
-        foreach (var feature in _api.FeatureManager.GetFeatures())
+        foreach (var feature in _api.FeatureManager.GetFeatures().Where(f => f.Type != FeatureType.Hide))
         {
             if (!vipPlayer.FeatureStates.TryGetValue(feature, out var featureState)) continue;
+            if (!_api.PlayerHasFeature(player, feature.Name)) continue;
 
             var value = string.Empty;
             if (feature.Type is FeatureType.Toggle)
@@ -119,33 +119,23 @@ public class Plugin : BasePlugin
             features.Add((displayArgs.Display, feature, featureState));
         }
 
-        switch (_vipConfig.Value.MenuType)
-        {
-            case "screen":
-                CreateScreenMenu(vipPlayer, features);
-                break;
-            default:
-                CreateMenu(vipPlayer, features);
-                break;
-        }
+        CreateMenu(vipPlayer, features);
     }
 
-    private void CreateScreenMenu(VipPlayer vipPlayer, List<(string, VipFeature, FeatureState)> features)
+    private void CreateMenu(VipPlayer vipPlayer, List<(string, VipFeature, FeatureState)> features)
     {
         var player = vipPlayer.Controller;
         if (player is null) return;
 
-        var screenMenu = _api.CreateScreenMenu(
-            Localizer.ForPlayer(player, "menu.Title", vipPlayer.Data?.Group ?? string.Empty));
-
+        var menu = _api.CreateMenu(Localizer.ForPlayer(player, "menu.Title", vipPlayer.Data?.Group ?? string.Empty));
         foreach (var (display, feature, state) in features)
         {
-            screenMenu.AddOption($"{Localizer.ForPlayer(player, feature.Name)} {display}", (controller, option) =>
+            menu.AddItem($"{Localizer.ForPlayer(player, feature.Name)} {display}", (p, _) =>
             {
                 var args = new PlayerUseFeatureEventArgs
                 {
                     State = state,
-                    Controller = player,
+                    Controller = p,
                     Feature = feature
                 };
 
@@ -166,67 +156,22 @@ public class Plugin : BasePlugin
                 }
 
                 vipPlayer.FeatureStates[feature] = returnState;
-                feature.OnSelectItem(player, feature);
+                feature.State = returnState;
+                feature.OnSelectItem(p, feature);
 
-                MenuAPI.GetActiveMenu(player)?.Display();
-            }, !_api.PlayerHasFeature(player, feature.Name));
-        }
-
-        screenMenu.Open(player);
-    }
-
-    private void CreateMenu(VipPlayer vipPlayer, List<(string, VipFeature, FeatureState)> features)
-    {
-        var player = vipPlayer.Controller;
-        if (player is null) return;
-
-        var menu = _api.CreateMenu(Localizer.ForPlayer(player, "menu.Title", vipPlayer.Data?.Group ?? string.Empty));
-
-        foreach (var (display, feature, state) in features)
-        {
-            menu.AddMenuOption($"{Localizer.ForPlayer(player, feature.Name)} {display}",
-                (p, o) =>
+                if (feature.Type != FeatureType.Selectable && _vipConfig.Value.ReOpenMenuAfterItemClick)
                 {
-                    var args = new PlayerUseFeatureEventArgs
-                    {
-                        State = state,
-                        Controller = player,
-                        Feature = feature
-                    };
-
-                    _api.InvokeOnPlayerUseFeature(args);
-
-                    if (!args.Allow)
-                        return;
-
-                    var returnState = state;
-                    if (feature.Type != FeatureType.Selectable)
-                    {
-                        returnState = state switch
-                        {
-                            FeatureState.Enabled => FeatureState.Disabled,
-                            FeatureState.Disabled => FeatureState.Enabled,
-                            _ => returnState
-                        };
-                    }
-
-                    vipPlayer.FeatureStates[feature] = returnState;
-                    feature.State = returnState;
-                    feature.OnSelectItem(player, feature);
-
-                    if (feature.Type != FeatureType.Selectable)
-                    {
-                        Server.NextFrame(() => OnCreateMenuCmd(player));
-                    }
-                }, !_api.PlayerHasFeature(player, feature.Name));
+                    Server.NextFrame(() => OnCreateMenuCmd(p));
+                }
+            });
         }
 
-        menu.Open(player);
+        menu.Display(player, 0);
     }
 
     public void PrintToChatAll(string message)
     {
-        foreach (var player in Utilities.GetPlayers())
+        foreach (var player in Utilities.GetPlayers().Where(p => !p.IsBot))
         {
             player.PrintToChat($"{Localizer.ForPlayer(player, "vip.Prefix")} {message}");
         }

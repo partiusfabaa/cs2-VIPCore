@@ -1,5 +1,7 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CS2MenuManager.API.Class;
+using CS2MenuManager.API.Enum;
 using VipCoreApi;
 using VipCoreApi.Enums;
 
@@ -10,7 +12,7 @@ public class Plugin : BasePlugin
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Fov";
     public override string ModuleVersion => "v2.0.0";
-    
+
     private Fov? _fov;
 
     public override void OnAllPluginsLoaded(bool hotReload)
@@ -53,25 +55,41 @@ public class Fov(IVipCoreApi api) : VipFeature<List<int>>("Fov", api, FeatureTyp
         if (userFov is null) return;
 
         var menu = CreateMenu(GetTranslatedText(player, "Fov"));
-        menu.AddMenuOption(GetTranslatedText("fov.Disable"), (controller, _) =>
-        {
-            _fovSettings[player.Slot] = 90;
 
-            PrintToChat(player, GetTranslatedText("fov.Off"));
-            ChangeFov(controller);
-        }, _fovSettings[player.Slot] == 90);
-        
-        foreach (var i in userFov)
+        var fovDisableKey = GetTranslatedText(player, "fov.Disable");
+        if (_fovSettings[player.Slot] == 90)
         {
-            menu.AddMenuOption(i.ToString(), (controller, _) =>
+            menu.AddItem(fovDisableKey, DisableOption.DisableHideNumber);
+        }
+        else
+        {
+            menu.AddItem(fovDisableKey, (controller, _) =>
             {
-                _fovSettings[player.Slot] = i;
-                PrintToChat(player, GetTranslatedText("fov.On", i));
+                _fovSettings[player.Slot] = 90;
+
+                PrintToChat(player, GetTranslatedText("fov.Off"));
                 ChangeFov(controller);
-            }, _fovSettings[player.Slot] == i);
+            });
         }
 
-        menu.Open(player);
+        foreach (var i in userFov)
+        {
+            if (_fovSettings[player.Slot] == i)
+            {
+                menu.AddItem(i.ToString(), DisableOption.DisableHideNumber);
+            }
+            else
+            {
+                menu.AddItem(i.ToString(), (controller, _) =>
+                {
+                    _fovSettings[player.Slot] = i;
+                    PrintToChat(player, GetTranslatedText("fov.On", i));
+                    ChangeFov(controller);
+                });
+            }
+        }
+
+        menu.Display(player, 0);
     }
 
     private void ChangeFov(CCSPlayerController player)
@@ -82,7 +100,7 @@ public class Fov(IVipCoreApi api) : VipFeature<List<int>>("Fov", api, FeatureTyp
         {
             SetPlayerCookie(player, "player_fov", fov);
         }
-        
+
         player.DesiredFOV = fov;
         Utilities.SetStateChanged(player, "CBasePlayerController", "m_iDesiredFOV");
     }

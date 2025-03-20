@@ -1,6 +1,5 @@
 ﻿using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Menu;
-using CS2ScreenMenuAPI.Internal;
+using CS2MenuManager.API.Interface;
 using VipCoreApi.Enums;
 
 namespace VipCoreApi;
@@ -176,16 +175,7 @@ public abstract class VipFeature : IDisposable
     /// </summary>
     /// <param name="title">The title of the menu.</param>
     /// <returns>An instance of <see cref="IMenu"/> representing the created menu.</returns>
-    public IMenu CreateMenu(string title)
-        => Api.CreateMenu(title);
-
-    /// <summary>
-    /// Creates a screen menu with the specified title.
-    /// </summary>
-    /// <param name="title">The title of the screen menu.</param>
-    /// <returns>An instance of <see cref="ScreenMenu"/> representing the created screen menu.</returns>
-    public ScreenMenu CreateScreenMenu(string title)
-        => Api.CreateScreenMenu(title);
+    public IMenu CreateMenu(string title) => Api.CreateMenu(title);
 
     /// <summary>
     /// Checks if the player is valid for using this feature, i.e. is VIP, has access to the feature, and the feature is enabled.
@@ -200,16 +190,14 @@ public abstract class VipFeature : IDisposable
     /// </summary>
     /// <param name="player">The player to check.</param>
     /// <returns><c>true</c> if the player is VIP; otherwise, <c>false</c>.</returns>
-    public bool IsPlayerVip(CCSPlayerController player)
-        => Api.IsPlayerVip(player);
+    public bool IsPlayerVip(CCSPlayerController player) => Api.IsPlayerVip(player);
 
     /// <summary>
     /// Checks if the specified player has access to this feature.
     /// </summary>
     /// <param name="player">The player to check.</param>
     /// <returns><c>true</c> if the player has access; otherwise, <c>false</c>.</returns>
-    public bool PlayerHasFeature(CCSPlayerController player)
-        => Api.PlayerHasFeature(player, Name);
+    public bool PlayerHasFeature(CCSPlayerController player) => Api.PlayerHasFeature(player, Name);
 
     /// <summary>
     /// Gets the value of this feature for the specified player.
@@ -217,39 +205,35 @@ public abstract class VipFeature : IDisposable
     /// <typeparam name="T">The expected type of the feature value.</typeparam>
     /// <param name="player">The player whose feature value is requested.</param>
     /// <returns>The feature value of type <typeparamref name="T"/> if it exists; otherwise, <c>null</c>.</returns>
-    public T? GetFeatureValue<T>(CCSPlayerController player)
-        => Api.GetFeatureValue<T>(player, Name);
+    public T? GetFeatureValue<T>(CCSPlayerController player) => Api.GetFeatureValue<T>(player, Name);
 
     /// <summary>
     /// Gets the current state of this feature for the specified player.
     /// </summary>
     /// <param name="player">The player whose feature state is requested.</param>
     /// <returns>The feature state (<see cref="FeatureState"/>).</returns>
-    public FeatureState GetPlayerFeatureState(CCSPlayerController player)
-        => Api.GetPlayerFeatureState(player, Name);
+    public FeatureState GetPlayerFeatureState(CCSPlayerController player) => Api.GetPlayerFeatureState(player, Name);
 
     /// <summary>
     /// Sets the state of this feature for the specified player.
     /// </summary>
     /// <param name="player">The player for whom the feature state is being set.</param>
     /// <param name="newState">The new feature state.</param>
-    public void SetPlayerFeatureState(CCSPlayerController player, FeatureState newState)
-        => Api.SetPlayerFeatureState(player, Name, newState);
+    public void SetPlayerFeatureState(CCSPlayerController player, FeatureState newState) =>
+        Api.SetPlayerFeatureState(player, Name, newState);
 
     /// <summary>
     /// Gets the VIP group of the specified player.
     /// </summary>
     /// <param name="player">The player whose VIP group is requested.</param>
     /// <returns>The VIP group as a string.</returns>
-    public string GetPlayerVipGroup(CCSPlayerController player)
-        => Api.GetPlayerVipGroup(player);
+    public string GetPlayerVipGroup(CCSPlayerController player) => Api.GetPlayerVipGroup(player);
 
     /// <summary>
     /// Gets the VIP groups defined in the vip.json file.
     /// </summary>
     /// <returns>An array of strings representing the VIP groups.</returns>
-    public string[] GetVipGroups()
-        => Api.GetVipGroups();
+    public string[] GetVipGroups() => Api.GetVipGroups();
 
     /// <summary>
     /// Updates the VIP information for the specified player.

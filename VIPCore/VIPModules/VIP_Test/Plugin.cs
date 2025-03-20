@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Entities;
+using CS2MenuManager.API.Menu;
 using Dapper;
 using MySqlConnector;
 using VipCoreApi;
@@ -42,7 +43,7 @@ public class Plugin : BasePlugin
         var menu = _api.CreateMenu("VIP Test");
         foreach (var vip in _config)
         {
-            menu.AddMenuOption(vip.Group, (p, _) =>
+            menu.AddItem(vip.Group, (p, _) =>
             {
                 var authorizedSteamId = p.AuthorizedSteamID;
                 if (authorizedSteamId == null) return;
@@ -51,7 +52,7 @@ public class Plugin : BasePlugin
             });
         }
 
-        menu.Open(controller);
+        menu.Display(controller, 0);
     }
 
     private async Task GivePlayerVipTest(CCSPlayerController player, SteamID steamId, VipTestConfig vipTest)

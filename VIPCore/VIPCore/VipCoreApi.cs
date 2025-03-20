@@ -3,8 +3,9 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Cvars;
-using CounterStrikeSharp.API.Modules.Menu;
-using CS2ScreenMenuAPI.Internal;
+using CS2MenuManager.API.Class;
+using CS2MenuManager.API.Interface;
+using CS2MenuManager.API.Menu;
 using FabiusTimer.Configs;
 using Microsoft.Extensions.Logging;
 using VIPCore.Configs;
@@ -27,7 +28,7 @@ public class VipCoreApi(
 {
     private Dictionary<ulong, PlayerCookie> _playersCookie = [];
 
-    private readonly JsonSerializerOptions _jsonSerializerOptions = new()
+    private readonly JsonSerializerOptions _serializerOptions = new()
     {
         ReadCommentHandling = JsonCommentHandling.Skip,
         WriteIndented = true
@@ -69,7 +70,7 @@ public class VipCoreApi(
                 return value;
             }
 
-            var custom = ((JsonElement)featureData).Deserialize<T>()!;
+            var custom = ((JsonElement)featureData).Deserialize<T>(_serializerOptions)!;
             vipPlayer.Group[feature] = custom;
 
             return (T?)custom;
@@ -129,7 +130,7 @@ public class VipCoreApi(
         var accountId = player.AuthorizedSteamID?.AccountId;
         if (!accountId.HasValue) return;
 
-        Task.Run(() => playersManager.UpdateUser(accountId.Value, name, group, time));
+        playersManager.UpdateUser(accountId.Value, name, group, time);
     }
 
     public void SetPlayerVip(CCSPlayerController player, string group, int time)
@@ -138,17 +139,50 @@ public class VipCoreApi(
 
     public void GivePlayerVip(CCSPlayerController player, string group, int time)
     {
-        throw new NotImplementedException();
+        GiveClientVip(player, group, time, false);
     }
 
     public void GivePlayerTemporaryVip(CCSPlayerController player, string group, int time)
     {
-        throw new NotImplementedException();
+        GiveClientVip(player, group, time, true);
+    }
+
+    private void GiveClientVip(CCSPlayerController player, string group, int time, bool isTemporary)
+    {
+        if (IsPlayerVip(player))
+            throw new Exception($"Player {player.PlayerName} already has a VIP");
+
+        var name = player.PlayerName;
+
+        var authSteamId = player.AuthorizedSteamID;
+        if (authSteamId == null)
+        {
+            plugin.Logger.LogError($"AuthorizedSteamId is null");
+            return;
+        }
+
+        var accountId = authSteamId.AccountId;
+
+        var user = plugin.CreateNewUser(accountId, name, group, time);
+
+        if (isTemporary)
+            playersManager.AddTemporaryUser(player, user);
+        else
+            playersManager.AddUser(player, user);
+        
+        InvokeOnPlayerAuthorized(player);
     }
 
     public void RemovePlayerVip(CCSPlayerController player)
     {
-        throw new NotImplementedException();
+        if (!playersManager.TryGetPlayer(player, out var vipPlayer))
+        {
+            plugin.Logger.LogError($"player not found");
+            return;
+        }
+        if (vipPlayer.Data is null) return;
+        
+        playersManager.RemoveUser(player, vipPlayer.Data.AccountId);
     }
 
     public void SetPlayerCookie<T>(ulong steamId64, string key, T value)
@@ -179,13 +213,13 @@ public class VipCoreApi(
                     case T typedValue:
                         return typedValue;
                     case JsonElement jsonElement:
-                        return jsonElement.Deserialize<T>(_jsonSerializerOptions)!;
+                        return jsonElement.Deserialize<T>(_serializerOptions)!;
                 }
 
                 var jsonString = featureValue.ToString();
                 if (jsonString != null)
                 {
-                    return JsonSerializer.Deserialize<T>(jsonString, _jsonSerializerOptions)!;
+                    return JsonSerializer.Deserialize<T>(jsonString, _serializerOptions)!;
                 }
             }
             catch (Exception e)
@@ -209,7 +243,7 @@ public class VipCoreApi(
         }
 
         var fileContent = File.ReadAllText(filePath);
-        var cookies = JsonSerializer.Deserialize<List<PlayerCookie>>(fileContent, _jsonSerializerOptions);
+        var cookies = JsonSerializer.Deserialize<List<PlayerCookie>>(fileContent, _serializerOptions);
 
         if (cookies != null)
         {
@@ -222,7 +256,7 @@ public class VipCoreApi(
         var filePath = Path.Combine(CoreConfigDirectory, "vip_core_cookie.json");
 
         var cookiesList = _playersCookie.Values.ToList();
-        var jsonContent = JsonSerializer.Serialize(cookiesList, _jsonSerializerOptions);
+        var jsonContent = JsonSerializer.Serialize(cookiesList, _serializerOptions);
 
         File.WriteAllText(filePath, jsonContent);
     }
@@ -267,13 +301,12 @@ public class VipCoreApi(
         {
             var defaultConfig = Activator.CreateInstance<T>();
 
-            File.WriteAllText(configFilePath,
-                JsonSerializer.Serialize(defaultConfig, _jsonSerializerOptions));
+            File.WriteAllText(configFilePath, JsonSerializer.Serialize(defaultConfig, _serializerOptions));
             return defaultConfig;
         }
 
         var configJson = File.ReadAllText(configFilePath);
-        var config = JsonSerializer.Deserialize<T>(configJson, _jsonSerializerOptions);
+        var config = JsonSerializer.Deserialize<T>(configJson, _serializerOptions);
 
         if (config == null)
             throw new FileNotFoundException($"File {name}.json not found or cannot be deserialized");
@@ -291,14 +324,12 @@ public class VipCoreApi(
         return vipConfig.Value.MenuType switch
         {
             "center" => new CenterHtmlMenu(title, plugin),
-            "chat" => new ChatMenu(title),
+            "chat" => new ChatMenu(title, plugin),
+            "console" => new ConsoleMenu(title, plugin),
+            "screen" => new ScreenMenu(title, plugin),
+            "wasd" => new WasdMenu(title, plugin),
             _ => new CenterHtmlMenu(title, plugin)
         };
-    }
-
-    public ScreenMenu CreateScreenMenu(string title)
-    {
-        return new ScreenMenu(title, plugin);
     }
 
     public event OnPlayerAuthorizedDelegate? OnPlayerAuthorized;
@@ -317,7 +348,7 @@ public class VipCoreApi(
 
     public void InvokeOnPlayerDisconnect(CCSPlayerController player, bool vip)
     {
-        OnPlayerDisconnect?.Invoke(player, vip); 
+        OnPlayerDisconnect?.Invoke(player, vip);
     }
 
     public void InvokeOnPlayerSpawn(CCSPlayerController player, bool isVip)

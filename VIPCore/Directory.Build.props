@@ -61,10 +61,12 @@
         <ItemGroup>
             <VipCoreApiToDelete Include="$(MSBuildThisFileDirectory)build\plugins\**\VipCoreApi.dll"/>
             <VipCoreApiToDeletePdb Include="$(MSBuildThisFileDirectory)build\plugins\**\VipCoreApi.pdb"/>
+            <MenuManager Include="$(MSBuildThisFileDirectory)build\plugins\**\CS2MenuManager.dll"/>
             <PluginGameDataDirs Include="$(MSBuildThisFileDirectory)build\plugins\**\gamedata"/>
         </ItemGroup>
         <Delete Files="@(VipCoreApiToDelete)"/>
         <Delete Files="@(VipCoreApiToDeletePdb)"/>
+        <Delete Files="@(MenuManager)"/>
         <RemoveDir Directories="$(PluginGameDataDirs)"/>
     </Target>
 </Project>
