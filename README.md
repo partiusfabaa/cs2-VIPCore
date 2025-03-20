@@ -12,7 +12,7 @@
 > If you find an error or anything else. Please message me in discord: [thesamefabius](https://discord.com/users/658204951595712519)
 
 ## Installation
-1. Install [CounterStrike Sharp](https://github.com/roflmuffin/CounterStrikeSharp), [Metamod:Source](https://www.sourcemm.net/downloads.php/?branch=master)
+1. Install [CounterStrike Sharp](https://github.com/roflmuffin/CounterStrikeSharp), [Metamod:Source](https://www.sourcemm.net/downloads.php/?branch=master), [CS2MenuManager](https://github.com/schwarper/CS2MenuManager)
 3. Download [VIPCore](https://github.com/partiusfabaa/cs2-VIPCore/releases)
 4. Unpack the archive and upload it to the game server
 
