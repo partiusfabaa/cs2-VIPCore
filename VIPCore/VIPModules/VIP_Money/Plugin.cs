@@ -35,7 +35,7 @@ public class Money(IVipCoreApi api) : VipFeature<string>("Money", api)
 {
     public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
-        if (IsPistolRound() || !IsPlayerValid(player)) return;
+        if (!IsPlayerValid(player)) return;
 
         var moneyServices = player.InGameMoneyServices;
         if (moneyServices == null) return;

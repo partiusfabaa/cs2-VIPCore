@@ -89,7 +89,7 @@ public class Plugin : BasePlugin
         foreach (var feature in _api.FeatureManager.GetFeatures().Where(f => f.Type != FeatureType.Hide))
         {
             if (!vipPlayer.FeatureStates.TryGetValue(feature, out var featureState)) continue;
-            if (!_api.PlayerHasFeature(player, feature.Name)) continue;
+            if (!feature.PlayerHasFeature(player) || feature.GetPlayerFeatureState(player) is FeatureState.NoAccess) continue;
 
             var value = string.Empty;
             if (feature.Type is FeatureType.Toggle)

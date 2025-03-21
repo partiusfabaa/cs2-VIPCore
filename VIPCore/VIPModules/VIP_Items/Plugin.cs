@@ -43,7 +43,7 @@ public class Items : VipFeature<Dictionary<string, List<string>>>
 
     public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
-        if (IsPistolRound() || !IsPlayerValid(player)) return;
+        if (!IsPlayerValid(player)) return;
 
         var itemsConfig = GetFeatureValue<Dictionary<string, List<string>>?>(player);
         if (itemsConfig == null) return;
