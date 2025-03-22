@@ -1,6 +1,5 @@
 ﻿using System.Data;
 using CounterStrikeSharp.API.Core;
-using FabiusTimer.Configs;
 using MySqlConnector;
 using VIPCore.Configs;
 

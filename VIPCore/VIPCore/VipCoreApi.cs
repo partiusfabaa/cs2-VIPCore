@@ -6,7 +6,6 @@ using CounterStrikeSharp.API.Modules.Cvars;
 using CS2MenuManager.API.Class;
 using CS2MenuManager.API.Interface;
 using CS2MenuManager.API.Menu;
-using FabiusTimer.Configs;
 using Microsoft.Extensions.Logging;
 using VIPCore.Configs;
 using VIPCore.Models;
@@ -27,12 +26,6 @@ public class VipCoreApi(
     Config<GroupsConfig> groupsConfig) : IVipCoreApi
 {
     private Dictionary<ulong, PlayerCookie> _playersCookie = [];
-
-    private readonly JsonSerializerOptions _serializerOptions = new()
-    {
-        ReadCommentHandling = JsonCommentHandling.Skip,
-        WriteIndented = true
-    };
 
     public string CoreConfigDirectory => Path.Combine(Application.RootDirectory, "configs/plugins/VIPCore/");
     public string ModulesConfigDirectory => Path.Combine(CoreConfigDirectory, "Modules/");
@@ -70,7 +63,7 @@ public class VipCoreApi(
                 return value;
             }
 
-            var custom = ((JsonElement)featureData).Deserialize<T>(_serializerOptions)!;
+            var custom = ((JsonElement)featureData).Deserialize<T>(ConfigSystem.ConfigJsonOptions)!;
             vipPlayer.Group[feature] = custom;
 
             return (T?)custom;
@@ -213,13 +206,13 @@ public class VipCoreApi(
                     case T typedValue:
                         return typedValue;
                     case JsonElement jsonElement:
-                        return jsonElement.Deserialize<T>(_serializerOptions)!;
+                        return jsonElement.Deserialize<T>(ConfigSystem.ConfigJsonOptions)!;
                 }
 
                 var jsonString = featureValue.ToString();
                 if (jsonString != null)
                 {
-                    return JsonSerializer.Deserialize<T>(jsonString, _serializerOptions)!;
+                    return JsonSerializer.Deserialize<T>(jsonString, ConfigSystem.ConfigJsonOptions)!;
                 }
             }
             catch (Exception e)
@@ -243,7 +236,7 @@ public class VipCoreApi(
         }
 
         var fileContent = File.ReadAllText(filePath);
-        var cookies = JsonSerializer.Deserialize<List<PlayerCookie>>(fileContent, _serializerOptions);
+        var cookies = JsonSerializer.Deserialize<List<PlayerCookie>>(fileContent, ConfigSystem.ConfigJsonOptions);
 
         if (cookies != null)
         {
@@ -256,7 +249,7 @@ public class VipCoreApi(
         var filePath = Path.Combine(CoreConfigDirectory, "vip_core_cookie.json");
 
         var cookiesList = _playersCookie.Values.ToList();
-        var jsonContent = JsonSerializer.Serialize(cookiesList, _serializerOptions);
+        var jsonContent = JsonSerializer.Serialize(cookiesList, ConfigSystem.ConfigJsonOptions);
 
         File.WriteAllText(filePath, jsonContent);
     }
@@ -284,10 +277,11 @@ public class VipCoreApi(
     public bool IsPistolRound()
     {
         var gamerules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules;
+        if (gamerules == null) return false;
+        
         var halftime = ConVar.Find("mp_halftime")!.GetPrimitiveValue<bool>();
         var maxrounds = ConVar.Find("mp_maxrounds")!.GetPrimitiveValue<int>();
-
-        if (gamerules == null) return false;
+        
         return gamerules.TotalRoundsPlayed == 0 ||
                (halftime && maxrounds / 2 == gamerules.TotalRoundsPlayed) ||
                gamerules.GameRestart;
@@ -301,12 +295,12 @@ public class VipCoreApi(
         {
             var defaultConfig = Activator.CreateInstance<T>();
 
-            File.WriteAllText(configFilePath, JsonSerializer.Serialize(defaultConfig, _serializerOptions));
+            File.WriteAllText(configFilePath, JsonSerializer.Serialize(defaultConfig, ConfigSystem.ConfigJsonOptions));
             return defaultConfig;
         }
 
         var configJson = File.ReadAllText(configFilePath);
-        var config = JsonSerializer.Deserialize<T>(configJson, _serializerOptions);
+        var config = JsonSerializer.Deserialize<T>(configJson, ConfigSystem.ConfigJsonOptions);
 
         if (config == null)
             throw new FileNotFoundException($"File {name}.json not found or cannot be deserialized");

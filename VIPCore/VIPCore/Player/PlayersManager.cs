@@ -5,7 +5,6 @@ using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
-using FabiusTimer.Configs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using VIPCore.Configs;
@@ -163,9 +162,11 @@ public class PlayersManager
         _api.Value.InvokeOnPlayerDisconnect(player, vipPlayer.IsVip);
 
         var playerName = player.PlayerName;
-        vipPlayer.Data!.LastVisit = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-
-        UpdateUser(vipPlayer.SteamId.AccountId, name: playerName);
+        if (vipPlayer.Data != null)
+        {
+            vipPlayer.Data.LastVisit = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            UpdateUser(vipPlayer.SteamId.AccountId, name: playerName);
+        }
     }
 
     public void PrintToChat(CCSPlayerController? player, string msg)

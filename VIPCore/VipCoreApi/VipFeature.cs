@@ -332,6 +332,11 @@ public abstract class VipFeature : IDisposable
     /// </summary>
     public virtual void Dispose()
     {
+        Api.OnPlayerAuthorized -= OnPlayerAuthorized;
+        Api.OnPlayerDisconnect -= OnPlayerDisconnect;
+        Api.OnPlayerSpawn -= OnPlayerSpawn;
+        Api.OnPlayerUseFeature -= OnPlayerUseFeature;
+        
         Api.FeatureManager.Unregister(this);
     }
 }

@@ -1,5 +1,4 @@
 ﻿using CounterStrikeSharp.API.Core;
-using FabiusTimer.Configs;
 using Microsoft.Extensions.DependencyInjection;
 using VIPCore.Configs;
 using VIPCore.Player;

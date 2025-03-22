@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace FabiusTimer.Configs;
+namespace VIPCore.Configs;
 
 public interface IConfig
 {
@@ -41,7 +41,7 @@ public class Config<T> : IConfig where T : new()
         T obj;
         if (File.Exists(_path))
         {
-            obj = JsonSerializer.Deserialize<T>(File.ReadAllText(_path))!;
+            obj = JsonSerializer.Deserialize<T>(File.ReadAllText(_path), ConfigSystem.ConfigJsonOptions)!;
         }
         else
         {

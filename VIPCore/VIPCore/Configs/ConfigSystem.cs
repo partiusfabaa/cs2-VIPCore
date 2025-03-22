@@ -3,7 +3,7 @@ using CounterStrikeSharp.API.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace FabiusTimer.Configs;
+namespace VIPCore.Configs;
 
 public class ConfigSystem
 {
@@ -12,7 +12,8 @@ public class ConfigSystem
 
     public static readonly JsonSerializerOptions ConfigJsonOptions = new()
     {
-        WriteIndented = true, ReadCommentHandling = JsonCommentHandling.Skip
+        WriteIndented = true, 
+        ReadCommentHandling = JsonCommentHandling.Skip
     };
 
     public ConfigSystem(IServiceCollection serviceCollection)

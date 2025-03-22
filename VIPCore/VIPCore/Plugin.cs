@@ -4,7 +4,6 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Timers;
-using FabiusTimer.Configs;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using VIPCore.Configs;
@@ -89,7 +88,8 @@ public class Plugin : BasePlugin
         foreach (var feature in _api.FeatureManager.GetFeatures().Where(f => f.Type != FeatureType.Hide))
         {
             if (!vipPlayer.FeatureStates.TryGetValue(feature, out var featureState)) continue;
-            if (!feature.PlayerHasFeature(player) || feature.GetPlayerFeatureState(player) is FeatureState.NoAccess) continue;
+            if (!feature.PlayerHasFeature(player) ||
+                feature.GetPlayerFeatureState(player) is FeatureState.NoAccess) continue;
 
             var value = string.Empty;
             if (feature.Type is FeatureType.Toggle)
@@ -168,7 +168,7 @@ public class Plugin : BasePlugin
 
         menu.Display(player, 0);
     }
-
+    
     public void PrintToChatAll(string message)
     {
         foreach (var player in Utilities.GetPlayers().Where(p => !p.IsBot))

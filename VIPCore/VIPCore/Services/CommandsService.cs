@@ -2,7 +2,6 @@
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
-using FabiusTimer.Configs;
 using Microsoft.Extensions.Logging;
 using VIPCore.Configs;
 using VIPCore.Player;
