@@ -6,6 +6,7 @@ using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
+using Microsoft.Extensions.Logging;
 using VipCoreApi;
 using VipCoreApi.Enums;
 
@@ -38,7 +39,7 @@ public class Bhop : VipFeature<BhopPlayer>
     private static readonly MemoryFunctionVoid<CCSPlayer_MovementServices, IntPtr>
         ProcessMovement = new(GameData.GetSignature("CCSPlayer_MovementServices_ProcessMovement"));
 
-    private readonly Plugin _vipBhop;
+    private readonly Plugin _plugin;
     private readonly BhopPlayer[] _bhopPlayer = new BhopPlayer[70];
 
     private readonly ConVar? _autobunnyhopping = ConVar.Find("sv_autobunnyhopping");
@@ -47,18 +48,18 @@ public class Bhop : VipFeature<BhopPlayer>
     private bool _wasAutobunnyhoppingChanged;
     private bool _wasEnablebunnyhoppingChanged;
 
-    public Bhop(Plugin vipBhop, IVipCoreApi api) : base("Bhop", api)
+    public Bhop(Plugin plugin, IVipCoreApi api) : base("Bhop", api)
     {
-        _vipBhop = vipBhop;
-        vipBhop.RegisterListener<Listeners.OnClientConnected>(slot => _bhopPlayer[slot] = new BhopPlayer());
-        vipBhop.RegisterListener<Listeners.OnClientDisconnectPost>(slot => _bhopPlayer[slot] = new BhopPlayer());
+        _plugin = plugin;
+        plugin.RegisterListener<Listeners.OnClientConnected>(slot => _bhopPlayer[slot] = new BhopPlayer());
+        plugin.RegisterListener<Listeners.OnClientDisconnectPost>(slot => _bhopPlayer[slot] = new BhopPlayer());
 
-        vipBhop.RegisterEventHandler<EventRoundStart>(EventRoundStart);
+        plugin.RegisterEventHandler<EventRoundStart>(EventRoundStart);
 
         ProcessMovement.Hook(ProcessMovementPre, HookMode.Pre);
         ProcessMovement.Hook(ProcessMovementPost, HookMode.Post);
 
-        vipBhop.RegisterListener<Listeners.OnTick>(() =>
+        plugin.RegisterListener<Listeners.OnTick>(() =>
         {
             foreach (var player in Utilities.GetPlayers()
                          .Where(player => player is { IsValid: true, IsBot: false, PawnIsAlive: true }))
@@ -114,7 +115,7 @@ public class Bhop : VipFeature<BhopPlayer>
             _bhopPlayer[player.Slot].MaxSpeed = bhopSettings.MaxSpeed;
 
             PrintToChat(player, GetTranslatedText(player, "bhop.TimeToActivation", bhopSettings.Timer));
-            _vipBhop.AddTimer(bhopSettings.Timer + gamerules.FreezeTime, () =>
+            _plugin.AddTimer(bhopSettings.Timer + gamerules.FreezeTime, () =>
             {
                 PrintToChat(player, GetTranslatedText(player, "bhop.Activated"));
                 SetBunnyhop(player, true);
