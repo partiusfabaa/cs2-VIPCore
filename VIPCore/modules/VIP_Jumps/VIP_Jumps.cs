@@ -8,12 +8,12 @@ namespace VIP_Jumps;
 
 public class VipJumps : BasePlugin
 {
-    public override string ModuleAuthor => "thesamefabius";
+    public override string ModuleAuthor => "thesamefabius,GSM-RO";
     public override string ModuleName => "[VIP] Jumps";
-    public override string ModuleVersion => "v1.0.1";
+    public override string ModuleVersion => "v1.0.2";
 
     private IVipCoreApi? _api;
-    private Jumps _jumps;
+    private Jumps? _jumps;
 
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
@@ -31,7 +31,8 @@ public class VipJumps : BasePlugin
 
     public override void Unload(bool hotReload)
     {
-        _api?.UnRegisterFeature(_jumps);
+        if(_jumps != null)
+            _api?.UnRegisterFeature(_jumps);
     }
 }
 
@@ -64,30 +65,36 @@ public class Jumps : VipFeatureBase
     {
         var client = player.Index;
         var playerPawn = player.PlayerPawn.Value;
-        
+        var settings = UserSettings[client]!;
+
         if (playerPawn != null)
         {
             var flags = (PlayerFlags)playerPawn.Flags;
             var buttons = player.Buttons;
 
-            if ((UserSettings[client]!.LastFlags & PlayerFlags.FL_ONGROUND) != 0 &&
+            if ((settings.LastFlags & PlayerFlags.FL_ONGROUND) != 0 &&
                 (flags & PlayerFlags.FL_ONGROUND) == 0 &&
-                (UserSettings[client]!.LastButtons & PlayerButtons.Jump) == 0 && (buttons & PlayerButtons.Jump) != 0)
+                (settings.LastButtons & PlayerButtons.Jump) == 0 && (buttons & PlayerButtons.Jump) != 0)
             {
-                //UserSettings[client]!.JumpsCount ++;
+                // cod comentat original
             }
             else if ((flags & PlayerFlags.FL_ONGROUND) != 0)
-                UserSettings[client]!.JumpsCount = 0;
-            else if ((UserSettings[client]!.LastButtons & PlayerButtons.Jump) == 0 &&
-                     (buttons & PlayerButtons.Jump) != 0 &&
-                     UserSettings[client]!.JumpsCount < UserSettings[client]!.NumberOfJumps)
             {
-                UserSettings[client]!.JumpsCount ++;
+                settings.JumpsCount = 0;
+            }
+            else if ((settings.LastButtons & PlayerButtons.Jump) == 0 &&
+                (buttons & PlayerButtons.Jump) != 0 &&
+                settings.JumpsCount < settings.NumberOfJumps &&
+                (settings.JumpLimitPerRound == 0 || settings.JumpsUsedThisRound < settings.JumpLimitPerRound))
+            {
+                settings.JumpsCount++;
+                settings.JumpsUsedThisRound++;
                 playerPawn.AbsVelocity.Z = 300;
             }
 
-            UserSettings[client]!.LastFlags = flags;
-            UserSettings[client]!.LastButtons = buttons;
+
+            settings.LastFlags = flags;
+            settings.LastButtons = buttons;
         }
     }
 
@@ -96,8 +103,21 @@ public class Jumps : VipFeatureBase
         if (UserSettings[player.Index] == null) return;
         if (!PlayerHasFeature(player)) return;
 
-        UserSettings[player.Index]!.NumberOfJumps = GetFeatureValue<int>(player);
+        var settings = UserSettings[player.Index]!;
+
+		var feature = GetFeatureValue<JumpsFeature>(player);
+		
+        settings.NumberOfJumps = feature.Jumps;
+        settings.JumpLimitPerRound = feature.LimitPerRound;
+		
+        settings.JumpsUsedThisRound = 0;
     }
+}
+
+public class JumpsFeature
+{
+	public int Jumps { get; set; }
+	public int LimitPerRound { get; set; }
 }
 
 public class UserSettings
@@ -106,4 +126,7 @@ public class UserSettings
     public PlayerFlags LastFlags { get; set; }
     public int JumpsCount { get; set; }
     public int NumberOfJumps { get; set; }
+
+    public int JumpsUsedThisRound { get; set; } = 0;
+    public int JumpLimitPerRound { get; set; } = 5; // default
 }

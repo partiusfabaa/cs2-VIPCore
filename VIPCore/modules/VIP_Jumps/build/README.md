@@ -3,8 +3,10 @@
 # Config
 
 ### in vip.json
-`"Jumps": 2` // Writing without any parentheses, etc
-
+"Jumps": {
+    "Jumps": 1,
+    "LimitPerRound": 5
+}
 # in lang (not necessarily)
 
 RU: `"Jumps": "Дополнительные прыжки"`
