@@ -3,10 +3,11 @@
 # Config
 
 ### in vip.json
-`"Jumps": {
+"Jumps": {
     "Jumps": 1,
-    "LimitPerRound": 5 // sett 0 for no limit
-}`
+    "LimitPerRound": 5
+}
+ # sett `0` for no limit
 # in lang (not necessarily)
 
 RU: `"Jumps": "Дополнительные прыжки"`
