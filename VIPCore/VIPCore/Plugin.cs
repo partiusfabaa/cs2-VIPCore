@@ -22,7 +22,7 @@ public class Plugin : BasePlugin
 
     private readonly Config<GroupsConfig> _groupsConfig;
     private readonly Config<VipConfig> _vipConfig;
-    private DatabaseManager _databaseManager;
+    private DatabaseService _databaseService;
     private VipCoreApi _api;
     private PlayersManager _playersManager;
     private readonly IServiceProvider _serviceProvider;
@@ -45,13 +45,14 @@ public class Plugin : BasePlugin
 
         RegisterAllAttributes(_serviceProvider.GetRequiredService<CommandsService>());
 
-        _databaseManager = _serviceProvider.GetRequiredService<DatabaseManager>();
+        _ = _serviceProvider.GetRequiredService<MenuManager>();
+        _databaseService = _serviceProvider.GetRequiredService<DatabaseService>();
         _playersManager = _serviceProvider.GetRequiredService<PlayersManager>();
         _api = _serviceProvider.GetRequiredService<VipCoreApi>();
 
         Capabilities.RegisterPluginCapability(IVipCoreApi.Capability, () => _api);
 
-        Task.Run(() => _databaseManager.CreateTableAsync());
+        Task.Run(() => _databaseService.CreateTableAsync());
 
         RegisterEventHandler<EventPlayerSpawn>(EventPlayerSpawn);
 
@@ -60,7 +61,7 @@ public class Plugin : BasePlugin
         RegisterListener<Listeners.OnMapStart>(_ => _api.LoadCookies());
         RegisterListener<Listeners.OnMapEnd>(() => _api.SaveCookies());
 
-        AddTimer(300.0f, () => { Task.Run(() => _databaseManager.PurgeExpiredUsersAsync()); }, TimerFlags.REPEAT);
+        AddTimer(300.0f, () => Task.Run(() => _databaseService.PurgeExpiredUsersAsync()), TimerFlags.REPEAT);
     }
 
     private HookResult EventPlayerSpawn(EventPlayerSpawn @event, GameEventInfo info)
@@ -168,7 +169,7 @@ public class Plugin : BasePlugin
 
         menu.Display(player, 0);
     }
-    
+
     public void PrintToChatAll(string message)
     {
         foreach (var player in Utilities.GetPlayers().Where(p => !p.IsBot))

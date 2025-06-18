@@ -56,5 +56,27 @@
   "tag.Off": "You have turned off {blue}Tag",
 
   "vip.OnlineVips": "{blue}{0}, ",
-  "vip.NoVipsOnline": "No VIP players online"
+  "vip.NoVipsOnline": "No VIP players online",
+
+  "admin.menu.title": "Admin Menu",
+  "admin.menu.players_manage": "Player Management",
+  "admin.menu.players_manage.add": "Give VIP",
+  "admin.menu.players_manage.remove": "Remove VIP",
+  "admin.menu.players_manage.set": "Update VIP",
+  "admin.menu.reload_configs": "Reload Configs",
+  "admin.menu.reload_players": "Reload Players",
+  "admin.menu.select_player": "Select a player",
+  "admin.menu.select_group": "Select VIP Group",
+  "admin.menu.select_time": "Select VIP Duration",
+  "admin.menu.time.own": "Custom time (in seconds)",
+  "admin.menu.time.forever": "Forever",
+  "admin.menu.time.1d": "1 day",
+  "admin.menu.time.7d": "7 days",
+  "admin.menu.time.30d": "30 days",
+  "admin.menu.time.1y": "1 Year",
+  "admin.menu.vip_given": "You gave VIP {1} to player {0} for {2}",
+  "admin.menu.vip_given_seconds": "You gave VIP {1} to player {0} for {2} seconds",
+  "admin.menu.enter_time_chat": "Please enter the VIP duration in seconds in chat.",
+  "admin.menu.invalid_time": "Invalid time entered. Please enter a positive number.",
+  "admin.menu.vip_removed": "You removed VIP from player {0}"
 }

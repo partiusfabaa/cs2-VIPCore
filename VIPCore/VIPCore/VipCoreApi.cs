@@ -21,7 +21,7 @@ public class VipCoreApi(
     PlayersManager playersManager,
     IFeatureManager featureManager,
     DatabaseProvider dbProvider,
-    DatabaseManager databaseManager,
+    DatabaseService databaseService,
     Config<VipConfig> vipConfig,
     Config<GroupsConfig> groupsConfig) : IVipCoreApi
 {
@@ -128,6 +128,7 @@ public class VipCoreApi(
 
     public void SetPlayerVip(CCSPlayerController player, string group, int time)
     {
+        //TODO: Implement VIP player update
     }
 
     public void GivePlayerVip(CCSPlayerController player, string group, int time)
@@ -161,7 +162,7 @@ public class VipCoreApi(
         if (isTemporary)
             playersManager.AddTemporaryUser(player, user);
         else
-            playersManager.AddUser(player, user);
+            playersManager.AddPlayerVip(player, user);
         
         InvokeOnPlayerAuthorized(player);
     }
@@ -175,7 +176,7 @@ public class VipCoreApi(
         }
         if (vipPlayer.Data is null) return;
         
-        playersManager.RemoveUser(player, vipPlayer.Data.AccountId);
+        playersManager.RemovePlayerVip(player, vipPlayer.Data.AccountId);
     }
 
     public void SetPlayerCookie<T>(ulong steamId64, string key, T value)

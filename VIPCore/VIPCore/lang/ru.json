@@ -56,5 +56,29 @@
   "tag.Off": "Вы выключили {blue}Tag",
   
   "vip.OnlineVips": "{blue}{0}, ",
-  "vip.NoVipsOnline": "Не вип игроков"
+  "vip.NoVipsOnline": "Нет вип игроков",
+
+  "admin.menu.title": "Админ-меню",
+  "admin.menu.players_manage": "Управление игроками",
+  "admin.menu.players_manage.add": "Выдать VIP",
+  "admin.menu.players_manage.remove": "Забрать VIP",
+  "admin.menu.players_manage.set": "Обновить VIP",
+  "admin.menu.reload_configs": "Перезагрузить конфиги",
+  "admin.menu.reload_players": "Перезагрузить игроков",
+  "admin.menu.select_player": "Выберите игрока",
+  "admin.menu.select_group": "Выберите группу VIP",
+  "admin.menu.select_time": "Выберите срок VIP",
+  "admin.menu.time.own": "Свое время (в секундах)",
+  "admin.menu.time.forever": "Навсегда",
+  "admin.menu.time.1d": "1 день",
+  "admin.menu.time.7d": "7 дней",
+  "admin.menu.time.30d": "30 дней",
+  "admin.menu.time.1y": "1 Год",
+  "admin.menu.vip_given": "Вы выдали VIP {1} игроку {0} на {2}",
+  "admin.menu.vip_given_seconds": "Вы выдали {1} игроку {0} на {2} секунд",
+  "admin.menu.enter_time_chat": "Пожалуйста, введите срок VIP в секундах в чат.",
+  "admin.menu.invalid_time": "Введено неверное время. Пожалуйста, введите положительное число.",
+  "admin.menu.vip_removed": "Вы удалили вип игрока {0}",
+  "admin.configs_reloaded_successfully": "Конфиг успешно перезагружен!",
+  "admin.players_reloaded_successfully": "Игроки успешно перезагружены!"
 }

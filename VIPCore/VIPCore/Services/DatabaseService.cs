@@ -8,7 +8,7 @@ using VIPCore.Player;
 
 namespace VIPCore.Services;
 
-public class DatabaseManager : IFeature
+public class DatabaseService : IFeature
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly Plugin _plugin;
@@ -16,7 +16,7 @@ public class DatabaseManager : IFeature
     private readonly int _serverId;
     private PlayersManager _playersManager;
 
-    public DatabaseManager(
+    public DatabaseService(
         IServiceProvider serviceProvider,
         Plugin plugin,
         DatabaseProvider dbProvider,

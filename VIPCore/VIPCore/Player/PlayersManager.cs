@@ -19,7 +19,7 @@ public class PlayersManager
     private readonly Plugin _plugin;
     private readonly Lazy<VipCoreApi> _api;
     private readonly Config<GroupsConfig> _groupsConfig;
-    private readonly DatabaseManager _databaseManager;
+    private readonly DatabaseService _databaseService;
 
     public PlayerDataContainer<VipPlayer> Players { get; }
 
@@ -28,12 +28,12 @@ public class PlayersManager
         Plugin plugin,
         Lazy<VipCoreApi> api,
         Config<GroupsConfig> groupsConfig,
-        DatabaseManager databaseManager)
+        DatabaseService databaseService)
     {
         _plugin = plugin;
         _api = api;
         _groupsConfig = groupsConfig;
-        _databaseManager = databaseManager;
+        _databaseService = databaseService;
 
         Players = new PlayerDataContainer<VipPlayer>(plugin, i =>
         {
@@ -59,7 +59,7 @@ public class PlayersManager
     {
         try
         {
-            var data = await _databaseManager.GetUserAsync(steamId.AccountId);
+            var data = await _databaseService.GetUserAsync(steamId.AccountId);
             if (data is null) return;
 
             player.Data = data;
@@ -193,9 +193,9 @@ public class PlayersManager
         return TryGetPlayer(player.Slot, out vipPlayer);
     }
 
-    public void AddUser(CCSPlayerController? player, VipData data)
+    public void AddPlayerVip(CCSPlayerController? player, VipData data)
     {
-        Task.Run(() => _databaseManager.AddUserAsync(data));
+        Task.Run(() => _databaseService.AddUserAsync(data));
         AddTemporaryUser(player, data);
     }
 
@@ -220,9 +220,9 @@ public class PlayersManager
     }
     
 
-    public void RemoveUser(CCSPlayerController? player, int accountId)
+    public void RemovePlayerVip(CCSPlayerController? player, int accountId)
     {
-        Task.Run(() => _databaseManager.RemoveUserAsync(accountId));
+        Task.Run(() => _databaseService.RemoveUserAsync(accountId));
         if (player != null && TryGetPlayer(player, out var vipPlayer))
         {
             vipPlayer.Data = null;
@@ -234,6 +234,6 @@ public class PlayersManager
 
     public void UpdateUser(int accountId, string name = "", string group = "", int time = -1)
     {
-        Task.Run(() => _databaseManager.UpdateVipAsync(accountId, name, group, time));
+        Task.Run(() => _databaseService.UpdateVipAsync(accountId, name, group, time));
     }
 }

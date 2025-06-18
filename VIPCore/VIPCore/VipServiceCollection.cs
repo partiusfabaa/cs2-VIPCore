@@ -18,7 +18,7 @@ public class VipServiceCollection : IPluginServiceCollection<Plugin>
         serviceCollection.AddSingleton<PlayersManager>();
         
         serviceCollection.AddSingleton<DatabaseProvider>();
-        serviceCollection.AddSingleton<DatabaseManager>();
+        serviceCollection.AddSingleton<DatabaseService>();
 
         serviceCollection.AddSingleton<VipCoreApi>();
         serviceCollection.AddSingleton<Lazy<VipCoreApi>>(provider =>

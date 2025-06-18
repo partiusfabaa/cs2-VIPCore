@@ -13,7 +13,6 @@ public class FeatureManager(Plugin plugin) : IFeatureManager
             return;
 
         _registeredFeatures.Add(feature);
-
         plugin.Logger.LogInformation("Feature '{feature}' registered successfully", feature.Name);
     }
 

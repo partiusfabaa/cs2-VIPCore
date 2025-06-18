@@ -42,7 +42,7 @@ public class CommandsService(
 
         var username = player == null ? "unknown" : player.PlayerName;
 
-        playersManager.AddUser(player, plugin.CreateNewUser(accountId, username, vipGroup, endVipTime));
+        playersManager.AddPlayerVip(player, plugin.CreateNewUser(accountId, username, vipGroup, endVipTime));
     }
 
     [RequiresPermissions("@css/root")]
@@ -59,7 +59,7 @@ public class CommandsService(
         if (accountId == -1)
             return;
 
-        playersManager.RemoveUser(player, accountId);
+        playersManager.RemovePlayerVip(player, accountId);
     }
 
     [RequiresPermissions("@css/root")]
