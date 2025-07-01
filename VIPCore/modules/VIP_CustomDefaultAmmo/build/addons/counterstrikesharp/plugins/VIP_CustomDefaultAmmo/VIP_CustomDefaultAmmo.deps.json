@@ -8,14 +8,14 @@
     ".NETCoreApp,Version=v8.0": {
       "VIP_CustomDefaultAmmo/1.0.0": {
         "dependencies": {
-          "CounterStrikeSharp.API": "1.0.304",
+          "CounterStrikeSharp.API": "1.0.307",
           "VipCoreApi": "1.0.0.0"
         },
         "runtime": {
           "VIP_CustomDefaultAmmo.dll": {}
         }
       },
-      "CounterStrikeSharp.API/1.0.304": {
+      "CounterStrikeSharp.API/1.0.307": {
         "dependencies": {
           "McMaster.NETCore.Plugins": "1.4.0",
           "Microsoft.CSharp": "4.7.0",
@@ -32,8 +32,8 @@
         },
         "runtime": {
           "lib/net8.0/CounterStrikeSharp.API.dll": {
-            "assemblyVersion": "1.0.304.0",
-            "fileVersion": "1.0.304.0"
+            "assemblyVersion": "1.0.307.0",
+            "fileVersion": "1.0.307.0"
           }
         }
       },
@@ -548,12 +548,12 @@
       "serviceable": false,
       "sha512": ""
     },
-    "CounterStrikeSharp.API/1.0.304": {
+    "CounterStrikeSharp.API/1.0.307": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-BFUh0Bt6MduhJ6GTWhD8r6lsOiqsBoibGqroSxVFtE+aHcI+nOMG0+cu7PZwxtvRVSjk5Ors1afpSjJI+4onyg==",
-      "path": "counterstrikesharp.api/1.0.304",
-      "hashPath": "counterstrikesharp.api.1.0.304.nupkg.sha512"
+      "sha512": "sha512-zMBrAj5c4CJojZsERT2qquLy4HMJMOcb8oa2QisO7teYQXyPdZK7H+MZdPnEMCHjnTXl92swaHAzClLAPTG4lQ==",
+      "path": "counterstrikesharp.api/1.0.307",
+      "hashPath": "counterstrikesharp.api.1.0.307.nupkg.sha512"
     },
     "McMaster.NETCore.Plugins/1.4.0": {
       "type": "package",
