@@ -27,6 +27,7 @@
 | **`css_vip_adduser <steamid or accountid> <vipgroup> <time or 0 permanently>`** | Adds a VIP player | **@css/root**  |
 | **`css_vip_deleteuser <steamid or accountid>`** | Allows you to delete a player by SteamID identifier | **@css/root**  |
 | **`css_vip_updateuser <steamid or accountid> <group or -s> <time or -s>`** | Updates the player's VIP | **@css/root**  |
+| **`css_vip_admin` or `css_admin_vip`** | Open admin menu | **@css/root**  |
 
 ## Configs
 Located in the folder `addons/counterstrikesharp/configs/plugins/VIPCore`
