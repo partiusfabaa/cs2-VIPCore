@@ -1,7 +1,5 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CS2MenuManager.API.Class;
-using CS2MenuManager.API.Enum;
 using VipCoreApi;
 using VipCoreApi.Enums;
 
@@ -54,12 +52,12 @@ public class Fov(IVipCoreApi api) : VipFeature<List<int>>("Fov", api, FeatureTyp
         var userFov = GetValue(player);
         if (userFov is null) return;
 
-        var menu = CreateMenu(GetTranslatedText(player, "Fov"));
+        var menu = CreateMenu(player, GetTranslatedText(player, "Fov"));
 
         var fovDisableKey = GetTranslatedText(player, "fov.Disable");
         if (_fovSettings[player.Slot] == 90)
         {
-            menu.AddItem(fovDisableKey, DisableOption.DisableHideNumber);
+            menu.AddItem(fovDisableKey, null!, true);
         }
         else
         {
@@ -76,7 +74,7 @@ public class Fov(IVipCoreApi api) : VipFeature<List<int>>("Fov", api, FeatureTyp
         {
             if (_fovSettings[player.Slot] == i)
             {
-                menu.AddItem(i.ToString(), DisableOption.DisableHideNumber);
+                menu.AddItem(i.ToString(), null, true);
             }
             else
             {
@@ -89,7 +87,7 @@ public class Fov(IVipCoreApi api) : VipFeature<List<int>>("Fov", api, FeatureTyp
             }
         }
 
-        menu.Display(player, 0);
+        menu.Display();
     }
 
     private void ChangeFov(CCSPlayerController player)

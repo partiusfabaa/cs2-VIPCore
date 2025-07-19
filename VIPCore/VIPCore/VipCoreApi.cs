@@ -3,9 +3,7 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Cvars;
-using CS2MenuManager.API.Class;
-using CS2MenuManager.API.Interface;
-using CS2MenuManager.API.Menu;
+using CS2ScreenMenuAPI;
 using Microsoft.Extensions.Logging;
 using VIPCore.Configs;
 using VIPCore.Models;
@@ -314,16 +312,11 @@ public class VipCoreApi(
         return LoadConfig<T>(name, ModulesConfigDirectory);
     }
 
-    public IMenu CreateMenu(string title)
+    public Menu CreateMenu(CCSPlayerController player, string title)
     {
-        return vipConfig.Value.MenuType switch
+        return new Menu(player, plugin)
         {
-            "center" => new CenterHtmlMenu(title, plugin),
-            "chat" => new ChatMenu(title, plugin),
-            "console" => new ConsoleMenu(title, plugin),
-            "screen" => new ScreenMenu(title, plugin),
-            "wasd" => new WasdMenu(title, plugin),
-            _ => new CenterHtmlMenu(title, plugin)
+            Title = title,
         };
     }
 

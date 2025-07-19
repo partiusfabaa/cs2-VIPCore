@@ -3,11 +3,10 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
-using CS2MenuManager.API.Class;
-using CS2MenuManager.API.Interface;
 using VIPCore.Configs;
 using VIPCore.Player;
 using System.Collections.Concurrent;
+using CS2ScreenMenuAPI;
 
 namespace VIPCore.Services;
 
@@ -39,25 +38,26 @@ public class MenuManager : IFeature
         plugin.AddCommandListener("say_team", OnSayCommand);
     }
 
+    [RequiresPermissions("@css/root")]
     private void CreateAdminMenu(CCSPlayerController? player, CommandInfo commandInfo)
     {
         if (player is null || !AdminManager.PlayerHasPermissions(player, _coreConfig.Value.AdminMenuPermission))
             return;
 
         var localizer = _plugin.Localizer;
-        var menu = _api.CreateMenu(localizer.ForPlayer(player, "admin.menu.title"));
+        var menu = _api.CreateMenu(player, localizer.ForPlayer(player, "admin.menu.title"));
 
         menu.AddItem(localizer.ForPlayer(player, "admin.menu.players_manage"), (p, i) =>
             OnPlayersManage(p, i, menu));
         menu.AddItem(localizer.ForPlayer(player, "admin.menu.reload_configs"), OnConfigsReload);
         menu.AddItem(localizer.ForPlayer(player, "admin.menu.reload_players"), OnPlayersReload);
 
-        menu.Display(player, 0);
+        menu.Display();
     }
 
-    private void OnPlayersManage(CCSPlayerController player, ItemOption option, IMenu prevMenu)
+    private void OnPlayersManage(CCSPlayerController player, IMenuOption option, Menu prevMenu)
     {
-        var menu = _api.CreateMenu(option.Text);
+        var menu = _api.CreateMenu(player, option.Text);
         menu.PrevMenu = prevMenu;
 
         var localizer = _plugin.Localizer;
@@ -69,16 +69,16 @@ public class MenuManager : IFeature
         //TODO: Implement VIP player update
         // menu.AddItem(localizer.ForPlayer(player, "admin.menu.players_manage.set"));
 
-        menu.Display(player, 0);
+        menu.Display();
     }
 
     private void OnPlayersMenu(
         CCSPlayerController player,
-        IMenu prevMenu,
+        Menu prevMenu,
         bool? isVip,
         Action<CCSPlayerController> handler)
     {
-        var menu = _api.CreateMenu(_plugin.Localizer.ForPlayer(player, "admin.menu.select_player"));
+        var menu = _api.CreateMenu(player, _plugin.Localizer.ForPlayer(player, "admin.menu.select_player"));
         menu.PrevMenu = prevMenu;
 
         foreach (var target in Utilities.GetPlayers())
@@ -89,12 +89,12 @@ public class MenuManager : IFeature
             menu.AddItem(target.PlayerName, (_, _) => handler(target));
         }
 
-        menu.Display(player, 0);
+        menu.Display();
     }
 
     private void ShowAddVipMenu(CCSPlayerController admin, CCSPlayerController target)
     {
-        var menu = _api.CreateMenu(_plugin.Localizer.ForPlayer(admin, "admin.menu.select_group"));
+        var menu = _api.CreateMenu(admin, _plugin.Localizer.ForPlayer(admin, "admin.menu.select_group"));
         menu.PrevMenu = null;
 
         foreach (var group in _api.GetVipGroups())
@@ -102,12 +102,12 @@ public class MenuManager : IFeature
             menu.AddItem(group, (p, i) => ShowAddVipTimeMenu(admin, target, group));
         }
 
-        menu.Display(admin, 0);
+        menu.Display();
     }
 
     private void ShowAddVipTimeMenu(CCSPlayerController admin, CCSPlayerController target, string group)
     {
-        var menu = _api.CreateMenu(_plugin.Localizer.ForPlayer(admin, "admin.menu.select_time"));
+        var menu = _api.CreateMenu(admin, _plugin.Localizer.ForPlayer(admin, "admin.menu.select_time"));
         menu.PrevMenu = null;
 
         var times = new[]
@@ -138,7 +138,7 @@ public class MenuManager : IFeature
             });
         }
 
-        menu.Display(admin, 0);
+        menu.Display();
     }
 
     private void RemoveVipFromPlayer(CCSPlayerController admin, CCSPlayerController target)
@@ -148,7 +148,7 @@ public class MenuManager : IFeature
             _plugin.Localizer.ForPlayer(admin, "admin.menu.vip_removed", target.PlayerName));
     }
 
-    private void OnConfigsReload(CCSPlayerController player, ItemOption option)
+    private void OnConfigsReload(CCSPlayerController player, IMenuOption option)
     {
         _coreConfig.Load();
         _groupsConfig.Load();
@@ -156,7 +156,7 @@ public class MenuManager : IFeature
         _playersManager.PrintToChat(player, _plugin.Localizer.ForPlayer(player, "admin.configs_reloaded_successfully"));
     }
 
-    private void OnPlayersReload(CCSPlayerController player, ItemOption option)
+    private void OnPlayersReload(CCSPlayerController player, IMenuOption option)
     {
         _playersManager.UpdatePlayers();
         _playersManager.PrintToChat(player, _plugin.Localizer.ForPlayer(player, "admin.players_reloaded_successfully"));
@@ -164,7 +164,7 @@ public class MenuManager : IFeature
 
     private HookResult OnSayCommand(CCSPlayerController? player, CommandInfo command)
     {
-        if (player == null || 
+        if (player == null ||
             !_pendingCustomTime.TryRemove(player.SteamID, out var pending) ||
             !AdminManager.PlayerHasPermissions(player, _coreConfig.Value.AdminMenuPermission))
             return HookResult.Continue;

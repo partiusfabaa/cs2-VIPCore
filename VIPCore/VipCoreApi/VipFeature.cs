@@ -1,5 +1,5 @@
 ﻿using CounterStrikeSharp.API.Core;
-using CS2MenuManager.API.Interface;
+using CS2ScreenMenuAPI;
 using VipCoreApi.Enums;
 
 namespace VipCoreApi;
@@ -173,9 +173,10 @@ public abstract class VipFeature : IDisposable
     /// <summary>
     /// Creates a menu with the specified title.
     /// </summary>
+    /// <param name="player"></param>
     /// <param name="title">The title of the menu.</param>
     /// <returns>An instance of <see cref="IMenu"/> representing the created menu.</returns>
-    public IMenu CreateMenu(string title) => Api.CreateMenu(title);
+    public Menu CreateMenu(CCSPlayerController player, string title) => Api.CreateMenu(player, title);
 
     /// <summary>
     /// Checks if the player is valid for using this feature, i.e. is VIP, has access to the feature, and the feature is enabled.
@@ -336,7 +337,7 @@ public abstract class VipFeature : IDisposable
         Api.OnPlayerDisconnect -= OnPlayerDisconnect;
         Api.OnPlayerSpawn -= OnPlayerSpawn;
         Api.OnPlayerUseFeature -= OnPlayerUseFeature;
-        
+
         Api.FeatureManager.Unregister(this);
     }
 }

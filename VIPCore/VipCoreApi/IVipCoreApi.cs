@@ -1,6 +1,6 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
-using CS2MenuManager.API.Interface;
+using CS2ScreenMenuAPI;
 using VipCoreApi.Enums;
 
 namespace VipCoreApi;
@@ -227,9 +227,10 @@ public interface IVipCoreApi
     /// <summary>
     /// Creates a menu based on the configuration settings.
     /// </summary>
+    /// <param name="player">player</param>
     /// <param name="title">The title of the menu.</param>
     /// <returns>An instance of <see cref="IMenu"/> representing the created menu.</returns>
-    IMenu CreateMenu(string title);
+    Menu CreateMenu(CCSPlayerController player, string title);
         
 
     /// <summary>

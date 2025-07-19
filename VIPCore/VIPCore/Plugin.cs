@@ -128,7 +128,7 @@ public class Plugin : BasePlugin
         var player = vipPlayer.Controller;
         if (player is null) return;
 
-        var menu = _api.CreateMenu(Localizer.ForPlayer(player, "menu.Title", vipPlayer.Data?.Group ?? string.Empty));
+        var menu = _api.CreateMenu(player, Localizer.ForPlayer(player, "menu.Title", vipPlayer.Data?.Group ?? string.Empty));
         foreach (var (display, feature, state) in features)
         {
             menu.AddItem($"{Localizer.ForPlayer(player, feature.Name)} {display}", (p, _) =>
@@ -167,7 +167,7 @@ public class Plugin : BasePlugin
             });
         }
 
-        menu.Display(player, 0);
+        menu.Display();
     }
 
     public void PrintToChatAll(string message)

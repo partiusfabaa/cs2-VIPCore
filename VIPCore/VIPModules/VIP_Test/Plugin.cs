@@ -3,8 +3,6 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Entities;
-using CS2MenuManager.API.Enum;
-using CS2MenuManager.API.Menu;
 using Dapper;
 using MySqlConnector;
 using VipCoreApi;
@@ -41,12 +39,12 @@ public class Plugin : BasePlugin
             return;
         }
 
-        var menu = _api.CreateMenu("VIP Test");
+        var menu = _api.CreateMenu(controller, "VIP Test");
         foreach (var vip in _config.Groups)
         {
             if (vip.Value.Count >= _api!.GetPlayerCookie<int>(controller.SteamID, _feature(vip.Key)))
             {
-                menu.AddItem(vip.Key, DisableOption.DisableShowNumber);
+                menu.AddItem(vip.Key, null!, true);
             }
             else
             {
@@ -60,7 +58,7 @@ public class Plugin : BasePlugin
             }
         }
 
-        menu.Display(controller, 0);
+        menu.Display();
     }
 
     private async Task GivePlayerVipTest(CCSPlayerController player, SteamID steamId, KeyValuePair<string, VipTestGroup> kvp)
