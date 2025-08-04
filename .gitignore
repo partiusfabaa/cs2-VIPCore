@@ -3,6 +3,8 @@
 **/bin
 **/obj
 .history
+**/runtimes
+**/publish
 
 VIPCore/ignoremodules/
 VIPCore/privatemodules/
