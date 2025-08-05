@@ -292,11 +292,8 @@ public class WeaponsMenu : VipFeatureBase
                 continue;
 
             if (weapon.Value.Entity == null) continue;
-            if (!weapon.Value.VisibleinPVS) continue;
-
-            var weaponName = weapon.Value.DesignerName;
+            
             var weaponData = weapon.Value.As<CCSWeaponBase>().VData;
-
             if (weaponData == null)
                 continue;
 
