@@ -3,7 +3,8 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Cvars;
-using CS2ScreenMenuAPI;
+using CS2MenuManager.API.Interface;
+using CS2MenuManager.API.Menu;
 using Microsoft.Extensions.Logging;
 using VIPCore.Configs;
 using VIPCore.Models;
@@ -161,7 +162,7 @@ public class VipCoreApi(
             playersManager.AddTemporaryUser(player, user);
         else
             playersManager.AddPlayerVip(player, user);
-        
+
         InvokeOnPlayerAuthorized(player);
     }
 
@@ -172,8 +173,9 @@ public class VipCoreApi(
             plugin.Logger.LogError($"player not found");
             return;
         }
+
         if (vipPlayer.Data is null) return;
-        
+
         playersManager.RemovePlayerVip(player, vipPlayer.Data.AccountId);
     }
 
@@ -277,10 +279,10 @@ public class VipCoreApi(
     {
         var gamerules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").First().GameRules;
         if (gamerules == null) return false;
-        
+
         var halftime = ConVar.Find("mp_halftime")!.GetPrimitiveValue<bool>();
         var maxrounds = ConVar.Find("mp_maxrounds")!.GetPrimitiveValue<int>();
-        
+
         return gamerules.TotalRoundsPlayed == 0 ||
                (halftime && maxrounds / 2 == gamerules.TotalRoundsPlayed) ||
                gamerules.GameRestart;
@@ -312,11 +314,14 @@ public class VipCoreApi(
         return LoadConfig<T>(name, ModulesConfigDirectory);
     }
 
-    public Menu CreateMenu(CCSPlayerController player, string title)
+    public IMenu CreateMenu(string title)
     {
-        return new Menu(player, plugin)
+        return vipConfig.Value.MenuType switch
         {
-            Title = title,
+            "wasd" => new WasdMenu(title, plugin),
+            "chat" => new ChatMenu(title, plugin),
+            "console" => new ConsoleMenu(title, plugin),
+            _ => new CenterHtmlMenu(title, plugin),
         };
     }
 

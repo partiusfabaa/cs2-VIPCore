@@ -6,7 +6,7 @@ public class VipConfig
     public int Delay { get; init; } = 2;
     public int TimeMode { get; init; } = 0;
     public int ServerId { get; init; } = 0;
-    public string MenuType { get; init; } = "screen";
+    public string MenuType { get; init; } = "wasd";
     public bool ReOpenMenuAfterItemClick { get; init; } = false;
     public string[] AdminMenuPermission { get; set; } = ["@css/root"];
     public bool VipLogging { get; init; } = true;

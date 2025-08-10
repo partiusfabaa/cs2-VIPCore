@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Entities;
+using CS2MenuManager.API.Enum;
 using Dapper;
 using MySqlConnector;
 using VipCoreApi;
@@ -39,12 +40,12 @@ public class Plugin : BasePlugin
             return;
         }
 
-        var menu = _api.CreateMenu(controller, "VIP Test");
+        var menu = _api.CreateMenu("VIP Test");
         foreach (var vip in _config.Groups)
         {
             if (vip.Value.Count >= _api!.GetPlayerCookie<int>(controller.SteamID, _feature(vip.Key)))
             {
-                menu.AddItem(vip.Key, null!, true);
+                menu.AddItem(vip.Key, DisableOption.DisableShowNumber);
             }
             else
             {
@@ -58,10 +59,11 @@ public class Plugin : BasePlugin
             }
         }
 
-        menu.Display();
+        menu.Display(controller, 0);
     }
 
-    private async Task GivePlayerVipTest(CCSPlayerController player, SteamID steamId, KeyValuePair<string, VipTestGroup> kvp)
+    private async Task GivePlayerVipTest(CCSPlayerController player, SteamID steamId,
+        KeyValuePair<string, VipTestGroup> kvp)
     {
         try
         {
@@ -70,7 +72,8 @@ public class Plugin : BasePlugin
 
             if (vipTestCount >= kvp.Value.Count)
             {
-                Server.NextFrame(() => _api.PrintToChat(player, _api.GetTranslatedText("viptest.YouCanNoLongerTakeTheVip")));
+                Server.NextFrame(() =>
+                    _api.PrintToChat(player, _api.GetTranslatedText("viptest.YouCanNoLongerTakeTheVip")));
                 return;
             }
 
@@ -85,7 +88,8 @@ public class Plugin : BasePlugin
                 return;
             }
 
-            var newCoolDown = DateTimeOffset.UtcNow.AddSeconds(_config.Cooldown + kvp.Value.Duration).ToUnixTimeSeconds();
+            var newCoolDown = DateTimeOffset.UtcNow.AddSeconds(_config.Cooldown + kvp.Value.Duration)
+                .ToUnixTimeSeconds();
             await AddUserOrUpdateVipTestAsync(steamId.SteamId2, (int)newCoolDown);
 
             _api.SetPlayerCookie(steamId.SteamId64, _feature(kvp.Key), vipTestCount + 1);
@@ -94,8 +98,10 @@ public class Plugin : BasePlugin
             Server.NextFrame(() =>
             {
                 _api.GivePlayerVip(player, kvp.Key, kvp.Value.Duration);
-                _api.PrintToChat(player, _api.GetTranslatedText("viptest.SuccessfullyPassed", kvp.Value.Duration.FormatTime()));
-                _api.PrintToChat(player, _api.GetTranslatedText("viptest.RemainingAttempts", kvp.Value.Count - (vipTestCount + 1)));
+                _api.PrintToChat(player,
+                    _api.GetTranslatedText("viptest.SuccessfullyPassed", kvp.Value.Duration.FormatTime()));
+                _api.PrintToChat(player,
+                    _api.GetTranslatedText("viptest.RemainingAttempts", kvp.Value.Count - (vipTestCount + 1)));
             });
         }
         catch (Exception e)
@@ -182,7 +188,7 @@ public class Plugin : BasePlugin
             var count = await db.ExecuteScalarAsync<int>(
                 "SELECT COUNT(*) FROM `vipcore_test` WHERE `steamid` = @SteamId",
                 new { SteamId = steamId });
-            
+
             return count > 0;
         }
         catch (Exception e)

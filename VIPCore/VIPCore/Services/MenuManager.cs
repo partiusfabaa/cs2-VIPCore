@@ -6,7 +6,8 @@ using CounterStrikeSharp.API.Modules.Commands;
 using VIPCore.Configs;
 using VIPCore.Player;
 using System.Collections.Concurrent;
-using CS2ScreenMenuAPI;
+using CS2MenuManager.API.Class;
+using CS2MenuManager.API.Interface;
 
 namespace VIPCore.Services;
 
@@ -45,19 +46,19 @@ public class MenuManager : IFeature
             return;
 
         var localizer = _plugin.Localizer;
-        var menu = _api.CreateMenu(player, localizer.ForPlayer(player, "admin.menu.title"));
+        var menu = _api.CreateMenu(localizer.ForPlayer(player, "admin.menu.title"));
 
-        menu.AddItem(localizer.ForPlayer(player, "admin.menu.players_manage"), (p, i) =>
-            OnPlayersManage(p, i, menu));
+        menu.AddItem(localizer.ForPlayer(player, "admin.menu.players_manage"), 
+            (p, i) => OnPlayersManage(p, i, menu));
         menu.AddItem(localizer.ForPlayer(player, "admin.menu.reload_configs"), OnConfigsReload);
         menu.AddItem(localizer.ForPlayer(player, "admin.menu.reload_players"), OnPlayersReload);
 
-        menu.Display();
+        menu.Display(player, 0);
     }
 
-    private void OnPlayersManage(CCSPlayerController player, IMenuOption option, Menu prevMenu)
+    private void OnPlayersManage(CCSPlayerController player, ItemOption option, IMenu prevMenu)
     {
-        var menu = _api.CreateMenu(player, option.Text);
+        var menu = _api.CreateMenu(option.Text);
         menu.PrevMenu = prevMenu;
 
         var localizer = _plugin.Localizer;
@@ -69,16 +70,16 @@ public class MenuManager : IFeature
         //TODO: Implement VIP player update
         // menu.AddItem(localizer.ForPlayer(player, "admin.menu.players_manage.set"));
 
-        menu.Display();
+        menu.Display(player, 0);
     }
 
     private void OnPlayersMenu(
         CCSPlayerController player,
-        Menu prevMenu,
+        IMenu prevMenu,
         bool? isVip,
         Action<CCSPlayerController> handler)
     {
-        var menu = _api.CreateMenu(player, _plugin.Localizer.ForPlayer(player, "admin.menu.select_player"));
+        var menu = _api.CreateMenu(_plugin.Localizer.ForPlayer(player, "admin.menu.select_player"));
         menu.PrevMenu = prevMenu;
 
         foreach (var target in Utilities.GetPlayers())
@@ -89,12 +90,12 @@ public class MenuManager : IFeature
             menu.AddItem(target.PlayerName, (_, _) => handler(target));
         }
 
-        menu.Display();
+        menu.Display(player, 0);
     }
 
     private void ShowAddVipMenu(CCSPlayerController admin, CCSPlayerController target)
     {
-        var menu = _api.CreateMenu(admin, _plugin.Localizer.ForPlayer(admin, "admin.menu.select_group"));
+        var menu = _api.CreateMenu(_plugin.Localizer.ForPlayer(admin, "admin.menu.select_group"));
         menu.PrevMenu = null;
 
         foreach (var group in _api.GetVipGroups())
@@ -102,12 +103,12 @@ public class MenuManager : IFeature
             menu.AddItem(group, (p, i) => ShowAddVipTimeMenu(admin, target, group));
         }
 
-        menu.Display();
+        menu.Display(admin, 0);
     }
 
     private void ShowAddVipTimeMenu(CCSPlayerController admin, CCSPlayerController target, string group)
     {
-        var menu = _api.CreateMenu(admin, _plugin.Localizer.ForPlayer(admin, "admin.menu.select_time"));
+        var menu = _api.CreateMenu(_plugin.Localizer.ForPlayer(admin, "admin.menu.select_time"));
         menu.PrevMenu = null;
 
         var times = new[]
@@ -138,7 +139,7 @@ public class MenuManager : IFeature
             });
         }
 
-        menu.Display();
+        menu.Display(admin, 0);
     }
 
     private void RemoveVipFromPlayer(CCSPlayerController admin, CCSPlayerController target)
@@ -148,7 +149,7 @@ public class MenuManager : IFeature
             _plugin.Localizer.ForPlayer(admin, "admin.menu.vip_removed", target.PlayerName));
     }
 
-    private void OnConfigsReload(CCSPlayerController player, IMenuOption option)
+    private void OnConfigsReload(CCSPlayerController player, ItemOption option)
     {
         _coreConfig.Load();
         _groupsConfig.Load();
@@ -156,7 +157,7 @@ public class MenuManager : IFeature
         _playersManager.PrintToChat(player, _plugin.Localizer.ForPlayer(player, "admin.configs_reloaded_successfully"));
     }
 
-    private void OnPlayersReload(CCSPlayerController player, IMenuOption option)
+    private void OnPlayersReload(CCSPlayerController player, ItemOption option)
     {
         _playersManager.UpdatePlayers();
         _playersManager.PrintToChat(player, _plugin.Localizer.ForPlayer(player, "admin.players_reloaded_successfully"));

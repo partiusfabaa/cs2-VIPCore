@@ -1,6 +1,6 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
-using CS2ScreenMenuAPI;
+using CS2MenuManager.API.Interface;
 using VipCoreApi.Enums;
 
 namespace VipCoreApi;
@@ -142,7 +142,8 @@ public interface IVipCoreApi
     /// <param name="player">The player for whom the cookie is set.</param>
     /// <param name="key">The key of the cookie.</param>
     /// <param name="value">The value to be saved.</param>
-    void SetPlayerCookie<T>(CCSPlayerController player, string key, T value) => SetPlayerCookie(player.SteamID, key, value);
+    void SetPlayerCookie<T>(CCSPlayerController player, string key, T value) =>
+        SetPlayerCookie(player.SteamID, key, value);
 
     /// <summary>
     /// Saves a cookie value for the player using their SteamID.
@@ -230,8 +231,7 @@ public interface IVipCoreApi
     /// <param name="player">player</param>
     /// <param name="title">The title of the menu.</param>
     /// <returns>An instance of <see cref="IMenu"/> representing the created menu.</returns>
-    Menu CreateMenu(CCSPlayerController player, string title);
-        
+    IMenu CreateMenu(string title);
 
     /// <summary>
     /// Event triggered when a player is authorized.
