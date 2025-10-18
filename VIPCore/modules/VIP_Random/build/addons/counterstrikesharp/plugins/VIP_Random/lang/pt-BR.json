@@ -1,0 +1,7 @@
+{
+  "prefix": "[ {blue}VIP{default} ] ",
+  "vip.selected": "{red}RandomVip{default} foi selecionado: {lime}{playerName}",
+  "vip.not.enough": "Jogadores insuficientes para a seleção de {blue}VIP{default}",
+  "vip.player.message": "Você foi selecionado como {blue}VIP{default} para este mapa. Seu {blue}VIP{default} termina quando o {lime}mapa{default} atual mudar!",
+  "vip.already.vip": "Você já possui privilégios VIP."
+}
