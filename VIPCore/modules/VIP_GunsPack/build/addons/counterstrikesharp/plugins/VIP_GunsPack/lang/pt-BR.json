@@ -1,0 +1,11 @@
+{
+  "not.Vip": "Você não é um jogador VIP.",
+  "no.Pack": "Nenhum pacote disponível no momento.",
+  "pack.menu_title": "Selecione um Pacote de Armas",
+  "pack_description": "{0} - ({1})",
+  "no.Permission": "Você não tem permissão para acessar este pacote.",
+  "received.Pack": "Você recebeu o {0}",
+  "invalid.Pack": "Seleção de pacote inválida. Por favor, escolha um número de pacote válido.",
+  "available.Packs": "Pacotes disponíveis:",
+  "usage.LimitReached": "Você atingiu o limite de uso para este comando."
+}
