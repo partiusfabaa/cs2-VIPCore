@@ -119,6 +119,8 @@ public class Bhop : VipFeatureBase
                     !PlayerHasFeature(player) ||
                     GetPlayerFeatureState(player) is not FeatureState.Enabled) continue;
 
+                SetBunnyhop(player, false);
+
                 var bhopSettings = GetFeatureValue<BhopSettings>(player);
                 settings.MaxSpeed = bhopSettings.MaxSpeed;
 
@@ -127,6 +129,7 @@ public class Bhop : VipFeatureBase
                 {
                     PrintToChat(player, GetTranslatedText("bhop.Activated"));
                     settings.Active = true;
+                    SetBunnyhop(player, true);
                 }, TimerFlags.STOP_ON_MAPCHANGE);
             }
         }
