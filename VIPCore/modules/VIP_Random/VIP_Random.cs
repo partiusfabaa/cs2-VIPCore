@@ -11,13 +11,11 @@ public class VIP_Random : BasePlugin
     public override string ModuleName => "[VIP] Random";
     public override string ModuleAuthor => "T3Marius";
     public override string ModuleDescription => "After x rounds from the map start, select random VIP.";
-    public override string ModuleVersion => "1.0.0";
+    public override string ModuleVersion => "1.0.1";
 
-    private static readonly string Feature = "random_vip";
     private IVipCoreApi? _vipApi;
     private Config _config = null!;
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
-
     private CCSPlayerController? RandomVIP;
     private int _currentRound;
     private bool _vipAssigned; // Flag to track if VIP has been assigned
@@ -38,19 +36,16 @@ public class VIP_Random : BasePlugin
             Server.PrintToChatAll("VIP API not found.");
             return;
         }
-
         _config = LoadConfig();
     }
 
     private Config LoadConfig()
     {
-        var configPath = Path.Combine(_vipApi.ModulesConfigDirectory, "vip_random.json");
-
+        var configPath = Path.Combine(_vipApi!.ModulesConfigDirectory, "vip_random.json");
         if (!File.Exists(configPath))
         {
             return CreateConfig(configPath);
         }
-
         var configJson = File.ReadAllText(configPath);
         return JsonSerializer.Deserialize<Config>(configJson) ?? CreateConfig(configPath);
     }
@@ -63,14 +58,13 @@ public class VIP_Random : BasePlugin
             RandomVIPRound = 4,
             RandomVIPMinPlayers = 1
         };
-
         File.WriteAllText(configPath, JsonSerializer.Serialize(defaultConfig, new JsonSerializerOptions { WriteIndented = true }));
         return defaultConfig;
     }
 
     private void SaveConfig()
     {
-        var configPath = Path.Combine(_vipApi.ModulesConfigDirectory, "vip_random.json");
+        var configPath = Path.Combine(_vipApi!.ModulesConfigDirectory, "vip_random.json");
         File.WriteAllText(configPath, JsonSerializer.Serialize(_config, new JsonSerializerOptions { WriteIndented = true }));
     }
 
@@ -78,9 +72,7 @@ public class VIP_Random : BasePlugin
     {
         int roundInterval = _config.RandomVIPRound;
         int minPlayers = _config.RandomVIPMinPlayers;
-
         _currentRound++;
-
         if (_currentRound >= roundInterval)
         {
             if (Utilities.GetPlayers().Count >= minPlayers)
@@ -98,20 +90,17 @@ public class VIP_Random : BasePlugin
                 Server.PrintToChatAll(Localizer["prefix"] + Localizer["vip.not.enough"]);
             }
         }
-
         return HookResult.Continue;
     }
 
     public HookResult OnPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
     {
         var player = @event.Userid;
-
         if (player == RandomVIP)
         {
-            _vipApi?.RemoveClientVip(RandomVIP);
+            _vipApi?.RemoveClientVip(RandomVIP!);
             _vipAssigned = false; // Reset the VIP assignment flag if the VIP disconnects
         }
-
         return HookResult.Continue;
     }
 
@@ -133,7 +122,6 @@ public class VIP_Random : BasePlugin
                 string message = localizedMessage.Replace("{playerName}", player.PlayerName);
                 Server.PrintToChatAll(Localizer["prefix"] + message);
                 player.PrintToChat(Localizer["prefix"] + Localizer["vip.player.message"]);
-
                 _vipApi.GiveClientVip(player, _config.RandomVIPGroup, 1800); // Adding a duration parameter
                 RandomVIP = player;
                 _vipAssigned = true; // Set the flag to indicate a VIP has been assigned
@@ -150,9 +138,7 @@ public class VIP_Random : BasePlugin
         var players = Utilities.GetPlayers()
             .Where(p => p != null && p.IsValid && p.PlayerPawn != null && p.PlayerPawn.IsValid && !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected)
             .ToList();
-
         if (players.Count == 0) return null;
-
         var rand = new Random();
         var randomIndex = rand.Next(players.Count);
         return players[randomIndex];
