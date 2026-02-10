@@ -9,11 +9,10 @@ public class VipAntiFlash : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Anti Flash";
-    public override string ModuleVersion => "v1.0.2";
-    
+    public override string ModuleVersion => "v1.0.3";
+   
     private IVipCoreApi? _api;
-    private AntiFlash _antiFlash;
-
+    private AntiFlash? _antiFlash;
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
     public override void OnAllPluginsLoaded(bool hotReload)
@@ -30,7 +29,10 @@ public class VipAntiFlash : BasePlugin
 
     public override void Unload(bool hotReload)
     {
-        _api?.UnRegisterFeature(_antiFlash);
+        if (_antiFlash != null)
+        {
+            _api?.UnRegisterFeature(_antiFlash);
+        }
     }
 }
 
@@ -43,17 +45,18 @@ public class AntiFlash : VipFeatureBase
         vipAntiFlash.RegisterEventHandler<EventPlayerBlind>((@event, info) =>
         {
             var player = @event.Userid;
-
             if (player == null || !player.IsValid) return HookResult.Continue;
+
             if (!IsClientVip(player) || !PlayerHasFeature(player) || GetPlayerFeatureState(player) is not FeatureState.Enabled) return HookResult.Continue;
 
             var featureValue = GetFeatureValue<int>(player);
             var attacker = @event.Attacker;
-
             var playerPawn = player.PlayerPawn.Value;
+
             if (playerPawn == null || playerPawn.LifeState is not (byte)LifeState_t.LIFE_ALIVE) return HookResult.Continue;
 
-            var sameTeam = attacker.Team == player.Team;
+            var sameTeam = attacker != null && attacker.Team == player.Team;
+
             switch (featureValue)
             {
                 case 1:
