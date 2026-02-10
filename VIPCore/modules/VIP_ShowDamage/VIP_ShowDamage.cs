@@ -11,8 +11,8 @@ public class VIP_ShowDamage : BasePlugin
 {
     public override string ModuleAuthor => "GSM-RO";
     public override string ModuleName => "[VIP] ShowDamage";
-    public override string ModuleVersion => "1.0.1";
-    public override string ModuleDescription => "Shows damage dealt to enemies in the center text for VIP players";
+    public override string ModuleVersion => "1.0.2";
+    public override string ModuleDescription => "Shows damage dealt to enemies in the center text for VIP players + optional sound";
 
     private ShowDamageFeature? _feature;
     private SoundDamageFeature? _soundFeature;
@@ -38,14 +38,8 @@ public class VIP_ShowDamage : BasePlugin
     {
         if (_api != null)
         {
-            if (_feature != null)
-            {
-                _api.UnRegisterFeature(_feature);
-            }
-            if (_soundFeature != null)
-            {
-                _api.UnRegisterFeature(_soundFeature);
-            }
+            if (_feature != null) _api.UnRegisterFeature(_feature);
+            if (_soundFeature != null) _api.UnRegisterFeature(_soundFeature);
         }
     }
 }
@@ -61,83 +55,88 @@ public class ShowDamageFeature : VipFeatureBase
     public override string Feature => "ShowDamage";
 
     private readonly VIP_ShowDamage _plugin;
-    private Dictionary<int, DamageDone> damageDone = new();
-    private ConVar? ffaEnabledConVar = null;
+    private readonly Dictionary<int, DamageDone> _damageDone = new();
+    private ConVar? _ffaEnabledConVar = null;
     public ShowDamageConfig _config;
 
-    public bool FFAEnabled
-    {
-        get
-        {
-            if (ffaEnabledConVar is null)
-                return false;
-            return ffaEnabledConVar.GetPrimitiveValue<bool>();
-        }
-    }
+    public bool FFAEnabled => _ffaEnabledConVar?.GetPrimitiveValue<bool>() ?? false;
 
     public ShowDamageFeature(VIP_ShowDamage plugin, IVipCoreApi api) : base(api)
     {
         _plugin = plugin;
-        _config = LoadConfig<ShowDamageConfig>("VIP_ShowDamage");  // Încarcă config-ul specific modulului
-        ffaEnabledConVar = ConVar.Find("mp_teammates_are_enemies");
+        _config = LoadConfig<ShowDamageConfig>("VIP_ShowDamage");
+        _ffaEnabledConVar = ConVar.Find("mp_teammates_are_enemies");
         _plugin.RegisterEventHandler<EventPlayerHurt>(EventPlayerHurt);
     }
 
     private Action BuildCallback(int attackerUserId) =>
         () =>
         {
-            if (damageDone.ContainsKey(attackerUserId))
+            if (!_damageDone.TryGetValue(attackerUserId, out var dmg)) return;
+
+            var player = Utilities.GetPlayerFromUserid(attackerUserId);
+            if (player is null || !player.IsValid)
             {
-                var player = Utilities.GetPlayerFromUserid(attackerUserId);
-                if (player is not null && player.IsValid)
+                _damageDone.Remove(attackerUserId);
+                return;
+            }
+
+            // Safety check: player still in VIPCore
+            if (!Api.IsClientVip(player))
+            {
+                _damageDone.Remove(attackerUserId);
+                return;
+            }
+
+            try
+            {
+                // Main check: is ShowDamage actually enabled?
+                if (Api.GetPlayerFeatureState(player, "ShowDamage") != IVipCoreApi.FeatureState.Enabled)
                 {
-                    // Debug: Print ShowDamage state
-                    var showState = Api.GetPlayerFeatureState(player, "ShowDamage");
-                    //player.PrintToChat($"Debug ShowDamage State: {showState}");
-
-                    if (showState != IVipCoreApi.FeatureState.Enabled)
-                    {
-                        damageDone.Remove(attackerUserId);
-                        return;
-                    }
-
-                    var dmg = damageDone[attackerUserId];
-                    if (dmg is not null)
-                    {
-                        StringBuilder builder = new();
-                        builder.Append($"-{dmg.Health} HP");
-                        if (_config.ShowArmorDmg)
-                        {
-                            builder.Append($"\n-{dmg.Armor} Armor");
-                        }
-                        player.PrintToCenter(builder.ToString());
-
-                        // Debug: Print SoundDMG state
-                        bool hasSound = Api.PlayerHasFeature(player, "SoundDMG");
-                        var soundState = Api.GetPlayerFeatureState(player, "SoundDMG");
-                        //player.PrintToChat($"Debug SoundDMG: Has {hasSound}, State {soundState}");
-
-                        // Play sound if has feature and enabled
-                        if (hasSound && soundState == IVipCoreApi.FeatureState.Enabled)
-                        {
-                            player.ExecuteClientCommand($"play {_config.SoundPath}");
-                        }
-                    }
+                    _damageDone.Remove(attackerUserId);
+                    return;
                 }
-                damageDone.Remove(attackerUserId);
+
+                // Show damage text
+                var builder = new StringBuilder();
+                builder.Append($"-{dmg.Health} HP");
+                if (_config.ShowArmorDmg)
+                    builder.Append($"\n-{dmg.Armor} Armor");
+
+                player.PrintToCenter(builder.ToString());
+
+                // Play sound only if SoundDMG is enabled
+                if (Api.PlayerHasFeature(player, "SoundDMG") &&
+                    Api.GetPlayerFeatureState(player, "SoundDMG") == IVipCoreApi.FeatureState.Enabled)
+                {
+                    player.ExecuteClientCommand($"play {_config.SoundPath}");
+                }
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("player not found"))
+            {
+                // Player disconnected between damage and timer → silent ignore
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[VIP_ShowDamage] Unexpected error in callback: {ex.Message}");
+            }
+            finally
+            {
+                _damageDone.Remove(attackerUserId);
             }
         };
 
     public HookResult EventPlayerHurt(EventPlayerHurt ev, GameEventInfo info)
     {
-        if (ev.Attacker is null ||
-            ev.Userid is null ||
-            !ev.Attacker.IsValid ||
-            (ev.Attacker.TeamNum == ev.Userid.TeamNum && !FFAEnabled))
+        if (ev.Attacker is null || ev.Userid is null || !ev.Attacker.IsValid)
             return HookResult.Continue;
 
-        // Check if attacker has ShowDamage feature AND it is enabled
-        if (!PlayerHasFeature(ev.Attacker) || Api.GetPlayerFeatureState(ev.Attacker, "ShowDamage") != IVipCoreApi.FeatureState.Enabled)
+        if (ev.Attacker.TeamNum == ev.Userid.TeamNum && !FFAEnabled)
+            return HookResult.Continue;
+
+        // Must have ShowDamage AND be enabled
+        if (!PlayerHasFeature(ev.Attacker) ||
+            Api.GetPlayerFeatureState(ev.Attacker, "ShowDamage") != IVipCoreApi.FeatureState.Enabled)
             return HookResult.Continue;
 
         int attackerUserId = ev.Attacker.UserId!.Value;
@@ -148,19 +147,20 @@ public class ShowDamageFeature : VipFeatureBase
             return HookResult.Continue;
         }
 
-        if (damageDone.ContainsKey(attackerUserId))
+        if (_damageDone.TryGetValue(attackerUserId, out var existing))
         {
-            DamageDone? dmg = damageDone[attackerUserId];
-            if (dmg is not null)
-            {
-                dmg.Health += ev.DmgHealth;
-                dmg.Armor += ev.DmgArmor;
-            }
+            existing.Health += ev.DmgHealth;
+            existing.Armor += ev.DmgArmor;
         }
         else
         {
-            damageDone.Add(attackerUserId, new DamageDone { Armor = ev.DmgArmor, Health = ev.DmgHealth });
-            _plugin.AddTimer(0.1F, BuildCallback(attackerUserId), 0);
+            _damageDone[attackerUserId] = new DamageDone
+            {
+                Health = ev.DmgHealth,
+                Armor = ev.DmgArmor
+            };
+
+            _plugin.AddTimer(0.1f, BuildCallback(attackerUserId));
         }
 
         return HookResult.Continue;
@@ -168,16 +168,9 @@ public class ShowDamageFeature : VipFeatureBase
 
     public override void OnSelectItem(CCSPlayerController player, IVipCoreApi.FeatureState state)
     {
-        if (state == IVipCoreApi.FeatureState.Enabled)
-        {
-            player.PrintToChat("ShowDamage enabled");
-        }
-        else
-        {
-            player.PrintToChat("ShowDamage disabled");
-        }
-        // Debug after toggle
-       // player.PrintToChat($"Debug ShowDamage after toggle: {state}");
+        player.PrintToChat(state == IVipCoreApi.FeatureState.Enabled
+            ? "ShowDamage enabled"
+            : "ShowDamage disabled");
     }
 }
 
@@ -185,22 +178,13 @@ public class SoundDamageFeature : VipFeatureBase
 {
     public override string Feature => "SoundDMG";
 
-    public SoundDamageFeature(VIP_ShowDamage plugin, IVipCoreApi api) : base(api)
-    {
-    }
+    public SoundDamageFeature(VIP_ShowDamage plugin, IVipCoreApi api) : base(api) { }
 
     public override void OnSelectItem(CCSPlayerController player, IVipCoreApi.FeatureState state)
     {
-        if (state == IVipCoreApi.FeatureState.Enabled)
-        {
-            player.PrintToChat("SoundDMG enabled");
-        }
-        else
-        {
-            player.PrintToChat("SoundDMG disabled");
-        }
-        // Debug after toggle
-       // player.PrintToChat($"Debug SoundDMG after toggle: {state}");
+        player.PrintToChat(state == IVipCoreApi.FeatureState.Enabled
+            ? "SoundDMG enabled"
+            : "SoundDMG disabled");
     }
 }
 
@@ -208,6 +192,6 @@ public class ShowDamageConfig
 {
     public bool ShowArmorDmg { get; set; } = true;
     public bool HideDamage { get; set; } = false;
-    public string AdminGroup { get; set; } = string.Empty;  // Kept for compatibility, but not used in VIP mode
+    public string AdminGroup { get; set; } = string.Empty;
     public string SoundPath { get; set; } = "sounds/Training/timer_bell.vsnd_c";
 }
