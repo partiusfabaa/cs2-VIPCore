@@ -149,3 +149,6 @@ public class TestConfig
     public float Test4 { get; set; } = 30.0f;
 }
 ```
+## License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
