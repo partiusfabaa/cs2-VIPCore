@@ -1,17 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-      <TargetFramework>net8.0</TargetFramework>
+      <TargetFramework>net10.0</TargetFramework>
       <ImplicitUsings>enable</ImplicitUsings>
       <Nullable>enable</Nullable>
     </PropertyGroup>
   
     <ItemGroup>
-      <PackageReference Include="CounterStrikeSharp.API" Version="1.0.342" />
+      <PackageReference Include="CounterStrikeSharp.API" Version="1.0.374" />
       
       <Reference Include="VipCoreApi">
         <HintPath>..\..\VipCoreApi.dll</HintPath>
-      </Reference>
+        <Private>False</Private>
+    </Reference>
     </ItemGroup>
   
 </Project>
