@@ -1,4 +1,5 @@
-﻿using CounterStrikeSharp.API;
+﻿using System.Text.Json;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -105,12 +106,52 @@ public class Jumps : VipFeatureBase
 
         var settings = UserSettings[player.Index]!;
 
-		var feature = GetFeatureValue<JumpsFeature>(player);
-		
+        var feature = ReadJumpsFeature(player);
+
         settings.NumberOfJumps = feature.Jumps;
         settings.JumpLimitPerRound = feature.LimitPerRound;
-		
+
         settings.JumpsUsedThisRound = 0;
+    }
+
+    /// <summary>
+    /// Reads the "Jumps" feature value tolerantly so both config formats work:
+    ///   new object form:  "Jumps": { "Jumps": 2, "LimitPerRound": 5 }
+    ///   legacy number:    "Jumps": 2   (interpreted as number of jumps, default limit)
+    /// This avoids the JsonException that crashed OnPlayerSpawn when the config used a plain number.
+    /// </summary>
+    private JumpsFeature ReadJumpsFeature(CCSPlayerController player)
+    {
+        var result = new JumpsFeature { Jumps = 2, LimitPerRound = 0 };
+
+        try
+        {
+            var element = GetFeatureValue<JsonElement>(player);
+
+            switch (element.ValueKind)
+            {
+                case JsonValueKind.Object:
+                    if (element.TryGetProperty("Jumps", out var jumpsProp) &&
+                        jumpsProp.ValueKind == JsonValueKind.Number)
+                        result.Jumps = jumpsProp.GetInt32();
+
+                    if (element.TryGetProperty("LimitPerRound", out var limitProp) &&
+                        limitProp.ValueKind == JsonValueKind.Number)
+                        result.LimitPerRound = limitProp.GetInt32();
+                    break;
+
+                case JsonValueKind.Number:
+                    // Legacy config: a bare number means "number of extra jumps".
+                    result.Jumps = element.GetInt32();
+                    break;
+            }
+        }
+        catch
+        {
+            // Fall back to the defaults above rather than crashing the spawn handler.
+        }
+
+        return result;
     }
 }
 

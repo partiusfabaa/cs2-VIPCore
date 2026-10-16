@@ -115,7 +115,7 @@ public class WeaponsMenu : VipFeatureBase
 
     private void CreateMenu(CCSPlayerController player)
     {
-        if (!player.PawnIsAlive || player.PlayerPawn.Value == null || player.Connected != PlayerConnectedState.PlayerConnected)
+        if (!player.PawnIsAlive || player.PlayerPawn.Value == null || player.Connected != PlayerConnectedState.Connected)
             return;
 
         if (GetPlayerSelection(player, out var selection) && selection != null)
@@ -156,11 +156,10 @@ public class WeaponsMenu : VipFeatureBase
 
         if (weaponsSettings == null) return;
 
-        var menu = new ChatMenu(GetTranslatedText("weaponsmenu.title"))
-        {
-            ExitButton = true,
-            //PostSelectAction = PostSelectAction.Close
-        };
+        // Route through the VIPCore API so this menu honours the configured menu type (chat / center
+        // / Panorama) instead of being hard-locked to a chat menu.
+        var menu = Api.CreateMenu(GetTranslatedText("weaponsmenu.title"));
+        menu.ExitButton = true;
 
         foreach (var package in player.Team == CsTeam.Terrorist ? weaponsSettings.T : weaponsSettings.CT)
         {
@@ -202,10 +201,8 @@ public class WeaponsMenu : VipFeatureBase
 
     private void CreateSubMenu(CCSPlayerController player, WeaponSelection selection)
     {
-        var menu = new ChatMenu(GetTranslatedText("weaponsmenu.wanttosave"))
-        {
-            PostSelectAction = PostSelectAction.Close
-        };
+        var menu = Api.CreateMenu(GetTranslatedText("weaponsmenu.wanttosave"));
+        menu.PostSelectAction = PostSelectAction.Close;
 
         menu.AddMenuOption(GetTranslatedText("weaponsmenu.wanttosave.yes"), (_, _) =>
         {
