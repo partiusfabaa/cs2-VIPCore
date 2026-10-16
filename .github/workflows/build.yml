@@ -1,0 +1,56 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: ${{ !contains(github.event.head_commit.message, '[noci]') }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Determine version
+        id: version
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          range=""
+          if [ -n "$BEFORE" ] && ! [[ "$BEFORE" =~ ^0+$ ]] && git cat-file -e "$BEFORE" 2>/dev/null; then
+            range="$BEFORE..HEAD"
+          fi
+          version=$(bash .github/scripts/next-version.sh $range)
+          echo "Next version: $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Build and package
+        working-directory: VIPCore
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: bash ../.github/scripts/build.sh
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "v$VERSION" VIPCore/out/VIPCore.zip VIPCore/out/VIP_Modules.zip \
+            --target "$GITHUB_SHA" \
+            --title "v$VERSION" \
+            --generate-notes

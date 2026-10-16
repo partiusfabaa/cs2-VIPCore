@@ -14,6 +14,10 @@
       <HintPath>..\..\VipCoreApi.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="RanksApi">
+      <HintPath>RanksApi.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
 
 </Project>
