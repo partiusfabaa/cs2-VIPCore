@@ -102,6 +102,78 @@ public class CustomDefaultAmmo : VipFeatureBase
     {
         _vipCustomAmmo = vipCustomAmmo;
         vipCustomAmmo.RegisterListener<Listeners.OnEntityCreated>(OnEntityCreated);
+
+        // Re-apply the VIP group's custom ammo when a VIP picks a weapon up off the ground.
+        vipCustomAmmo.RegisterEventHandler<EventItemPickup>(OnItemPickup);
+    }
+
+    private HookResult OnItemPickup(EventItemPickup @event, GameEventInfo info)
+    {
+        var player = @event.Userid;
+        if (player == null || !player.IsValid || player.IsBot ||
+            player.Connected != PlayerConnectedState.Connected)
+            return HookResult.Continue;
+
+        if (!PlayerHasFeature(player) || !_customEnabled[player.Slot])
+            return HookResult.Continue;
+
+        if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
+            or IVipCoreApi.FeatureState.NoAccess)
+            return HookResult.Continue;
+
+        var groupName = GetFeatureValue<string>(player);
+        if (string.IsNullOrEmpty(groupName) ||
+            !_vipCustomAmmo._ammoConfig.TryGetValue(groupName, out var weaponSettings))
+            return HookResult.Continue;
+
+        // The picked-up weapon becomes the player's active weapon a frame later; apply then.
+        Server.NextFrame(() =>
+        {
+            if (!player.IsValid) return;
+
+            var pawn = player.PlayerPawn.Value;
+            var activeWeaponHandle = pawn?.WeaponServices?.ActiveWeapon;
+            var active = activeWeaponHandle is { IsValid: true } ? activeWeaponHandle.Value : null;
+            if (active == null || !active.IsValid) return;
+
+            ApplyAmmoToWeapon(active, weaponSettings);
+        });
+
+        return HookResult.Continue;
+    }
+
+    /// <summary>
+    /// Applies the VIP group's clip/reserve settings to a single weapon instance, if the weapon
+    /// matches an entry in the settings. Never touches the shared VData - only this instance.
+    /// </summary>
+    private void ApplyAmmoToWeapon(CBasePlayerWeapon weapon, Dictionary<string, WeaponSettings> weaponSettings)
+    {
+        if (weapon == null || !weapon.IsValid) return;
+
+        var defIndex = weapon.AttributeManager.Item.ItemDefinitionIndex;
+
+        foreach (var item in weaponSettings)
+        {
+            if (string.IsNullOrEmpty(item.Key) || item.Value == null) continue;
+            if (!CheckIfWeapon(item.Key.Trim(), defIndex)) continue;
+
+            CCSWeaponBase? _weapon = weapon.As<CCSWeaponBase>();
+            if (_weapon == null) return;
+
+            if (item.Value.DefaultClip != -1)
+            {
+                _weapon.Clip1 = item.Value.DefaultClip;
+                Utilities.SetStateChanged(_weapon, "CBasePlayerWeapon", "m_iClip1");
+            }
+
+            if (item.Value.DefaultReserve != -1)
+            {
+                _weapon.ReserveAmmo[0] = item.Value.DefaultReserve;
+                Utilities.SetStateChanged(_weapon, "CBasePlayerWeapon", "m_pReserveAmmo");
+            }
+
+            break;
+        }
     }
 
     public void OnEntityCreated(CEntityInstance entity)
@@ -113,62 +185,42 @@ public class CustomDefaultAmmo : VipFeatureBase
         if (weapon == null || !weapon.IsValid)
             return;
 
-        var players = Utilities.GetPlayers().Where(x => x is { IsBot: false, Connected: PlayerConnectedState.PlayerConnected } && PlayerHasFeature(x) && _customEnabled[x.Slot]);
-
-        foreach (var player in players)
+        // Resolve settings a frame later, once the engine has assigned the weapon's owner.
+        Server.NextFrame(() =>
         {
-            if (player == null) return;
+            if (!weapon.IsValid) return;
 
-            if (!PlayerHasFeature(player)) return;
-            if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
-            or IVipCoreApi.FeatureState.NoAccess) return;
-            
-            string groupName = GetFeatureValue<string>(player);
+            // KEY FIX: only apply custom ammo to a weapon that is actually OWNED by a player (i.e.
+            // freshly given / picked up). A dropped weapon (on death, or thrown) has no owner, so we
+            // leave it completely untouched - it keeps whatever ammo the player really had (empty
+            // stays empty, low stays low). Previously every created weapon entity, including dropped
+            // ones, was force-filled to the config amount, which is the bug being fixed.
+            var owner = weapon.OwnerEntity.Value;
+            if (owner == null || !owner.IsValid)
+                return;
 
-            if (string.IsNullOrEmpty(groupName) || !_vipCustomAmmo._ammoConfig.TryGetValue(groupName, out var weaponSettings))
-                continue;
-            
-            foreach (var item in weaponSettings)
-            {
-                if (string.IsNullOrEmpty(item.Key) || item.Value == null) continue;
+            var ownerController = owner.As<CCSPlayerPawn>()?.Controller.Value?.As<CCSPlayerController>();
+            if (ownerController == null || !ownerController.IsValid)
+                return;
 
-                Server.NextFrame(() =>
-                {
-                    if (!weapon.IsValid) return;
+            if (ownerController.IsBot || ownerController.Connected != PlayerConnectedState.Connected)
+                return;
 
-                    string weaponName = item.Key.Trim();
+            if (!PlayerHasFeature(ownerController) || !_customEnabled[ownerController.Slot])
+                return;
 
-                    if (!CheckIfWeapon(weaponName, weapon.AttributeManager.Item.ItemDefinitionIndex)) return;
+            if (GetPlayerFeatureState(ownerController) is IVipCoreApi.FeatureState.Disabled
+                or IVipCoreApi.FeatureState.NoAccess)
+                return;
 
-                    CCSWeaponBase? _weapon = weapon.As<CCSWeaponBase>();
-                    if (_weapon == null) return;
+            var groupName = GetFeatureValue<string>(ownerController);
+            if (string.IsNullOrEmpty(groupName) ||
+                !_vipCustomAmmo._ammoConfig.TryGetValue(groupName, out var weaponSettings))
+                return;
 
-                    if (item.Value.DefaultClip != -1)
-                    {
-                        if (_weapon.VData != null)
-                        {
-                            _weapon.VData.MaxClip1 = item.Value.DefaultClip;
-                            _weapon.VData.DefaultClip1 = item.Value.DefaultClip;
-                        }
-
-                        _weapon.Clip1 = item.Value.DefaultClip;
-
-                        Utilities.SetStateChanged(_weapon, "CBasePlayerWeapon", "m_iClip1");
-                    }
-
-                    if (item.Value.DefaultReserve != -1)
-                    {
-                        if (_weapon.VData != null)
-                        {
-                            _weapon.VData.PrimaryReserveAmmoMax = item.Value.DefaultReserve;
-                        }
-                        _weapon.ReserveAmmo[0] = item.Value.DefaultReserve;
-
-                        Utilities.SetStateChanged(_weapon, "CBasePlayerWeapon", "m_pReserveAmmo");
-                    }
-                });
-            }
-        }
+            // NOTE: ApplyAmmoToWeapon only sets this instance's live ammo, never the shared VData.
+            ApplyAmmoToWeapon(weapon, weaponSettings);
+        });
     }
 
     public override void OnPlayerLoaded(CCSPlayerController player, string group)

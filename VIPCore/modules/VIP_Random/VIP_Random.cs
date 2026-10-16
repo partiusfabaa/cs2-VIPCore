@@ -136,7 +136,7 @@ public class VIP_Random : BasePlugin
     private CCSPlayerController? GetRandomPlayer()
     {
         var players = Utilities.GetPlayers()
-            .Where(p => p != null && p.IsValid && p.PlayerPawn != null && p.PlayerPawn.IsValid && !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.PlayerConnected)
+            .Where(p => p != null && p.IsValid && p.PlayerPawn != null && p.PlayerPawn.IsValid && !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.Connected)
             .ToList();
         if (players.Count == 0) return null;
         var rand = new Random();
