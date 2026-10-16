@@ -239,22 +239,25 @@ public class VipCore : BasePlugin
     [ConsoleCommand("css_vip_adduser")]
     public void OnCmdAddUser(CCSPlayerController? controller, CommandInfo command)
     {
-        if (command.ArgCount is > 4 or < 4)
+        if (command.ArgCount != 4)
         {
-            PrintLogInfo("Usage: css_vip_adduser {usage}", $"<steamid or accountid> <group> <time_{GetTimeUnitName}>");
+            ReplyToCommand(controller, $"Usage: css_vip_adduser <steamid or accountid> <group> <time_{GetTimeUnitName}>");
             return;
         }
 
         var accountId = Utils.GetAccountIdFromCommand(command.GetArg(1), out var player);
         if (accountId == -1)
+        {
+            ReplyToCommand(controller, $"Invalid SteamID/AccountID: {command.GetArg(1)}");
             return;
+        }
 
         var vipGroup = command.GetArg(2);
         var endVipTime = Convert.ToInt32(command.GetArg(3));
 
         if (!Config.Groups.ContainsKey(vipGroup))
         {
-            PrintLogError("This {VIP} group was not found!", "VIP");
+            ReplyToCommand(controller, $"VIP group '{vipGroup}' was not found!");
             return;
         }
 
@@ -263,6 +266,9 @@ public class VipCore : BasePlugin
         var user = CreateNewUser(accountId, username, vipGroup, endVipTime);
 
         AddVip(player, user);
+
+        var timeText = endVipTime == 0 ? "permanent" : $"{endVipTime} {GetTimeUnitName}";
+        ReplyToCommand(controller, $"VIP added: {username} (AccountID {accountId}) -> group '{vipGroup}', time: {timeText}.");
     }
 
     public void AddVip(CCSPlayerController? player, User user) // :)
@@ -282,17 +288,22 @@ public class VipCore : BasePlugin
     [ConsoleCommand("css_vip_deleteuser")]
     public void OnCmdDeleteVipUser(CCSPlayerController? controller, CommandInfo command)
     {
-        if (command.ArgCount is < 2 or > 2)
+        if (command.ArgCount != 2)
         {
-            ReplyToCommand(controller, "Using: css_vip_deleteuser <steamid or accountid>");
+            ReplyToCommand(controller, "Usage: css_vip_deleteuser <steamid or accountid>");
             return;
         }
 
         var accountId = Utils.GetAccountIdFromCommand(command.GetArg(1), out var player);
         if (accountId == -1)
+        {
+            ReplyToCommand(controller, $"Invalid SteamID/AccountID: {command.GetArg(1)}");
             return;
+        }
 
         RemoveVip(player, accountId);
+
+        ReplyToCommand(controller, $"VIP removed: AccountID {accountId}{(player != null ? $" ({player.PlayerName})" : "")}.");
     }
 
     public void RemoveVip(CCSPlayerController? player, int accountId) // :)
@@ -312,16 +323,19 @@ public class VipCore : BasePlugin
     [ConsoleCommand("css_vip_updateuser")]
     public void OnCmdUpdateUserGroup(CCSPlayerController? controller, CommandInfo command)
     {
-        if (command.ArgCount is > 4 or < 4)
+        if (command.ArgCount != 4)
         {
-            PrintLogInfo("Usage: css_vip_updateuser {usage}\n{t}", "<steamid or accountid> [group or -s] [time or -s]",
-                "if you don't want to update something, don't leave it blank, write `-` or `-s`\nExample of updating time: css_vip_updateuser \"STEAM_0:0:123456\" -s 3600");
+            ReplyToCommand(controller, "Usage: css_vip_updateuser <steamid or accountid> <group or -s> <time or -s>");
+            ReplyToCommand(controller, "Use '-' or '-s' to keep a field unchanged. Example: css_vip_updateuser \"STEAM_0:0:123456\" -s 3600");
             return;
         }
 
         var accountId = Utils.GetAccountIdFromCommand(command.GetArg(1), out var player);
         if (accountId == -1)
+        {
+            ReplyToCommand(controller, $"Invalid SteamID/AccountID: {command.GetArg(1)}");
             return;
+        }
 
         var vipGroup = command.GetArg(2);
 
@@ -329,7 +343,7 @@ public class VipCore : BasePlugin
         {
             if (!Config.Groups.ContainsKey(vipGroup))
             {
-                PrintLogError("This {VIP} group was not found!", "VIP");
+                ReplyToCommand(controller, $"VIP group '{vipGroup}' was not found!");
                 return;
             }
         }
@@ -346,6 +360,10 @@ public class VipCore : BasePlugin
         }
 
         Task.Run(() => Database.UpdateUserVip(accountId, group: vipGroup, time: time));
+
+        var groupText = string.IsNullOrEmpty(vipGroup) ? "unchanged" : $"'{vipGroup}'";
+        var timeText = time == -1 ? "unchanged" : (time == 0 ? "permanent" : $"{time} {GetTimeUnitName}");
+        ReplyToCommand(controller, $"VIP updated: AccountID {accountId} -> group: {groupText}, time: {timeText}.");
     }
 
     [RequiresPermissions("@css/root")]
@@ -372,6 +390,27 @@ public class VipCore : BasePlugin
         const string msg = "configuration successfully rebooted!";
 
         ReplyToCommand(controller, msg);
+    }
+
+    [RequiresPermissions("@css/root")]
+    [ConsoleCommand("css_vip_help", "Lists all VIPCore admin commands.")]
+    public void OnCommandHelp(CCSPlayerController? controller, CommandInfo command)
+    {
+        var t = GetTimeUnitName;
+        var lines = new[]
+        {
+            "===== VIPCore commands =====",
+            $"css_vip_adduser <steamid or accountid> <group> <time_{t}>  - add a VIP (time 0 = permanent)",
+            "css_vip_updateuser <steamid or accountid> <group or -s> <time or -s>  - update a VIP (-s keeps a field)",
+            "css_vip_deleteuser <steamid or accountid>  - remove a VIP",
+            "css_reload_vip_player <steamid>  - reload a player's VIP data from the database",
+            "css_vip_reload  - reload the VIPCore configuration",
+            "css_vip_help  - show this list",
+            "============================="
+        };
+
+        foreach (var line in lines)
+            ReplyToCommand(controller, line);
     }
 
     private void CreateMenu(CCSPlayerController? player)
@@ -510,7 +549,8 @@ public class VipCore : BasePlugin
         if (controller != null)
             PrintToChat(controller, msg);
         else
-            PrintLogInfo($"{msg}");
+            // Always echo command feedback to the server console, regardless of VipLogging.
+            Server.PrintToConsole($"[VIPCore] {msg}");
     }
 
     public void PrintToChat(CCSPlayerController player, string msg)

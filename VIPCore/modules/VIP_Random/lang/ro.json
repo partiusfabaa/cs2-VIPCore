@@ -1,0 +1,7 @@
+{
+  "prefix": "{green}[VIP Random] {default}",
+  "vip.not.enough": "Nu sunt destui jucători online pentru a alege un VIP aleatoriu.",
+  "vip.selected": "{gold}{playerName} {default}a fost ales ca VIP aleatoriu!",
+  "vip.player.message": "{gold}Ai fost ales ca VIP aleatoriu!",
+  "vip.already.vip": "Jucătorul ales aleatoriu este deja VIP."
+}
