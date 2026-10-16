@@ -8,13 +8,13 @@
     ".NETCoreApp,Version=v10.0": {
       "VIP_SniperCount/1.0.0": {
         "dependencies": {
-          "CounterStrikeSharp.API": "1.0.374"
+          "CounterStrikeSharp.API": "1.0.376"
         },
         "runtime": {
           "VIP_SniperCount.dll": {}
         }
       },
-      "CounterStrikeSharp.API/1.0.374": {
+      "CounterStrikeSharp.API/1.0.376": {
         "dependencies": {
           "FastGenericNew": "3.3.1",
           "McMaster.NETCore.Plugins": "1.4.0",
@@ -30,8 +30,8 @@
         },
         "runtime": {
           "lib/net10.0/CounterStrikeSharp.API.dll": {
-            "assemblyVersion": "1.0.374.0",
-            "fileVersion": "1.0.374.0"
+            "assemblyVersion": "1.0.376.0",
+            "fileVersion": "1.0.376.0"
           }
         }
       },
@@ -531,12 +531,12 @@
       "serviceable": false,
       "sha512": ""
     },
-    "CounterStrikeSharp.API/1.0.374": {
+    "CounterStrikeSharp.API/1.0.376": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-LLVDs6sxO9YgVw6uiOx0d+bONuhZTRw4bRN3S/scABNdobC1rb/7R8KOJ4phsaBINFoRMffcrrUgkz8Tq0dP1g==",
-      "path": "counterstrikesharp.api/1.0.374",
-      "hashPath": "counterstrikesharp.api.1.0.374.nupkg.sha512"
+      "sha512": "sha512-TD0fSqxkNcJWFuR2TtHhYw72ONL7Rm+whsgdwlqW1UkMBdjdyNc0EtTDErf/DvgTEmwG7KNwOWZrXSjblFge9A==",
+      "path": "counterstrikesharp.api/1.0.376",
+      "hashPath": "counterstrikesharp.api.1.0.376.nupkg.sha512"
     },
     "FastGenericNew/3.3.1": {
       "type": "package",

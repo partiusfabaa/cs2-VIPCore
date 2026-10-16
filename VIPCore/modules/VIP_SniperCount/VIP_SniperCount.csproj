@@ -1,33 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-	<PropertyGroup>
-		<TargetFramework>net10.0</TargetFramework>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
-		<OutputPath>bin\Release\addons\counterstrikesharp\plugins\VIP_SniperCount\</OutputPath>
-		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<Configuration>Release</Configuration>
-		<DebugType>none</DebugType>
-		<AssemblyName>VIP_SniperCount</AssemblyName>
-		<RootNamespace>VIP_SniperCount</RootNamespace>
-	</PropertyGroup>
-
-	<ItemGroup>
-		<PackageReference Include="CounterStrikeSharp.API" Version="1.0.374" />
-
-		<!-- VipCoreApi is a SHARED API (ships once in addons/counterstrikesharp/shared), so Private=false
-		     stops a local copy being emitted next to this plugin. -->
-		<Reference Include="VipCoreApi">
-			<HintPath>3rd_party\VipCoreApi.dll</HintPath>
-			<Private>false</Private>
-		</Reference>
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Update="lang\**\*.*" CopyToOutputDirectory="PreserveNewest" />
-	</ItemGroup>
-
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CounterStrikeSharp.API" Version="1.0.376" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="VipCoreApi">
+      <HintPath>..\..\VipCoreApi.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
 </Project>

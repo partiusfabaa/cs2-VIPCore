@@ -19,7 +19,7 @@ public class VipCore : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Core";
-    public override string ModuleVersion => "v1.3.3";
+    public override string ModuleVersion => "v1.4.0";
 
     public Config Config { get; set; } = null!;
     public CoreConfig CoreConfig { get; set; } = null!;
@@ -137,7 +137,7 @@ public class VipCore : BasePlugin
 
         AddTimer(Config.Delay, () =>
         {
-            if (player.Connected != PlayerConnectedState.PlayerConnected) return;
+            if (player.Connected != PlayerConnectedState.Connected) return;
 
             try
             {
