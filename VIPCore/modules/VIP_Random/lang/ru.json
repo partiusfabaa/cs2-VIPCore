@@ -1,0 +1,7 @@
+{
+  "prefix": "{green}[VIP Random] {default}",
+  "vip.not.enough": "Недостаточно игроков онлайн для выбора случайного VIP.",
+  "vip.selected": "{gold}{playerName} {default}был выбран случайным VIP!",
+  "vip.player.message": "{gold}Вы были выбраны случайным VIP!",
+  "vip.already.vip": "Выбранный игрок уже является VIP."
+}

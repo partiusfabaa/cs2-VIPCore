@@ -1,0 +1,7 @@
+{
+  "prefix": "{green}[VIP Random] {default}",
+  "vip.not.enough": "Not enough players online to pick a random VIP.",
+  "vip.selected": "{gold}{playerName} {default}has been selected as the random VIP!",
+  "vip.player.message": "{gold}You have been selected as the random VIP!",
+  "vip.already.vip": "The randomly selected player is already a VIP."
+}

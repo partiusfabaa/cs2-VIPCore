@@ -52,5 +52,18 @@
 	"Grenades": "Grenades",
 	"NoFallDamage": "No Fall Damage",
 	"flags": "Flags",
-	"ShowDamage": "Show Damage"
+	"ShowDamage": "Show Damage",
+	"BuyTeamWeapon": "Buy Team Weapon",
+	"DamageMultiplier": "Damage Multiplier",
+	"DefuseKit": "Defuse Kit",
+	"exp_multiplier": "Experience Multiplier",
+	"fastdefuse": "Fast Defuse",
+	"fastplant": "Fast Plant",
+	"FastReload": "Fast Reload",
+	"Fov": "FOV",
+	"ResetDeaths": "Reset Deaths",
+	"SoundDMG": "Damage Sound",
+	"Tag": "Tag",
+	"TeammatesHeal": "Teammates Heal",
+	"WeaponsMenu": "Weapons Menu"
 }

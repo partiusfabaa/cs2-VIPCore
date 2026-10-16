@@ -1,0 +1,4 @@
+{
+  "vip.OnlineVips": "{green}VIP-uri online: {default}{0}",
+  "vip.NoVipsOnline": "{green}Nu există niciun VIP online momentan."
+}
