@@ -1,11 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="CounterStrikeSharp.API" Version="1.0.376" />
   </ItemGroup>
@@ -14,6 +12,11 @@
       <HintPath>..\..\VipCoreApi.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <!-- CS2-SimpleAdmin public API (gag/silence). Compile-time only; the real DLL ships with
+         CS2-SimpleAdmin on the server. Private=false so no local copy is emitted. -->
+    <Reference Include="CS2-SimpleAdminApi">
+      <HintPath>3rd_party\CS2-SimpleAdminApi.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
-
 </Project>
