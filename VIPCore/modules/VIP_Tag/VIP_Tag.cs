@@ -193,7 +193,8 @@ public class Tag : VipFeatureBase
         var nameColor = TagColors.ColorChar(tag.NameColor, team);
         var msgColor = TagColors.ColorChar(tag.MessageColor, team);
 
-        var line = $" {tagColor}{tag.ChatTag} {nameColor}{player.PlayerName}{ChatColors.Default}: {msgColor}{message}";
+        var teamPrefix = teamOnly ? $"{ChatColors.Default}(team) " : "";
+        var line = $" {tagColor}{tag.ChatTag} {teamPrefix}{nameColor}{player.PlayerName}{ChatColors.Default}: {msgColor}{message}";
 
         if (teamOnly)
         {
