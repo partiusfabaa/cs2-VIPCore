@@ -22,35 +22,52 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Plan release
+        id: plan
+        env:
+          BEFORE: ${{ github.event.before }}
+          FORCE_FULL: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          before=""
+          if [ -n "$BEFORE" ] && ! [[ "$BEFORE" =~ ^0+$ ]] && git cat-file -e "$BEFORE" 2>/dev/null; then
+            before="$BEFORE"
+          fi
+          bash .github/scripts/plan-release.sh $before | tee -a "$GITHUB_OUTPUT"
+
       - uses: actions/setup-dotnet@v4
+        if: steps.plan.outputs.mode != 'none'
         with:
           dotnet-version: 10.0.x
 
-      - name: Determine version
-        id: version
-        env:
-          BEFORE: ${{ github.event.before }}
-        run: |
-          range=""
-          if [ -n "$BEFORE" ] && ! [[ "$BEFORE" =~ ^0+$ ]] && git cat-file -e "$BEFORE" 2>/dev/null; then
-            range="$BEFORE..HEAD"
-          fi
-          version=$(bash .github/scripts/next-version.sh $range)
-          echo "Next version: $version"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-
       - name: Build and package
+        if: steps.plan.outputs.mode != 'none'
         working-directory: VIPCore
         env:
-          VERSION: ${{ steps.version.outputs.version }}
+          VERSION: ${{ steps.plan.outputs.version }}
+          MODULES: ${{ steps.plan.outputs.modules }}
         run: bash ../.github/scripts/build.sh
 
-      - name: Create release
+      - name: Create core release
+        if: steps.plan.outputs.mode == 'full'
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.plan.outputs.tag }}
         run: |
-          gh release create "v$VERSION" VIPCore/out/VIPCore.zip VIPCore/out/VIP_Modules.zip \
+          gh release create "$TAG" VIPCore/out/VIPCore.zip VIPCore/out/VIP_Modules.zip \
             --target "$GITHUB_SHA" \
-            --title "v$VERSION" \
+            --title "$TAG" \
             --generate-notes
+
+      - name: Create modules release
+        if: steps.plan.outputs.mode == 'modules'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.plan.outputs.tag }}
+          MODULES: ${{ steps.plan.outputs.modules }}
+        run: |
+          gh release create "$TAG" VIPCore/out/VIP_Modules.zip \
+            --target "$GITHUB_SHA" \
+            --title "$TAG" \
+            --notes "Modules: ${MODULES// /, }" \
+            --generate-notes \
+            --latest=false
