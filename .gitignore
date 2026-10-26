@@ -5,6 +5,7 @@
 .history
 **/runtimes
 **/publish
+VIPCore/modules/*/build/
 
 VIPCore/ignoremodules/
 VIPCore/privatemodules/

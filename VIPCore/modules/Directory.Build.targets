@@ -1,0 +1,5 @@
+<Project>
+  <ItemGroup>
+    <None Update="README.md" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
