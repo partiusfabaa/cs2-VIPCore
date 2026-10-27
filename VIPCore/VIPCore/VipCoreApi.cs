@@ -30,6 +30,7 @@ public class VipCoreApi : IVipCoreApi
     public string GetDatabaseConnectionString => _vipCore.DbConnectionString;
     private JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions { 
         ReadCommentHandling = JsonCommentHandling.Skip,
+        AllowTrailingCommas = true,
         WriteIndented = true
     };
 
