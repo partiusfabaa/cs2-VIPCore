@@ -13,45 +13,72 @@
 
 ## Commands 
 
-| **Command**                             | **Description**                                               |
-|-------------------------------------|-----------------------------------------------------------|
-| **`css_vip_reload` or `!vip_reload`**    | Reloads the configuration **(`@css/root`)** |
-| **`css_vip_adduser <steamid or accountid> <vipgroup> <time or 0 permanently>`** | Adds a VIP player **(for server console only)** |
-| **`css_vip_updateuser <steamid or accountid> <group or -s> <time or -s>`** | Updates the player's VIP **(for server console only)** |
-| **`css_vip_deleteuser <steamid or accountid>`** | Allows you to delete a player by SteamID identifier **(for server console only)** |
-| **`css_vip`** or **`!vip`** | Opens the VIP menu |
+| **Command**                             | **Description**                                               | **Flag** |
+|-------------------------------------|-----------------------------------------------------------|----------------|
+| **`css_vip_reload` or `!vip_reload`**    | Reloads the configuration | **@css/root** |
+| **`css_vip_adduser <steamid or accountid> <vipgroup> <time or 0 permanently>`** | Adds a VIP player | **@css/root** |
+| **`css_vip_updateuser <steamid or accountid> <group or -s> <time or -s>`** | Updates the player's VIP | **@css/root** |
+| **`css_vip_deleteuser <steamid or accountid>`** | Allows you to delete a player by SteamID identifier | **@css/root** |
+| **`css_vip`** or **`!vip`** | Opens the VIP menu | 
+| **`css_vip_help`** or **`!vip_help`** | Lists all VIP admin commands | **@css/root** |
 
 ## Configs
-Located in the folder `addons/counterstrikesharp/configs/plugins/VIPCore`
+All configs are in `addons/counterstrikesharp/configs/plugins/VIPCore`. Module configs are in `VIPCore/Modules`.
 
-### Core.json
+### vip_core.json
+
+| Option | Default | Description |
+|---|---|---|
+| `TimeMode` | `0` | Unit for VIP time in commands: `0` seconds, `1` minutes, `2` hours, `3` days |
+| `ServerId` | `0` | Server ID, VIPs are stored per server |
+| `UseCenterHtmlMenu` | `true` | `true` - menu in the center of the screen, `false` - in chat. |
+| `ServerIP` | `0.0.0.0` | Server IP |
+| `ServerPort` | `27015` | Server port |
+| `ReOpenMenuAfterItemClick` | `false` | Reopen the VIP menu after selecting an item |
+| `VipLogging` | `true` | Log VIPCore actions |
+| `Connection` | | MySQL connection |
+
 ```json
 {
-  "TimeMode": 0,		   // 0 - seconds | 1 - minutes | 2 - hours | 3 - days)
-  "ServerId": 0,		   // SERVER ID
-  "UseCenterHtmlMenu": true,	   //If `true`, the menu will be in the center, if `false`, it will be in the chat. Note that if you have another plugin that uses `CenterHtml`, server crashes may occur
-  "ServerIP": "0.0.0.0", 	   // default ip
-  "ServerPort": 27015, 		   // default port
-  "ReOpenMenuAfterItemClick": true,//Whether to reopen the menu after selecting an item | true - yes | false - no
-  "VipLogging": true,	   	   //Whether to log VIPCore | true - yes | false - no
+  "TimeMode": 1,
+  "ServerId": 0,
+  "UseCenterHtmlMenu": true,
+  "ServerIP": "0.0.0.0",
+  "ServerPort": 27015,
+  "ReOpenMenuAfterItemClick": false,
+  "VipLogging": true,
   "Connection": {
-	"Host": 	"host",
-	"Database": "database",
-	"User": 	"user",
-	"Password": "password",
-	"Port": 3306
+    "Host": "localhost",
+    "Database": "database",
+    "User": "user",
+    "Password": "password",
+    "Port": 3306
   }
 }
 ```
+
 ### vip.json
+
+`Delay` - delay in seconds after spawn before VIP features are applied.
+
+`Groups` - VIP groups. The key is the group name, `Values` are the features of the group. Each module describes its value in its own README.
+
 ```json
 {
-  "Delay": 2.0
+  "Delay": 2.0,
   "Groups": {
-    "VIP1": {
+    "VIP": {
       "Values": {
-        "feature1": value1,
-	"feature2": value2
+        "Health": 120,
+        "Money": "++1000",
+        "Tag": { "ScoreboardTag": "VIP", "ChatTag": "[VIP]", "ColorTag": "lime" }
+      }
+    },
+    "PREMIUM": {
+      "Values": {
+        "Health": 150,
+        "Money": "++3000",
+        "Tag": ["PREMIUM_TAGS"]
       }
     }
   }
