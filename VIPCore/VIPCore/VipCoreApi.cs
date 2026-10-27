@@ -6,6 +6,7 @@ using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Menu;
 using Microsoft.Extensions.Logging;
+using VIPCore.Models;
 using VipCoreApi;
 using static VipCoreApi.IVipCoreApi;
 
@@ -50,35 +51,31 @@ public class VipCoreApi : IVipCoreApi
 
     public void RegisterFeature(VipFeatureBase vipFeatureBase, FeatureType featureType = FeatureType.Toggle)
     {
-        foreach (var config in _vipCore.Config.Groups)
-        {
-            if (vipFeatureBase.Feature == null || string.IsNullOrEmpty(vipFeatureBase.Feature)) continue;
-            config.Value.Values.TryAdd(vipFeatureBase.Feature, string.Empty);
-            foreach (var keyValuePair in config.Value.Values)
-            {
-                if (string.IsNullOrEmpty(keyValuePair.Value.ToString())) continue;
+        if (string.IsNullOrEmpty(vipFeatureBase.Feature)) return;
 
-                _vipCore.Features.TryAdd(vipFeatureBase.Feature, new Feature
-                {
-                    FeatureType = featureType,
-                    OnSelectItem = vipFeatureBase.OnSelectItem
-                });
-            }
-        }
+        foreach (var config in _vipCore.Config.Groups)
+            config.Value.Values.TryAdd(vipFeatureBase.Feature, string.Empty);
+
+        _vipCore.FeatureRegistry.Register(vipFeatureBase.Feature, new Feature
+        {
+            FeatureType = featureType,
+            OnSelectItem = vipFeatureBase.OnSelectItem
+        });
+
+        foreach (var vip in _vipCore.Players.Records)
+            _vipCore.ApplyFeatureStates(vip, onlyMissing: true);
 
         _vipCore.PrintLogInfo("Feature '{feature}' registered successfully", vipFeatureBase.Feature);
     }
 
     public void UnRegisterFeature(VipFeatureBase vipFeatureBase)
     {
+        if (string.IsNullOrEmpty(vipFeatureBase.Feature)) return;
+
         foreach (var config in _vipCore.Config.Groups)
-        {
-            if (vipFeatureBase.Feature != null)
-            {
-                config.Value.Values.Remove(vipFeatureBase.Feature);
-                _vipCore.Features.Remove(vipFeatureBase.Feature, out _);
-            }
-        }
+            config.Value.Values.Remove(vipFeatureBase.Feature);
+
+        _vipCore.FeatureRegistry.Unregister(vipFeatureBase.Feature);
 
         _vipCore.PrintLogInfo(
             "Feature '{feature}' unregistered successfully", vipFeatureBase.Feature);
@@ -97,63 +94,57 @@ public class VipCoreApi : IVipCoreApi
 
     public FeatureState GetPlayerFeatureState(CCSPlayerController player, string feature)
     {
-        if (!_vipCore.Users.TryGetValue(player.SteamID, out var user))
+        if (!_vipCore.Players.TryGetRecord(player, out var vip))
             throw new InvalidOperationException("player not found");
 
-        return user.FeatureState.GetValueOrDefault(feature, FeatureState.NoAccess);
+        return vip.IsExpired
+            ? FeatureState.NoAccess
+            : vip.FeatureStates.GetValueOrDefault(feature, FeatureState.NoAccess);
     }
 
     public void SetPlayerFeatureState(CCSPlayerController player, string feature, FeatureState newState)
     {
-        if (!_vipCore.Users.TryGetValue(player.SteamID, out var user))
+        if (!_vipCore.Players.TryGetRecord(player, out var vip))
             throw new InvalidOperationException("player not found");
 
-        if (!user.FeatureState.ContainsKey(feature))
+        if (!vip.FeatureStates.ContainsKey(feature))
             throw new InvalidOperationException("feature not found");
 
-        user.FeatureState[feature] = newState;
+        vip.FeatureStates[feature] = newState;
     }
 
     public void DisableAllFeatures()
     {
-        _vipCore.ForcedDisabledFeatures.Clear();
-
-        foreach (var feature in _vipCore.Features.Keys)
-        {
-            _vipCore.ForcedDisabledFeatures.Add(feature);
-        }
+        _vipCore.FeatureRegistry.DisableAll();
     }
 
     public void EnableAllFeatures()
     {
-        _vipCore.ForcedDisabledFeatures.Clear();
+        _vipCore.FeatureRegistry.EnableAll();
     }
 
     public bool IsClientVip(CCSPlayerController player)
     {
-        return _vipCore.IsPlayerVip(player) && _vipCore.IsCoreEnableConVar.Value;
+        return _vipCore.Players.IsVip(player);
     }
 
     public bool PlayerHasFeature(CCSPlayerController player, string feature)
     {
-        if (_vipCore.ForcedDisabledFeatures.Contains(feature)) return false;
+        if (_vipCore.FeatureRegistry.IsForcedDisabled(feature)) return false;
 
-        if (!_vipCore.Users.TryGetValue(player.SteamID, out var user)) return false;
+        if (!_vipCore.Players.TryGet(player, out var vip)) return false;
 
-        if (user is null or { group: null }) return false;
+        if (!_vipCore.Config.Groups.TryGetValue(vip.Group, out var vipGroup)) return false;
 
-        if (!_vipCore.Config.Groups.TryGetValue(user.group, out var vipGroup)) return false;
-
-        return vipGroup.Values.Any(vipGroupValue =>
-            vipGroupValue.Key == feature && !string.IsNullOrEmpty(vipGroupValue.Value.ToString()));
+        return vipGroup.Values.TryGetValue(feature, out var value) && !string.IsNullOrEmpty(value.ToString());
     }
 
     public string GetClientVipGroup(CCSPlayerController player)
     {
-        if (!_vipCore.Users.TryGetValue(player.SteamID, out var user))
+        if (!_vipCore.Players.TryGetRecord(player, out var vip))
             throw new InvalidOperationException("player not found");
 
-        return user.group;
+        return vip.Group;
     }
 
     public string[] GetVipGroups()
@@ -172,19 +163,12 @@ public class VipCoreApi : IVipCoreApi
 
         Task.Run(() => _vipCore.Database.UpdateUserVip(steamId.AccountId, name, group, time));
 
-        var user = _vipCore.CreateNewUser(steamId.AccountId, name, group, time);
-        if (!_vipCore.Users.TryAdd(steamId.SteamId64, user))
-        {
-            _vipCore.Users[steamId.SteamId64] = user;
-        }
-
-        OnPlayerLoaded(player, group);
+        if (_vipCore.Players.TryGetRecord(player, out var vip))
+            _vipCore.UpdateOnlineVip(player, vip, name, group, time);
     }
 
     public void SetClientVip(CCSPlayerController player, string group, int time)
     {
-        var name = player.PlayerName;
-
         var authSteamId = player.AuthorizedSteamID;
         if (authSteamId == null)
         {
@@ -192,30 +176,8 @@ public class VipCoreApi : IVipCoreApi
             return;
         }
 
-        var accountId = authSteamId.AccountId;
-        var steamId64 = authSteamId.SteamId64;
-
-        OnPlayerLoaded(player, group);
-        Task.Run(() => SetClientVipAsync(name, accountId, group, time, steamId64));
-    }
-
-    private async Task SetClientVipAsync(string name, int accountId, string group, int time,
-        ulong steamId64)
-    {
-        try
-        {
-            var user = _vipCore.CreateNewUser(accountId, name, group, time);
-            await _vipCore.Database.UpdateUserInDb(user);
-
-            if (_vipCore.Users.ContainsKey(steamId64))
-            {
-                _vipCore.Users[steamId64] = user;
-            }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-        }
+        var user = _vipCore.CreateNewUser(authSteamId.AccountId, player.PlayerName, group, time);
+        _vipCore.AddVip(player, user);
     }
 
     public void GiveClientTemporaryVip(CCSPlayerController player, string group, int time)
@@ -233,8 +195,6 @@ public class VipCoreApi : IVipCoreApi
         if (IsClientVip(player))
             throw new Exception($"Player {player.PlayerName} already has a VIP");
 
-        var name = player.PlayerName;
-
         var authSteamId = player.AuthorizedSteamID;
         if (authSteamId == null)
         {
@@ -242,15 +202,8 @@ public class VipCoreApi : IVipCoreApi
             return;
         }
 
-        var accountId = authSteamId.AccountId;
-        var steamId64 = authSteamId.SteamId64;
-
-        OnPlayerLoaded(player, group);
-
-        var user = _vipCore.CreateNewUser(accountId, name, group, time);
-        _vipCore.Users.TryAdd(steamId64, user);
-        _vipCore.SetClientFeature(steamId64, group);
-        _vipCore.IsClientVip[player.Slot] = true;
+        var user = _vipCore.CreateNewUser(authSteamId.AccountId, player.PlayerName, group, time);
+        _vipCore.Players.Set(player, VipPlayer.FromUser(user, authSteamId.SteamId64, isTemporary));
 
         if (!isTemporary)
         {
@@ -260,27 +213,13 @@ public class VipCoreApi : IVipCoreApi
 
     public void RemoveClientVip(CCSPlayerController player)
     {
-        var steamId = new SteamID(player.SteamID);
-
-        if (!_vipCore.Users.TryGetValue(steamId.SteamId64, out var user))
+        if (!_vipCore.Players.TryGetRecord(player, out var vip) || !_vipCore.Players.Remove(player))
             throw new InvalidOperationException("player not found");
 
-        OnPlayerRemoved(player, user.group);
-        _vipCore.IsClientVip[player.Slot] = false;
-        Task.Run(() => RemoveClientVipAsync(steamId));
-    }
+        if (vip.IsTemporary) return;
 
-    private async Task RemoveClientVipAsync(SteamID steamId)
-    {
-        try
-        {
-            _vipCore.Users.Remove(steamId.SteamId64, out _);
-            await _vipCore.Database.RemoveUserFromDb(steamId.AccountId);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-        }
+        var accountId = new SteamID(player.SteamID).AccountId;
+        Task.Run(() => _vipCore.Database.RemoveUserFromDb(accountId));
     }
 
     public void PrintToChat(CCSPlayerController player, string message)
@@ -332,10 +271,10 @@ public class VipCoreApi : IVipCoreApi
 
     public T GetFeatureValue<T>(CCSPlayerController player, string feature)
     {
-        if (!_vipCore.Users.TryGetValue(player.SteamID, out var user))
+        if (!_vipCore.Players.TryGetRecord(player, out var vip))
             throw new InvalidOperationException("User not found.");
 
-        if (_vipCore.Config.Groups.TryGetValue(user.group, out var vipGroup))
+        if (_vipCore.Config.Groups.TryGetValue(vip.Group, out var vipGroup))
         {
             if (vipGroup.Values.TryGetValue(feature, out var value))
             {
