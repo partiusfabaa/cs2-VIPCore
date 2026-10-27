@@ -66,7 +66,7 @@ public sealed class VipPlayers(VipCore core)
         return true;
     }
 
-    public void Forget(CCSPlayerController player) => _players.TryRemove(player.SteamID, out _);
+    public void Forget(VipPlayer vip) => _players.TryRemove(new KeyValuePair<ulong, VipPlayer>(vip.SteamId64, vip));
 
     public IEnumerable<VipPlayer> Records => _players.Values;
 

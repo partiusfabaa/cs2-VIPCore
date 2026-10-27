@@ -213,10 +213,15 @@ public class VipCoreApi : IVipCoreApi
 
     public void RemoveClientVip(CCSPlayerController player)
     {
-        if (!_vipCore.Players.TryGetRecord(player, out var vip) || !_vipCore.Players.Remove(player))
-            throw new InvalidOperationException("player not found");
-
-        if (vip.IsTemporary) return;
+        if (_vipCore.Players.TryGetRecord(player, out var vip) && _vipCore.Players.Remove(player))
+        {
+            if (vip.IsTemporary) return;
+        }
+        else
+        {
+            _vipCore.PrintLogWarning("RemoveClientVip: player {name} is not loaded as VIP, removing from database only",
+                player.PlayerName);
+        }
 
         var accountId = new SteamID(player.SteamID).AccountId;
         Task.Run(() => _vipCore.Database.RemoveUserFromDb(accountId));

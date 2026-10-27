@@ -109,7 +109,7 @@ public class VipCore : BasePlugin
                 VipApi.SetPlayerCookie(player.SteamID, key, (int)state);
         }
 
-        Players.Forget(player);
+        Server.NextFrame(() => Players.Forget(vip));
 
         if (vip.IsTemporary) return HookResult.Continue;
 
