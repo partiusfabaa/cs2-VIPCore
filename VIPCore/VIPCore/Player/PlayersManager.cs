@@ -53,7 +53,11 @@ public class PlayersManager
 
     public bool TryGetPlayer(CCSPlayerController player, [NotNullWhen(true)] out VipPlayer? vipPlayer)
     {
-        vipPlayer = player.Slot >= 0 && player.Slot < _players.Length ? _players[player.Slot] : null;
+        vipPlayer = null;
+        if (player is not { IsValid: true }) return false;
+
+        var slot = player.Slot;
+        vipPlayer = slot >= 0 && slot < _players.Length ? _players[slot] : null;
         return vipPlayer != null;
     }
 
@@ -93,7 +97,7 @@ public class PlayersManager
         if (player.Data is null || player.IsTemporary) return;
 
         var accountId = player.SteamId.AccountId;
-        var name = player.Controller.PlayerName;
+        var name = player.Controller.IsValid ? player.Controller.PlayerName : player.Data.Name;
         Task.Run(() => _database.UpdateLastVisitAsync(accountId, name));
     }
 

@@ -126,6 +126,7 @@ public class VipCoreApi : IVipCoreApi
 
     public void UpdatePlayerVip(CCSPlayerController player, string name = "", string group = "", int time = -1)
     {
+        if (!IsValidPlayer(player, nameof(UpdatePlayerVip))) return;
         if (!string.IsNullOrEmpty(group) && !GroupExists(group)) return;
 
         _players.UpdateVip(GetAccountId(player), player,
@@ -136,6 +137,7 @@ public class VipCoreApi : IVipCoreApi
 
     public void SetPlayerVip(CCSPlayerController player, string group, int time)
     {
+        if (!IsValidPlayer(player, nameof(SetPlayerVip))) return;
         if (!GroupExists(group)) return;
 
         _players.GiveVip(player, CreateVipData(player, group, time));
@@ -153,6 +155,8 @@ public class VipCoreApi : IVipCoreApi
 
     private void GivePlayerVip(CCSPlayerController player, string group, int time, bool isTemporary)
     {
+        if (!IsValidPlayer(player, nameof(GivePlayerVip))) return;
+
         if (_players.TryGetPlayer(player, out var vipPlayer) && vipPlayer.IsVip)
         {
             _plugin.LogWarning("GivePlayerVip: player {name} already has VIP '{group}'", player.PlayerName,
@@ -167,6 +171,8 @@ public class VipCoreApi : IVipCoreApi
 
     public void RemovePlayerVip(CCSPlayerController player)
     {
+        if (!IsValidPlayer(player, nameof(RemovePlayerVip))) return;
+
         if (!_players.TryGetPlayer(player, out var vipPlayer) || vipPlayer.Data is null)
             _plugin.LogWarning("RemovePlayerVip: player {name} is not loaded as VIP, removing from database only",
                 player.PlayerName);
@@ -289,6 +295,14 @@ public class VipCoreApi : IVipCoreApi
 
     private VipData CreateVipData(CCSPlayerController player, string group, int time) =>
         _players.CreateVipData(GetAccountId(player), player.PlayerName, group, _plugin.ExpiresIn(time));
+
+    private bool IsValidPlayer(CCSPlayerController? player, string method)
+    {
+        if (player is { IsValid: true }) return true;
+
+        _plugin.LogWarning("{method}: player is not valid", method);
+        return false;
+    }
 
     private static int GetAccountId(CCSPlayerController player) =>
         (player.AuthorizedSteamID ?? new SteamID(player.SteamID)).AccountId;

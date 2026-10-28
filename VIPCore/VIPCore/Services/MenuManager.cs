@@ -299,7 +299,8 @@ public class MenuManager
 
     private HookResult OnSayCommand(CCSPlayerController? player, CommandInfo command)
     {
-        if (player is null || !_pendingCustomTime.TryRemove(player.SteamID, out var pending) || !HasAdminAccess(player))
+        if (_pendingCustomTime.IsEmpty || player is not { IsValid: true, IsBot: false } ||
+            !_pendingCustomTime.TryRemove(player.SteamID, out var pending) || !HasAdminAccess(player))
             return HookResult.Continue;
 
         if (!int.TryParse(command.GetArg(1), out var seconds) || seconds < 0)
