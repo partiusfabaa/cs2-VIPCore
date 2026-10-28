@@ -36,7 +36,6 @@ public class VipGravity : BasePlugin
 
 public class Gravity : VipFeature<float>
 {
-    private readonly MoveType_t[] _oldMoveType = new MoveType_t[70];
     private readonly CCSPlayerController?[] _players = new CCSPlayerController?[65];
 
     public Gravity(VipGravity vipGravity, IVipCoreApi api) : base("Gravity", api)
@@ -56,15 +55,10 @@ public class Gravity : VipFeature<float>
                 }
 
                 var playerPawn = player.PlayerPawn.Value;
-                if (playerPawn is null) continue;
+                if (playerPawn is null || !player.PawnIsAlive ||
+                    playerPawn.ActualMoveType is MoveType_t.MOVETYPE_LADDER) continue;
 
-                if (_oldMoveType[slot] is MoveType_t.MOVETYPE_LADDER &&
-                    playerPawn.ActualMoveType is not MoveType_t.MOVETYPE_LADDER)
-                {
-                    playerPawn.GravityScale = GetValue(player);
-                }
-
-                _oldMoveType[slot] = playerPawn.ActualMoveType;
+                SetGravity(playerPawn, GetValue(player));
             }
         });
 
@@ -77,7 +71,11 @@ public class Gravity : VipFeature<float>
 
     public override void OnPlayerAuthorized(CCSPlayerController player, string group) => UpdatePlayer(player);
 
-    public override void OnPlayerRemoved(CCSPlayerController player, string group) => _players[player.Slot] = null;
+    public override void OnPlayerRemoved(CCSPlayerController player, string group)
+    {
+        _players[player.Slot] = null;
+        ResetGravity(player);
+    }
 
     public override void OnPlayerDisconnect(CCSPlayerController player, bool vip) => _players[player.Slot] = null;
 
@@ -98,25 +96,35 @@ public class Gravity : VipFeature<float>
 
         if (playerPawnValue == null) return;
 
-        playerPawnValue.GravityScale = GetValue(player);
+        SetGravity(playerPawnValue, GetValue(player));
     }
 
     public override void OnSelectItem(CCSPlayerController player, VipFeature feature)
     {
         UpdatePlayer(player);
 
-        var state = GetPlayerFeatureState(player);
         var playerPawnValue = player.PlayerPawn.Value;
+        if (playerPawnValue == null) return;
 
-        if (state == FeatureState.Disabled)
-        {
-            if (playerPawnValue != null)
-                playerPawnValue.GravityScale = 1.0f;
-            return;
-        }
+        if (GetPlayerFeatureState(player) is FeatureState.Enabled)
+            SetGravity(playerPawnValue, GetValue(player));
+        else
+            SetGravity(playerPawnValue, 1.0f);
+    }
 
-        if (playerPawnValue != null)
-            playerPawnValue.GravityScale = GetValue(player);
+    private static void ResetGravity(CCSPlayerController player)
+    {
+        if (player.IsValid && player.PlayerPawn.Value is { } playerPawn)
+            SetGravity(playerPawn, 1.0f);
+    }
+
+    private static void SetGravity(CCSPlayerPawn playerPawn, float gravity)
+    {
+        if (Math.Abs(playerPawn.GravityScale - gravity) < 0.0001f &&
+            Math.Abs(playerPawn.ActualGravityScale - gravity) < 0.0001f) return;
+
+        playerPawn.GravityScale = gravity;
+        playerPawn.ActualGravityScale = gravity;
     }
 
     public override void OnFeatureDisplay(FeatureDisplayArgs args)

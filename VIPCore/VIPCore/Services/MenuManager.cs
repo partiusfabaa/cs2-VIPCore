@@ -3,6 +3,7 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Menu;
 using Microsoft.Extensions.Logging;
 using VIPCore.Configs;
 using VIPCore.Player;
@@ -84,7 +85,9 @@ public class MenuManager
                 Controller = player,
                 Feature = feature,
                 State = state,
-                Display = feature.Type is FeatureType.Toggle ? $"[{StateText(player, state)}]" : string.Empty
+                Display = feature.Type is FeatureType.Toggle
+                    ? $"[{MenuStateText(player, state, menu is CenterHtmlMenu)}]"
+                    : string.Empty
             };
 
             try
@@ -159,6 +162,27 @@ public class MenuManager
         FeatureState.Disabled => _plugin.Translate(player, "chat.Disabled"),
         _ => _plugin.Translate(player, "chat.NoAccess")
     };
+
+    private string MenuStateText(CCSPlayerController player, FeatureState state, bool html)
+    {
+        var text = state switch
+        {
+            FeatureState.Enabled => _plugin.Translate(player, "menu.Enabled"),
+            FeatureState.Disabled => _plugin.Translate(player, "menu.Disabled"),
+            _ => _plugin.Translate(player, "menu.NoAccess")
+        };
+
+        if (!html) return text;
+
+        var color = state switch
+        {
+            FeatureState.Enabled => "#3cdc3c",
+            FeatureState.Disabled => "#ff4d4d",
+            _ => "#a0a0a0"
+        };
+
+        return $"<font color='{color}'>{text}</font>";
+    }
 
     private bool HasAdminAccess(CCSPlayerController? player) =>
         player is not null && AdminManager.PlayerHasPermissions(player, _coreConfig.Value.AdminMenuPermission);

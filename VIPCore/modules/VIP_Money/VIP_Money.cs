@@ -64,7 +64,7 @@ public class Money(IVipCoreApi api) : VipFeature<string>("Money", api)
             moneyServices.Account = money > maxMoney ? maxMoney : money;
         }
         
-        Utilities.SetStateChanged(player, "CCSPlayerController_InGameMoneyServices", "m_iAccount");
+        Utilities.SetStateChanged(player, "CCSPlayerController", "m_pInGameMoneyServices");
     }
 
     public override void OnFeatureDisplay(FeatureDisplayArgs args)

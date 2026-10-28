@@ -38,6 +38,8 @@ public class VIP_Bhop : BasePlugin
 
 public class Bhop : VipFeature<BhopSettings>
 {
+    private const float SpeedCapSmoothing = 0.5f;
+
     private readonly VIP_Bhop _vipBhop;
     private readonly BhopSettings[] _bhopSettings = new BhopSettings[70];
     private readonly CCSPlayerController?[] _players = new CCSPlayerController?[65];
@@ -140,8 +142,9 @@ public class Bhop : VipFeature<BhopSettings>
         if (flags.HasFlag(PlayerFlags.FL_ONGROUND) && buttons.HasFlag(PlayerButtons.Jump))
         {
             var maxSpeed = _bhopSettings[player.Slot].MaxSpeed;
-            if (Math.Round(playerPawn.AbsVelocity.Length2D()) > maxSpeed && maxSpeed is not 0)
-                ChangeVelocity(playerPawn, maxSpeed);
+            var speed = playerPawn.AbsVelocity.Length2D();
+            if (maxSpeed > 0 && speed > maxSpeed)
+                ChangeVelocity(playerPawn, maxSpeed + (speed - maxSpeed) * SpeedCapSmoothing);
 
             playerPawn.AbsVelocity.Z = 300;
             SetBunnyhop(player, true);
@@ -190,12 +193,12 @@ public class Bhop : VipFeature<BhopSettings>
     {
         if (pawn == null) return;
 
-        var currentVelocity = new Vector(pawn.AbsVelocity.X, pawn.AbsVelocity.Y, pawn.AbsVelocity.Z);
-        var currentSpeed = Math.Sqrt(currentVelocity.X * currentVelocity.X + currentVelocity.Y * currentVelocity.Y +
-                                     currentVelocity.Z * currentVelocity.Z);
+        var currentSpeed = pawn.AbsVelocity.Length2D();
+        if (currentSpeed <= 0) return;
 
-        pawn.AbsVelocity.X = (float)(currentVelocity.X / currentSpeed) * vel;
-        pawn.AbsVelocity.Y = (float)(currentVelocity.Y / currentSpeed) * vel;
+        var scale = vel / currentSpeed;
+        pawn.AbsVelocity.X *= scale;
+        pawn.AbsVelocity.Y *= scale;
     }
 
     private CCSGameRules? GetGameRules()
