@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Utils;
 using VipCoreApi;
 using VipCoreApi.Enums;
+using VipCoreApi.Args;
 
 namespace VIP_DecoyTeleport;
 
@@ -96,5 +97,15 @@ public class DecoyTeleport : VipFeature<int>
         new CBaseCSGrenadeProjectile(decoyIndex).Remove();
 
         return HookResult.Continue;
+    }
+
+    public override void OnFeatureDisplay(FeatureDisplayArgs args)
+    {
+        if (args.State != FeatureState.Enabled) return;
+
+        var limit = GetValue(args.Controller);
+        args.Display = limit > 0
+            ? $"[{Math.Max(limit - _decoyCount[args.Controller.Index], 0)}/{limit}]"
+            : "[∞]";
     }
 }

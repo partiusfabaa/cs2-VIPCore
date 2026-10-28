@@ -2,6 +2,7 @@
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
 using VipCoreApi.Enums;
+using VipCoreApi.Args;
 
 namespace VIP_AntiFlash;
 
@@ -72,5 +73,20 @@ public class AntiFlash : VipFeature<int>
 
             return HookResult.Continue;
         });
+    }
+
+    public override void OnFeatureDisplay(FeatureDisplayArgs args)
+    {
+        if (args.State != FeatureState.Enabled) return;
+
+        var mode = GetValue(args.Controller) switch
+        {
+            1 => "antiflash.Team",
+            2 => "antiflash.Self",
+            3 => "antiflash.TeamSelf",
+            _ => "antiflash.All"
+        };
+
+        args.Display = $"[{GetTranslatedText(args.Controller, mode)}]";
     }
 }

@@ -5,6 +5,7 @@ using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Utils;
 using VipCoreApi;
 using VipCoreApi.Enums;
+using VipCoreApi.Args;
 
 namespace VIP_Gravity;
 
@@ -116,5 +117,13 @@ public class Gravity : VipFeature<float>
 
         if (playerPawnValue != null)
             playerPawnValue.GravityScale = GetValue(player);
+    }
+
+    public override void OnFeatureDisplay(FeatureDisplayArgs args)
+    {
+        if (args.State != FeatureState.Enabled) return;
+
+        var percent = (int)MathF.Round((GetValue(args.Controller) - 1) * 100);
+        args.Display = percent > 0 ? $"[+{percent}%]" : $"[{percent}%]";
     }
 }

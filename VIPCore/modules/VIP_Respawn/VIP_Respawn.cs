@@ -5,6 +5,7 @@ using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using VipCoreApi;
 using VipCoreApi.Enums;
+using VipCoreApi.Args;
 
 namespace VIP_Respawn;
 
@@ -99,5 +100,13 @@ public class Respawn : VipFeature<int>
         VirtualFunction.CreateVoid<CCSPlayerController>(player.Handle, GameData.GetOffset("CCSPlayerController_Respawn"))(player);
         _usedRespawns[player.Index] ++;
         PrintToChat(player, GetTranslatedText("respawn.Success"));
+    }
+
+    public override void OnFeatureDisplay(FeatureDisplayArgs args)
+    {
+        var limit = GetValue(args.Controller);
+        var left = Math.Max(limit - (_usedRespawns[args.Controller.Index] ?? 0), 0);
+
+        args.Display = $"[{left}/{limit}]";
     }
 }

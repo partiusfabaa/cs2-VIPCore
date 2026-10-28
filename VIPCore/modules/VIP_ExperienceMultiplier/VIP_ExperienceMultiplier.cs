@@ -3,6 +3,8 @@ using CounterStrikeSharp.API.Core.Capabilities;
 using RanksApi;
 using VipCoreApi;
 using VipCoreApi.Enums;
+using VipCoreApi.Args;
+using System.Globalization;
 
 namespace VIP_ExperienceMultiplier;
 
@@ -62,5 +64,11 @@ public class ExperienceMultiplier : VipFeature<float>
         if (!vip || !PlayerHasFeature(player)) return;
 
         _multiplier[player.Slot] = GetPlayerFeatureState(player) is FeatureState.Enabled ? GetValue(player) : 1;
+    }
+
+    public override void OnFeatureDisplay(FeatureDisplayArgs args)
+    {
+        if (args.State == FeatureState.Enabled)
+            args.Display = $"[x{GetValue(args.Controller).ToString("0.##", CultureInfo.InvariantCulture)}]";
     }
 }

@@ -3,6 +3,8 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
 using VipCoreApi.Enums;
+using VipCoreApi.Args;
+using System.Globalization;
 
 namespace VIP_Vampirism;
 
@@ -59,5 +61,11 @@ public class Vampirism : VipFeature<float>
 
             return HookResult.Continue;
         });
+    }
+
+    public override void OnFeatureDisplay(FeatureDisplayArgs args)
+    {
+        if (args.State == FeatureState.Enabled)
+            args.Display = $"[{GetValue(args.Controller).ToString("0.#", CultureInfo.InvariantCulture)}%]";
     }
 }

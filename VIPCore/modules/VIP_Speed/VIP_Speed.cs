@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
 using VipCoreApi.Enums;
+using VipCoreApi.Args;
 
 namespace VIP_Speed;
 
@@ -122,5 +123,13 @@ public class SpeedModifier : VipFeature<float>
 
         playerPawn.VelocityModifier = speedModifierValue;
         Utilities.SetStateChanged(playerPawn, "CCSPlayerPawn", "m_flVelocityModifier");
+    }
+
+    public override void OnFeatureDisplay(FeatureDisplayArgs args)
+    {
+        if (args.State != FeatureState.Enabled) return;
+
+        var percent = (int)MathF.Round((GetValue(args.Controller) - 1) * 100);
+        args.Display = percent > 0 ? $"[+{percent}%]" : $"[{percent}%]";
     }
 }

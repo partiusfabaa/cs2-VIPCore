@@ -1,6 +1,7 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
+using VipCoreApi.Args;
 using VipCoreApi.Enums;
 
 namespace VIP_Armor;
@@ -45,5 +46,11 @@ public class Armor(IVipCoreApi api) : VipFeature<int>("Armor", api)
             new CCSPlayer_ItemServices(playerPawn.ItemServices.Handle).HasHelmet = true;
 
         playerPawn.ArmorValue = armorValue;
+    }
+
+    public override void OnFeatureDisplay(FeatureDisplayArgs args)
+    {
+        if (args.State == FeatureState.Enabled)
+            args.Display = $"[{GetValue(args.Controller)}]";
     }
 }

@@ -3,6 +3,8 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
 using CounterStrikeSharp.API.Modules.Cvars;
+using VipCoreApi.Args;
+using VipCoreApi.Enums;
 
 namespace VIP_Money;
 
@@ -63,5 +65,15 @@ public class Money(IVipCoreApi api) : VipFeature<string>("Money", api)
         }
         
         Utilities.SetStateChanged(player, "CCSPlayerController_InGameMoneyServices", "m_iAccount");
+    }
+
+    public override void OnFeatureDisplay(FeatureDisplayArgs args)
+    {
+        if (args.State != FeatureState.Enabled) return;
+
+        var value = GetValue(args.Controller);
+        if (string.IsNullOrWhiteSpace(value)) return;
+
+        args.Display = value.Contains("++") ? $"[+{value.Split("++")[1]}$]" : $"[{value}$]";
     }
 }

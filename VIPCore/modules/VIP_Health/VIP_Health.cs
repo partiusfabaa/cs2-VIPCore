@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Memory;
 using VipCoreApi;
+using VipCoreApi.Args;
 using VipCoreApi.Enums;
 
 namespace VIP_Health;
@@ -46,11 +47,16 @@ public class Health : VipFeature<int>
         var playerPawn = player.PlayerPawn.Value;
 
         var healthValue = GetValue(player);
-
         if (healthValue <= 0 || playerPawn == null) return;
 
         playerPawn.Health = healthValue;
         playerPawn.MaxHealth = healthValue;
         Utilities.SetStateChanged(playerPawn, "CBaseEntity", "m_iHealth");
+    }
+    
+    public override void OnFeatureDisplay(FeatureDisplayArgs args)
+    {
+        if (args.State == FeatureState.Enabled)
+            args.Display = $"[{GetValue(args.Controller)}]";
     }
 }

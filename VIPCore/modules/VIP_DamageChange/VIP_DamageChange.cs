@@ -5,6 +5,8 @@ using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using VipCoreApi;
 using VipCoreApi.Enums;
+using VipCoreApi.Args;
+using System.Globalization;
 
 namespace VIP_DamageChange;
 
@@ -86,5 +88,11 @@ public class DamageMultiplier : VipFeature<float>
         }
         
         return HookResult.Continue;
+    }
+
+    public override void OnFeatureDisplay(FeatureDisplayArgs args)
+    {
+        if (args.State == FeatureState.Enabled)
+            args.Display = $"[x{GetValue(args.Controller).ToString("0.##", CultureInfo.InvariantCulture)}]";
     }
 }

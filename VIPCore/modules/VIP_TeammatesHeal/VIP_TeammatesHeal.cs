@@ -4,6 +4,9 @@ using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using VipCoreApi;
+using VipCoreApi.Args;
+using VipCoreApi.Enums;
+using System.Globalization;
 
 namespace VIP_TeammatesHeal;
 
@@ -145,5 +148,11 @@ public class TeammatesHeal : VipFeature<float>
     {
         VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Unhook(OnTakeDamage, HookMode.Pre);
         base.Dispose();
+    }
+
+    public override void OnFeatureDisplay(FeatureDisplayArgs args)
+    {
+        if (args.State == FeatureState.Enabled)
+            args.Display = $"[{GetValue(args.Controller).ToString("0.#", CultureInfo.InvariantCulture)}%]";
     }
 }
