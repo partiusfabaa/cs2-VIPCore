@@ -41,8 +41,7 @@ public class Health : VipFeature<int>
 
     public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
-        if (!vip || !PlayerHasFeature(player)) return;
-        if (GetPlayerFeatureState(player) is not FeatureState.Enabled) return;
+        if (!vip || !IsFeatureEnabled(player)) return;
 
         var playerPawn = player.PlayerPawn.Value;
 

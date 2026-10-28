@@ -42,11 +42,8 @@ public class Vampirism : VipFeature<float>
 
             if (attacker == @event.Userid) return HookResult.Continue;
 
-            if (IsPlayerVip(attacker) && PlayerHasFeature(attacker) && attacker.PawnIsAlive)
+            if (IsFeatureEnabled(attacker) && attacker.PawnIsAlive)
             {
-                if (GetPlayerFeatureState(attacker) is not FeatureState.Enabled)
-                    return HookResult.Continue;
-
                 var attackerPawn = attacker.PlayerPawn.Value;
                 if (attackerPawn == null) return HookResult.Continue;
 

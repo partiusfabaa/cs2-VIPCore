@@ -41,7 +41,7 @@ public class AntiFlash : VipFeature<int>
             var player = @event.Userid;
             if (player == null || !player.IsValid) return HookResult.Continue;
 
-            if (!IsPlayerVip(player) || !PlayerHasFeature(player) || GetPlayerFeatureState(player) is not FeatureState.Enabled) return HookResult.Continue;
+            if (!IsFeatureEnabled(player)) return HookResult.Continue;
 
             var featureValue = GetValue(player);
             var attacker = @event.Attacker;

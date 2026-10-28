@@ -43,9 +43,7 @@ public class FastPlant : VipFeature<bool>
             var playerPawn = player.PlayerPawn.Value;
             if (playerPawn == null) return HookResult.Continue;
 
-            if (!IsPlayerVip(player) || !PlayerHasFeature(player) ||
-                GetPlayerFeatureState(player) is not FeatureState.Enabled ||
-                !player.PawnIsAlive) return HookResult.Continue;
+            if (!IsFeatureEnabled(player) || !player.PawnIsAlive) return HookResult.Continue;
 
             if (!GetValue(player)) return HookResult.Continue;
 

@@ -109,11 +109,7 @@ public class CustomDefaultAmmo : VipFeature<string>
             player.Connected != PlayerConnectedState.Connected)
             return HookResult.Continue;
 
-        if (!PlayerHasFeature(player) || !_customEnabled[player.Slot])
-            return HookResult.Continue;
-
-        if (GetPlayerFeatureState(player) is FeatureState.Disabled
-            or FeatureState.NoAccess)
+        if (!IsFeatureEnabled(player) || !_customEnabled[player.Slot])
             return HookResult.Continue;
 
         var groupName = GetValue(player);
@@ -201,11 +197,7 @@ public class CustomDefaultAmmo : VipFeature<string>
             if (ownerController.IsBot || ownerController.Connected != PlayerConnectedState.Connected)
                 return;
 
-            if (!PlayerHasFeature(ownerController) || !_customEnabled[ownerController.Slot])
-                return;
-
-            if (GetPlayerFeatureState(ownerController) is FeatureState.Disabled
-                or FeatureState.NoAccess)
+            if (!IsFeatureEnabled(ownerController) || !_customEnabled[ownerController.Slot])
                 return;
 
             var groupName = GetValue(ownerController);

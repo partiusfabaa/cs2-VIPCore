@@ -63,7 +63,7 @@ public class WeaponsMenu : VipFeature
     private void OnVwMenuCommand(CCSPlayerController? caller, CommandInfo command)
     {
         if (caller == null || !caller.IsValid) return;
-        if (!IsPlayerVip(caller) || !PlayerHasFeature(caller) || GetPlayerFeatureState(caller) is not FeatureState.Enabled)
+        if (!IsFeatureEnabled(caller))
             return;
 
         RemovePlayerSelection(caller);
@@ -101,7 +101,7 @@ public class WeaponsMenu : VipFeature
         if (player == null || !player.IsValid || player.IsBot || player.TeamNum < 2)
             return HookResult.Continue;
 
-        if (!IsPlayerVip(player) || !PlayerHasFeature(player) || GetPlayerFeatureState(player) is not FeatureState.Enabled)
+        if (!IsFeatureEnabled(player))
             return HookResult.Continue;
 
         MenuManager.CloseActiveMenu(player);

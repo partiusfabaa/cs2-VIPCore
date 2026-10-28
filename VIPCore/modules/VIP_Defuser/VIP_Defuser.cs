@@ -57,9 +57,7 @@ public class Defuser : VipFeature
     public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
         if (!vip) return;
-        if (!PlayerHasFeature(player)) return;
-        if (GetPlayerFeatureState(player) is FeatureState.Disabled
-            or FeatureState.NoAccess) return;
+        if (!IsFeatureEnabled(player)) return;
             
         if (player == null) return;
         

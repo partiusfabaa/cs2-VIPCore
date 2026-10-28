@@ -190,12 +190,12 @@ public abstract class VipFeature : IDisposable
     public IMenu CreateMenu(string title) => Api.CreateMenu(title);
 
     /// <summary>
-    /// Checks if the player is valid for using this feature, i.e. is VIP, has access to the feature, and the feature is enabled.
+    /// Checks if the feature works for the player right now: the player is VIP, their group has the feature, and it is enabled.
     /// </summary>
     /// <param name="player">The player to check.</param>
-    /// <returns><c>true</c> if the player meets all criteria; otherwise, <c>false</c>.</returns>
-    public bool IsPlayerValid(CCSPlayerController player)
-        => IsPlayerVip(player) && PlayerHasFeature(player) && GetPlayerFeatureState(player) is FeatureState.Enabled;
+    /// <returns><c>true</c> if the feature is enabled for the player; otherwise, <c>false</c>.</returns>
+    public bool IsFeatureEnabled(CCSPlayerController player)
+        => GetPlayerFeatureState(player) is FeatureState.Enabled;
 
     /// <summary>
     /// Checks if the specified player is VIP.

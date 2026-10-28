@@ -48,8 +48,7 @@ public class VIPFastReload : BasePlugin
 
         private void ApplyFastReload(CCSPlayerController player)
         {
-            if (!PlayerHasFeature(player)) return;
-            if (GetPlayerFeatureState(player) is FeatureState.Disabled or FeatureState.NoAccess) return;
+            if (!IsFeatureEnabled(player)) return;
 
             CBasePlayerWeapon? activeWeapon = player.PlayerPawn.Value?.WeaponServices?.ActiveWeapon.Value;
             if (activeWeapon == null) return;

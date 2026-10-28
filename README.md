@@ -131,7 +131,7 @@ public class MyFeature : VipFeature<int>
 
     public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
-        if (!vip || !IsPlayerValid(player)) return;
+        if (!vip || !IsFeatureEnabled(player)) return;
 
         PrintToChat(player, $"VIP player - {player.PlayerName} has spawned, value: {GetValue(player)}");
     }

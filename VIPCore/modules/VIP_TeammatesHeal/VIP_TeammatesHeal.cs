@@ -80,8 +80,7 @@ public class TeammatesHeal : VipFeature<float>
 
         if (attacker != player &&
             attacker.Team == player.Team &&
-            IsPlayerVip(attacker) &&
-            PlayerHasFeature(attacker))
+            IsFeatureEnabled(attacker))
         {
             var weapon = damageInfo.Inflictor.Value?.As<CBasePlayerWeapon>();
             if (weapon is null)

@@ -57,10 +57,7 @@ public class SmokeColor : VipFeature<int[]>
             if (throwerValueController == null) return;
             var controller = new CCSPlayerController(throwerValueController.Handle);
 
-            if (!IsPlayerVip(controller)) return;
-            if (!PlayerHasFeature(controller)) return;
-            if (GetPlayerFeatureState(controller) is not FeatureState.Enabled)
-                return;
+            if (!IsFeatureEnabled(controller)) return;
             
             var smokeColor = GetValue(controller)!;
 

@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities;
 using VipCoreApi.Enums;
@@ -24,7 +25,15 @@ public class VipPlayer(CCSPlayerController controller, SteamID steamId)
     public string Group => Data?.Group ?? string.Empty;
 
     public bool HasFeature(string feature) =>
-        Features != null && Features.TryGetValue(feature, out var value) && !string.IsNullOrEmpty(value.ToString());
+        Features != null && Features.TryGetValue(feature, out var value) && !IsEmpty(value);
+
+    private static bool IsEmpty(object value) => value switch
+    {
+        JsonElement { ValueKind: JsonValueKind.Null or JsonValueKind.Undefined } => true,
+        JsonElement { ValueKind: JsonValueKind.String } element => string.IsNullOrEmpty(element.GetString()),
+        JsonElement => false,
+        _ => string.IsNullOrEmpty(value.ToString())
+    };
 
     public void Clear()
     {

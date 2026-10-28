@@ -51,10 +51,8 @@ public class NoFallDamage : VipFeature<bool>
         var damageInfo = hook.GetParam<CTakeDamageInfo>(1);
 
         if (damageInfo.BitsDamageType.HasFlag(DamageTypes_t.DMG_FALL) 
-            && IsPlayerVip(player) 
-            && PlayerHasFeature(player) 
-            && GetValue(player)
-            && GetPlayerFeatureState(player) is FeatureState.Enabled)
+            && IsFeatureEnabled(player)
+            && GetValue(player))
         {
             return HookResult.Handled;
         }

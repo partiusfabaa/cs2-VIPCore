@@ -128,8 +128,7 @@ public class ShowDamageFeature : VipFeature
             return HookResult.Continue;
 
         // Must have ShowDamage AND be enabled
-        if (!PlayerHasFeature(ev.Attacker) ||
-            Api.GetPlayerFeatureState(ev.Attacker, "ShowDamage") != FeatureState.Enabled)
+        if (!IsFeatureEnabled(ev.Attacker))
             return HookResult.Continue;
 
         int attackerUserId = ev.Attacker.UserId!.Value;

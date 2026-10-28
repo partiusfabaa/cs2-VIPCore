@@ -59,7 +59,7 @@ public class DamageMultiplier : VipFeature<float>
 
         if (player.IsValid)
         {
-            if (!PlayerHasFeature(player) || GetPlayerFeatureState(player) is not FeatureState.Enabled)
+            if (!IsFeatureEnabled(player))
                 return HookResult.Continue;
 
             var weaponBase = damageInfo.Ability.Value?.As<CCSWeaponBase>();

@@ -63,9 +63,7 @@ public class InfiniteAmmo : VipFeature<Config>
 	{
 		if (player == null) return;
 		
-		if (!PlayerHasFeature(player)) return;
-        if (GetPlayerFeatureState(player) is FeatureState.Disabled
-            or FeatureState.NoAccess) return;
+		if (!IsFeatureEnabled(player)) return;
 		
 		_config = GetValue(player);
 

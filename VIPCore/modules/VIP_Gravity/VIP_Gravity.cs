@@ -84,15 +84,14 @@ public class Gravity : VipFeature<float>
     {
         if (player is not { IsValid: true, IsBot: false }) return;
 
-        _players[player.Slot] = IsPlayerValid(player) ? player : null;
+        _players[player.Slot] = IsFeatureEnabled(player) ? player : null;
     }
 
     public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
         UpdatePlayer(player);
 
-        if (!vip || !PlayerHasFeature(player)) return;
-        if (GetPlayerFeatureState(player) is not FeatureState.Enabled) return;
+        if (!vip || !IsFeatureEnabled(player)) return;
 
         var playerPawnValue = player.PlayerPawn.Value;
 

@@ -68,6 +68,9 @@ public class VipCoreApi : IVipCoreApi
         if (!_players.TryGetPlayer(player, out var vipPlayer) || !vipPlayer.FeatureStates.ContainsKey(feature))
             return;
 
+        if (newState is not FeatureState.NoAccess && !vipPlayer.HasFeature(feature))
+            return;
+
         vipPlayer.FeatureStates[feature] = newState;
     }
 

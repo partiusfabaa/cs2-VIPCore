@@ -37,7 +37,7 @@ public class Money(IVipCoreApi api) : VipFeature<string>("Money", api)
     {
         if (!vip) return;
         if (IsPistolRound()) return;
-        if (!IsPlayerValid(player)) return;
+        if (!IsFeatureEnabled(player)) return;
 
         var moneyServices = player.InGameMoneyServices;
         if (moneyServices == null) return;

@@ -67,8 +67,7 @@ public class RainbowModel : VipFeature<bool>
     public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
         if (!vip) return;
-        if (!PlayerHasFeature(player)) return;
-        if (GetPlayerFeatureState(player) is not FeatureState.Enabled) return;
+        if (!IsFeatureEnabled(player)) return;
 
         var playerPawnValue = player.PlayerPawn.Value;
 

@@ -99,7 +99,7 @@ public class Bhop : VipFeature<BhopSettings>
     {
         if (player is not { IsValid: true, IsBot: false }) return;
 
-        if (!IsPlayerValid(player))
+        if (!IsFeatureEnabled(player))
         {
             RemovePlayer(player);
             return;
@@ -162,9 +162,7 @@ public class Bhop : VipFeature<BhopSettings>
             {
                 settings.Active = false;
 
-                if (!IsPlayerVip(player) ||
-                    !PlayerHasFeature(player) ||
-                    GetPlayerFeatureState(player) is not FeatureState.Enabled) continue;
+                if (!IsFeatureEnabled(player)) continue;
 
                 SetBunnyhop(player, false);
 

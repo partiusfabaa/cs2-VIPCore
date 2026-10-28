@@ -52,9 +52,8 @@ public class RegenHealth : VipFeature<Regen>
         {
             var player = @event.Userid;
 
-            if (IsPlayerVip(player) && PlayerHasFeature(player) && @event.DmgHealth > 0)
+            if (player != null && IsFeatureEnabled(player) && @event.DmgHealth > 0)
             {
-                if (GetPlayerFeatureState(player) is not FeatureState.Enabled) return HookResult.Continue;
                 _isRegenActive[player.Slot] = true;
                 _regen[player.Slot] = GetValue(player)!;
                 _regenInterval[player.Slot] = _regen[player.Slot].Interval;
@@ -69,7 +68,7 @@ public class RegenHealth : VipFeature<Regen>
         foreach (var player in Utilities.GetPlayers()
                      .Where(u => u.PlayerPawn.Value != null && u.PlayerPawn.Value.IsValid && u.PawnIsAlive))
         {
-            if (_isRegenActive[player.Slot] && IsPlayerVip(player) && PlayerHasFeature(player))
+            if (_isRegenActive[player.Slot] && IsFeatureEnabled(player))
             {
                 if (_regen[player.Slot].Delay > 0)
                 {

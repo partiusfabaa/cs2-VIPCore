@@ -43,7 +43,7 @@ public class FastDefuse : VipFeature<float>
             var playerPawn = player.PlayerPawn.Value;
             if (playerPawn == null) return HookResult.Continue;
             
-            if (!IsPlayerVip(player) || !PlayerHasFeature(player) || GetPlayerFeatureState(player) is not FeatureState.Enabled || !player.PawnIsAlive) return HookResult.Continue;
+            if (!IsFeatureEnabled(player) || !player.PawnIsAlive) return HookResult.Continue;
             
             var featureValue = GetValue(player);
             var bomb = Utilities.FindAllEntitiesByDesignerName<CPlantedC4>("planted_c4").First();

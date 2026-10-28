@@ -92,7 +92,7 @@ public class Jumps : VipFeature
     {
         if (player is not { IsValid: true, IsBot: false }) return;
 
-        _players[player.Slot] = IsPlayerValid(player) ? player : null;
+        _players[player.Slot] = IsFeatureEnabled(player) ? player : null;
     }
 
     private void OnTick(CCSPlayerController player)

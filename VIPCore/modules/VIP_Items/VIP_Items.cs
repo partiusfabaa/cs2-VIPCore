@@ -50,9 +50,7 @@ public class Items : VipFeature<Dictionary<string, List<string>>>
     {
         if (!vip || IsPistolRound()) return;
 
-        if (!PlayerHasFeature(player)) return;
-        if (GetPlayerFeatureState(player) is FeatureState.Disabled
-            or FeatureState.NoAccess) return;
+        if (!IsFeatureEnabled(player)) return;
 
         var itemsConfig = GetValue(player);
         if (itemsConfig == null) return;

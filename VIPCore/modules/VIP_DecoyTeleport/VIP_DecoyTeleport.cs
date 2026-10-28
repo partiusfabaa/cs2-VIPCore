@@ -51,8 +51,7 @@ public class DecoyTeleport : VipFeature<int>
     public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
         if (!vip) return;
-        if (!PlayerHasFeature(player)) return;
-        if (GetPlayerFeatureState(player) is not FeatureState.Enabled) return;
+        if (!IsFeatureEnabled(player)) return;
 
         _decoyCount[player.Index] = 0;
 
@@ -69,9 +68,7 @@ public class DecoyTeleport : VipFeature<int>
         var controller = @event.Userid;
         var entityIndex = controller.Index;
 
-        if (!IsPlayerVip(controller)) return HookResult.Continue;
-        if (!PlayerHasFeature(controller)) return HookResult.Continue;
-        if (GetPlayerFeatureState(controller) is not FeatureState.Enabled) return HookResult.Continue;
+        if (!IsFeatureEnabled(controller)) return HookResult.Continue;
 
         var pDecoyFiring = @event;
         //var bodyComponent = controller.PlayerPawn.Value?.CBodyComponent?.SceneNode;

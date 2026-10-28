@@ -40,9 +40,7 @@ public class Healthshot : VipFeature<int>
 
     public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
-        if (!vip || !PlayerHasFeature(player)) return;
-        if (GetPlayerFeatureState(player) is FeatureState.Disabled
-            or FeatureState.NoAccess) return;
+        if (!vip || !IsFeatureEnabled(player)) return;
 
         var playerPawnValue = player.PlayerPawn.Value;
         var weaponServices = playerPawnValue?.WeaponServices;

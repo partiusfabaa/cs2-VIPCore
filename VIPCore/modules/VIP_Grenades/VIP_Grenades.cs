@@ -45,9 +45,7 @@ public class Grenades : VipFeature<Dictionary<string, Dictionary<string, int>>>
     };
     public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
-        if (!vip || !PlayerHasFeature(player)) return;
-        if (GetPlayerFeatureState(player) is FeatureState.Disabled
-            or FeatureState.NoAccess) return;
+        if (!vip || !IsFeatureEnabled(player)) return;
 
         var teamKey = player.TeamNum switch
         {

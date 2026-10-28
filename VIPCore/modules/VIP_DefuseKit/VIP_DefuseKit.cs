@@ -36,9 +36,7 @@ public class VIP_DefuseKit : BasePlugin
         }
         public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
         {
-            if (!IsPlayerVip(player) ||
-                !PlayerHasFeature(player) ||
-                GetPlayerFeatureState(player) is not FeatureState.Enabled) return;
+            if (!IsFeatureEnabled(player)) return;
 
             if (player.Team == CsTeam.Terrorist)
                 return;
