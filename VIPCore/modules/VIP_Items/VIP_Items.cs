@@ -32,16 +32,6 @@ public class VipItems : BasePlugin
 
 public class Items : VipFeature<Dictionary<string, List<string>>>
 {
-    private readonly Dictionary<string, int> _grenadeIndex = new()
-    {
-        ["flashbang"] = 14, 
-        ["smokegrenade"] = 15,
-        ["decoy"] = 17,
-        ["incgrenade"] = 16,
-        ["molotov"] = 16,
-        ["hegrenade"] = 13
-    };
-    
     public Items(IVipCoreApi api) : base("Items", api)
     {
     }
@@ -75,18 +65,9 @@ public class Items : VipFeature<Dictionary<string, List<string>>>
         foreach (var item in items)
         {
             var itemName = item.StartsWith("weapon_") || item.StartsWith("item_") ? item : $"weapon_{item}";
-            var shortName = itemName.StartsWith("weapon_") ? itemName["weapon_".Length..] : itemName;
 
-            if (_grenadeIndex.TryGetValue(shortName, out var ammoIndex))
-            {
-                if (weaponService.Ammo[ammoIndex] == 0)
-                    player.GiveNamedItem(itemName);
-            }
-            else
-            {
-                if (weaponService.MyWeapons.ToList().Find(m => m.Value != null && m.Value.DesignerName == itemName) == null)
-                    player.GiveNamedItem(itemName);
-            }
+            if (weaponService.MyWeapons.ToList().Find(m => m.Value != null && m.Value.DesignerName == itemName) == null)
+                player.GiveNamedItem(itemName);
         }
     }
 }
