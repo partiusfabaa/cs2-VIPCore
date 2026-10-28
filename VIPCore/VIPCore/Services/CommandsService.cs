@@ -125,7 +125,7 @@ public class CommandsService(Plugin plugin, PlayersManager players, Config<Group
     public void OnCmdReload(CCSPlayerController? controller, CommandInfo command)
     {
         plugin.ReloadConfigs();
-        plugin.ReplyToCommand(controller, "configuration successfully rebooted!");
+        plugin.ReplyToCommand(controller, "Configuration reloaded successfully!");
     }
 
     [RequiresPermissions("@css/root")]
@@ -140,7 +140,7 @@ public class CommandsService(Plugin plugin, PlayersManager players, Config<Group
             "css_vip_updateuser <steamid or accountid> <group or -s> <time or -s>  - update a VIP (-s keeps a field)",
             "css_vip_deleteuser <steamid or accountid>  - remove a VIP",
             "css_reload_vip_player <steamid>  - reload a player's VIP data from the database",
-            "css_vip_reload  - reload the VIPCore configuration",
+            "css_vip_reload  - reload the VIP configuration",
             "css_vip_admin  - open the VIP admin menu",
             "css_vip_help  - show this list",
             "============================="

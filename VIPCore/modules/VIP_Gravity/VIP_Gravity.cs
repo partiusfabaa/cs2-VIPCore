@@ -141,7 +141,6 @@ public class Gravity : VipFeature<float>
 
         playerPawn.GravityScale = gravity;
         playerPawn.ActualGravityScale = gravity;
-        Utilities.SetStateChanged(playerPawn, "CBaseEntity", "m_flActualGravityScale");
     }
 
     public override void OnFeatureDisplay(FeatureDisplayArgs args)

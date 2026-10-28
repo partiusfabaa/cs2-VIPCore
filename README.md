@@ -13,10 +13,10 @@
 
 ## Commands 
 
-| **Command**                             | **Description**                                               | **Flag** |
-|-------------------------------------|-----------------------------------------------------------|----------------|
-| **`css_vip`** or **`!vip`** | Opens the VIP menu | |
-| **`css_vip_admin`** or **`!vip_admin`** | Opens the VIP admin menu: give or remove VIP, reload configs and players | `AdminMenuPermission` |
+| **Command**                             | **Description**                                               | **Flag**      |
+|-------------------------------------|-----------------------------------------------------------|---------------|
+| **`css_vip`** or **`!vip`** | Opens the VIP menu |               |
+| **`css_vip_admin`** or **`!vip_admin`** | Opens the VIP admin menu: give or remove VIP, reload configs and players | **@css/root** |
 | **`css_vip_adduser <steamid or accountid> <vipgroup> <time or 0 permanently>`** | Adds a VIP player | **@css/root** |
 | **`css_vip_updateuser <steamid or accountid> <group or -s> <time or -s>`** | Updates the player's VIP | **@css/root** |
 | **`css_vip_deleteuser <steamid or accountid>`** | Removes the player's VIP | **@css/root** |
