@@ -1,8 +1,7 @@
 ![GitHub all releases](https://img.shields.io/github/downloads/partiusfabaa/cs2-VIPCore/total?style=social)
 
 # cs2-VIPCore
-
-#### If you find an error or anything else. Please message me in discord: thesamefabius
+> Found a bug or have a question? Message me on Discord: [thesamefabius](https://discord.com/users/658204951595712519)
 
 ## Installation
 1. Install [CounterStrike Sharp](https://github.com/roflmuffin/CounterStrikeSharp), [Metamod:Source](https://www.sourcemm.net/downloads.php/?branch=master)
