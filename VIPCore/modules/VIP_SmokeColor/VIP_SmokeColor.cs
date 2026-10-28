@@ -2,6 +2,7 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_SmokeColor;
 
@@ -9,10 +10,10 @@ public class VipSmokeColor : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Smoke Color";
-    public override string ModuleVersion => "v1.0.0";
+    public override string ModuleVersion => "v2.0.0";
 
 
-    private SmokeColor _smokeColor;
+    private SmokeColor? _smokeColor;
     private IVipCoreApi? _api;
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
@@ -24,21 +25,18 @@ public class VipSmokeColor : BasePlugin
         _api.OnCoreReady += () =>
         {
             _smokeColor = new SmokeColor(this, _api);
-            _api.RegisterFeature(_smokeColor);
         };
     }
 
     public override void Unload(bool hotReload)
     {
-        _api?.UnRegisterFeature(_smokeColor);
+        _smokeColor?.Dispose();
     }
 }
 
-public class SmokeColor : VipFeatureBase
+public class SmokeColor : VipFeature<int[]>
 {
-    public override string Feature => "SmokeColor";
-
-    public SmokeColor(VipSmokeColor smokeColor, IVipCoreApi api) : base(api)
+    public SmokeColor(VipSmokeColor smokeColor, IVipCoreApi api) : base("SmokeColor", api)
     {
         smokeColor.RegisterListener<Listeners.OnEntitySpawned>(OnEntitySpawned);
     }
@@ -59,12 +57,12 @@ public class SmokeColor : VipFeatureBase
             if (throwerValueController == null) return;
             var controller = new CCSPlayerController(throwerValueController.Handle);
 
-            if (!IsClientVip(controller)) return;
+            if (!IsPlayerVip(controller)) return;
             if (!PlayerHasFeature(controller)) return;
-            if (GetPlayerFeatureState(controller) is not IVipCoreApi.FeatureState.Enabled)
+            if (GetPlayerFeatureState(controller) is not FeatureState.Enabled)
                 return;
             
-            var smokeColor = GetFeatureValue<int[]>(controller);
+            var smokeColor = GetValue(controller)!;
 
             smokeGrenade.SmokeColor.X = smokeColor[0] == -1 ? Random.Shared.NextSingle() * 255.0f : smokeColor[0];
             smokeGrenade.SmokeColor.Y = smokeColor[1] == -1 ? Random.Shared.NextSingle() * 255.0f : smokeColor[1];

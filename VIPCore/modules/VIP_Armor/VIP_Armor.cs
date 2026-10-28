@@ -1,7 +1,7 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
-using static VipCoreApi.IVipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_Armor;
 
@@ -9,10 +9,10 @@ public class VipArmor : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Armor";
-    public override string ModuleVersion => "v1.0.1";
+    public override string ModuleVersion => "v2.0.0";
 
     private IVipCoreApi? _api;
-    private Armor _armor;
+    private Armor? _armor;
     
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
@@ -22,30 +22,24 @@ public class VipArmor : BasePlugin
         if (_api == null) return;
 
         _armor = new Armor(_api);
-        _api.RegisterFeature(_armor);
     }
 
     public override void Unload(bool hotReload)
     {
-        _api?.UnRegisterFeature(_armor);
+        _armor?.Dispose();
     }
 }
 
-public class Armor : VipFeatureBase
+public class Armor(IVipCoreApi api) : VipFeature<int>("Armor", api)
 {
-    public override string Feature => "Armor";
-    public Armor(IVipCoreApi api) : base(api)
+    public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
-    }
-
-    public override void OnPlayerSpawn(CCSPlayerController player)
-    {
-        if (!PlayerHasFeature(player)) return;
+        if (!vip || !PlayerHasFeature(player)) return;
         if (GetPlayerFeatureState(player) is not FeatureState.Enabled) return;
 
         var playerPawn = player.PlayerPawn.Value;
 
-        var armorValue = GetFeatureValue<int>(player);
+        var armorValue = GetValue(player);
         if (armorValue <= 0 || playerPawn == null) return;
 
         if (playerPawn.ItemServices != null)

@@ -14,7 +14,7 @@ public class VIPVipsOnline : BasePlugin
 {
     public override string ModuleAuthor => "panda";
     public override string ModuleName => "[VIP] Vips Online";
-    public override string ModuleVersion => "v1.0";
+    public override string ModuleVersion => "v2.0.0";
     private IVipCoreApi? _api;
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
@@ -31,7 +31,7 @@ public class VIPVipsOnline : BasePlugin
     {
         if (_api == null) return;
 
-        var onlineVips = Utilities.GetPlayers().Where(p => p.IsValid && _api.IsClientVip(p)).Select(p => $"{p.PlayerName}").ToList();
+        var onlineVips = Utilities.GetPlayers().Where(p => p.IsValid && _api.IsPlayerVip(p)).Select(p => $"{p.PlayerName}").ToList();
 
         string message;
         var vipList = string.Join(", ", onlineVips);

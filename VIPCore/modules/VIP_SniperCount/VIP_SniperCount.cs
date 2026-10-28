@@ -19,7 +19,7 @@ public class VIP_SniperCount : BasePlugin
 {
     public override string ModuleAuthor => "panda";
     public override string ModuleName => "[VIP] Sniper Count";
-    public override string ModuleVersion => "1.0.0";
+    public override string ModuleVersion => "v2.0.0";
     public override string ModuleDescription => "Shows per-team sniper counts to VIPs at round start.";
 
     private IVipCoreApi? _api;
@@ -78,7 +78,7 @@ public class VIP_SniperCount : BasePlugin
         // Send only to VIPs.
         foreach (var player in players)
         {
-            if (!_api.IsClientVip(player))
+            if (!_api.IsPlayerVip(player))
                 continue;
 
             player.PrintToChat(ctLine);

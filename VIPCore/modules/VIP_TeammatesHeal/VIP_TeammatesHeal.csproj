@@ -7,10 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="VipCoreApi">
-      <HintPath>..\..\VipCoreApi.dll</HintPath>
+    <ProjectReference Include="..\..\VipCoreApi\VipCoreApi.csproj">
       <Private>False</Private>
-    </Reference>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>

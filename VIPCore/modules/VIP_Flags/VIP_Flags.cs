@@ -8,7 +8,7 @@ using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using VipCoreApi;
-using static VipCoreApi.IVipCoreApi;
+using VipCoreApi.Enums;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
 namespace VIP_Flags;
@@ -17,10 +17,10 @@ public class VipFlags : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Flags";
-    public override string ModuleVersion => "v1.0.1";
+    public override string ModuleVersion => "v2.0.0";
 
     private IVipCoreApi? _api;
-    private Flags _flags;
+    private Flags? _flags;
 
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
@@ -31,22 +31,20 @@ public class VipFlags : BasePlugin
         if (_api == null) return;
 
         _flags = new Flags(this, _api);
-        _api.RegisterFeature(_flags, FeatureType.Hide);
     }
 
     public override void Unload(bool hotReload)
     {
-        _api?.UnRegisterFeature(_flags);
+        _flags?.Dispose();
     }
 }
 
-public class Flags : VipFeatureBase
+public class Flags : VipFeature<List<string>>
 {
     private readonly VipFlags _vipFlags;
-    public override string Feature => "flags";
     private readonly Dictionary<ulong, List<string>> _flags = new();
 
-    public Flags(VipFlags vipFlags, IVipCoreApi api) : base(api)
+    public Flags(VipFlags vipFlags, IVipCoreApi api) : base("flags", api, FeatureType.Hide)
     {
         _vipFlags = vipFlags;
         vipFlags.RegisterEventHandler<EventPlayerDisconnect>((@event, _) =>
@@ -55,7 +53,7 @@ public class Flags : VipFeatureBase
 
             if (player is null || !player.IsValid) return HookResult.Continue;
 
-            if (IsClientVip(player) && PlayerHasFeature(player))
+            if (IsPlayerVip(player) && PlayerHasFeature(player))
             {
                 RemovePlayerPermissions(player);
             }
@@ -64,7 +62,7 @@ public class Flags : VipFeatureBase
         });
     }
 
-    public override void OnPlayerLoaded(CCSPlayerController player, string group)
+    public override void OnPlayerAuthorized(CCSPlayerController player, string group)
     {
         if (!PlayerHasFeature(player)) return;
 
@@ -78,7 +76,7 @@ public class Flags : VipFeatureBase
             if (!_flags.ContainsKey(player.SteamID))
                 _flags.Add(player.SteamID, []);
 
-            var flagsOrGroups = GetFeatureValue<List<string>>(player);
+            var flagsOrGroups = GetValue(player);
 
             var steamId = new SteamID(player.SteamID);
             foreach (var flagOrGroup in flagsOrGroups)

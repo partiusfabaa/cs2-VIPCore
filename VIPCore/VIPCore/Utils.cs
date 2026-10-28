@@ -43,7 +43,7 @@ public static class Utils
             }
         }
 
-        return int.Parse(steamId);
+        return int.TryParse(steamId, out var accountId) ? accountId : -1;
     }
 
     public static CCSPlayerController? GetPlayerFromSteamId(string steamId)

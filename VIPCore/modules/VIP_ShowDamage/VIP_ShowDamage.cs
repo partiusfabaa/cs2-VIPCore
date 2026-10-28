@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Cvars;
 using System.Text;
 using VipCoreApi;
+using VipCoreApi.Enums;
 using CounterStrikeSharp.API.Core.Capabilities;
 
 namespace VIP_ShowDamage;
@@ -11,7 +12,7 @@ public class VIP_ShowDamage : BasePlugin
 {
     public override string ModuleAuthor => "GSM-RO";
     public override string ModuleName => "[VIP] ShowDamage";
-    public override string ModuleVersion => "1.0.2";
+    public override string ModuleVersion => "v2.0.0";
     public override string ModuleDescription => "Shows damage dealt to enemies in the center text for VIP players + optional sound";
 
     private ShowDamageFeature? _feature;
@@ -27,20 +28,14 @@ public class VIP_ShowDamage : BasePlugin
         _api.OnCoreReady += () =>
         {
             _feature = new ShowDamageFeature(this, _api);
-            _api.RegisterFeature(_feature);
-
             _soundFeature = new SoundDamageFeature(this, _api);
-            _api.RegisterFeature(_soundFeature);
         };
     }
 
     public override void Unload(bool hotReload)
     {
-        if (_api != null)
-        {
-            if (_feature != null) _api.UnRegisterFeature(_feature);
-            if (_soundFeature != null) _api.UnRegisterFeature(_soundFeature);
-        }
+        _feature?.Dispose();
+        _soundFeature?.Dispose();
     }
 }
 
@@ -50,10 +45,8 @@ public class DamageDone
     public float Armor { get; set; }
 }
 
-public class ShowDamageFeature : VipFeatureBase
+public class ShowDamageFeature : VipFeature
 {
-    public override string Feature => "ShowDamage";
-
     private readonly VIP_ShowDamage _plugin;
     private readonly Dictionary<int, DamageDone> _damageDone = new();
     private ConVar? _ffaEnabledConVar = null;
@@ -61,7 +54,7 @@ public class ShowDamageFeature : VipFeatureBase
 
     public bool FFAEnabled => _ffaEnabledConVar?.GetPrimitiveValue<bool>() ?? false;
 
-    public ShowDamageFeature(VIP_ShowDamage plugin, IVipCoreApi api) : base(api)
+    public ShowDamageFeature(VIP_ShowDamage plugin, IVipCoreApi api) : base("ShowDamage", api)
     {
         _plugin = plugin;
         _config = LoadConfig<ShowDamageConfig>("VIP_ShowDamage");
@@ -82,7 +75,7 @@ public class ShowDamageFeature : VipFeatureBase
             }
 
             // Safety check: player still in VIPCore
-            if (!Api.IsClientVip(player))
+            if (!Api.IsPlayerVip(player))
             {
                 _damageDone.Remove(attackerUserId);
                 return;
@@ -91,7 +84,7 @@ public class ShowDamageFeature : VipFeatureBase
             try
             {
                 // Main check: is ShowDamage actually enabled?
-                if (Api.GetPlayerFeatureState(player, "ShowDamage") != IVipCoreApi.FeatureState.Enabled)
+                if (Api.GetPlayerFeatureState(player, "ShowDamage") != FeatureState.Enabled)
                 {
                     _damageDone.Remove(attackerUserId);
                     return;
@@ -107,7 +100,7 @@ public class ShowDamageFeature : VipFeatureBase
 
                 // Play sound only if SoundDMG is enabled
                 if (Api.PlayerHasFeature(player, "SoundDMG") &&
-                    Api.GetPlayerFeatureState(player, "SoundDMG") == IVipCoreApi.FeatureState.Enabled)
+                    Api.GetPlayerFeatureState(player, "SoundDMG") == FeatureState.Enabled)
                 {
                     player.ExecuteClientCommand($"play {_config.SoundPath}");
                 }
@@ -136,7 +129,7 @@ public class ShowDamageFeature : VipFeatureBase
 
         // Must have ShowDamage AND be enabled
         if (!PlayerHasFeature(ev.Attacker) ||
-            Api.GetPlayerFeatureState(ev.Attacker, "ShowDamage") != IVipCoreApi.FeatureState.Enabled)
+            Api.GetPlayerFeatureState(ev.Attacker, "ShowDamage") != FeatureState.Enabled)
             return HookResult.Continue;
 
         int attackerUserId = ev.Attacker.UserId!.Value;
@@ -166,23 +159,21 @@ public class ShowDamageFeature : VipFeatureBase
         return HookResult.Continue;
     }
 
-    public override void OnSelectItem(CCSPlayerController player, IVipCoreApi.FeatureState state)
+    public override void OnSelectItem(CCSPlayerController player, VipFeature feature)
     {
-        player.PrintToChat(state == IVipCoreApi.FeatureState.Enabled
+        player.PrintToChat(GetPlayerFeatureState(player) == FeatureState.Enabled
             ? "ShowDamage enabled"
             : "ShowDamage disabled");
     }
 }
 
-public class SoundDamageFeature : VipFeatureBase
+public class SoundDamageFeature : VipFeature
 {
-    public override string Feature => "SoundDMG";
+    public SoundDamageFeature(VIP_ShowDamage plugin, IVipCoreApi api) : base("SoundDMG", api) { }
 
-    public SoundDamageFeature(VIP_ShowDamage plugin, IVipCoreApi api) : base(api) { }
-
-    public override void OnSelectItem(CCSPlayerController player, IVipCoreApi.FeatureState state)
+    public override void OnSelectItem(CCSPlayerController player, VipFeature feature)
     {
-        player.PrintToChat(state == IVipCoreApi.FeatureState.Enabled
+        player.PrintToChat(GetPlayerFeatureState(player) == FeatureState.Enabled
             ? "SoundDMG enabled"
             : "SoundDMG disabled");
     }

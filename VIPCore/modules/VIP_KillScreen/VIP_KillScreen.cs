@@ -2,6 +2,7 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_KillScreen;
 
@@ -9,9 +10,9 @@ public class VipKillScreen : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Kill Screen";
-    public override string ModuleVersion => "v1.0.1";
+    public override string ModuleVersion => "v2.0.0";
 
-    private KillScreen _killScreen;
+    private KillScreen? _killScreen;
     private IVipCoreApi? _api;
     
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
@@ -22,20 +23,17 @@ public class VipKillScreen : BasePlugin
         if (_api == null) return;
 
         _killScreen = new KillScreen(this, _api);
-        _api.RegisterFeature(_killScreen);
     }
 
     public override void Unload(bool hotReload)
     {
-        _api?.UnRegisterFeature(_killScreen);
+        _killScreen?.Dispose();
     }
 }
 
-public class KillScreen : VipFeatureBase
+public class KillScreen : VipFeature<bool>
 {
-    public override string Feature => "Killscreen";
-    
-    public KillScreen(VipKillScreen vipKillScreen, IVipCoreApi api) : base(api)
+    public KillScreen(VipKillScreen vipKillScreen, IVipCoreApi api) : base("Killscreen", api)
     {
         vipKillScreen.RegisterEventHandler<EventPlayerDeath>((@event, info) =>
         {
@@ -43,10 +41,10 @@ public class KillScreen : VipFeatureBase
             if (attacker is null || !attacker.IsValid) return HookResult.Continue;
             if (@event.Userid is not null && attacker.PlayerName == @event.Userid.PlayerName) return HookResult.Continue;
 
-            if (!IsClientVip(attacker)) return HookResult.Continue;
+            if (!IsPlayerVip(attacker)) return HookResult.Continue;
             if (!PlayerHasFeature(attacker)) return HookResult.Continue;
-            if (GetPlayerFeatureState(attacker) is not IVipCoreApi.FeatureState.Enabled) return HookResult.Continue;
-            if(!GetFeatureValue<bool>(attacker)) return HookResult.Continue;
+            if (GetPlayerFeatureState(attacker) is not FeatureState.Enabled) return HookResult.Continue;
+            if(!GetValue(attacker)) return HookResult.Continue;
             
             var attackerPawn = attacker.PlayerPawn.Value;
             

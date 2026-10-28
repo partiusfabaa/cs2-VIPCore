@@ -7,7 +7,7 @@ using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using VipCoreApi;
-using static VipCoreApi.IVipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_Bhop;
 
@@ -15,9 +15,9 @@ public class VIP_Bhop : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Bhop";
-    public override string ModuleVersion => "v1.0.3";
+    public override string ModuleVersion => "v2.0.0";
 
-    private Bhop _bhop;
+    private Bhop? _bhop;
     private IVipCoreApi? _api;
 
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
@@ -28,23 +28,20 @@ public class VIP_Bhop : BasePlugin
         if (_api == null) return;
 
         _bhop = new Bhop(this, _api);
-        _api.RegisterFeature(_bhop);
     }
 
     public override void Unload(bool hotReload)
     {
-        _api?.UnRegisterFeature(_bhop);
+        _bhop?.Dispose();
     }
 }
 
-public class Bhop : VipFeatureBase
+public class Bhop : VipFeature<BhopSettings>
 {
-    public override string Feature => "Bhop";
-
     private readonly VIP_Bhop _vipBhop;
     private readonly BhopSettings[] _bhopSettings = new BhopSettings[70];
 
-    public Bhop(VIP_Bhop vipBhop, IVipCoreApi api) : base(api)
+    public Bhop(VIP_Bhop vipBhop, IVipCoreApi api) : base("Bhop", api)
     {
         _vipBhop = vipBhop;
         vipBhop.RegisterListener<Listeners.OnClientConnected>(slot => _bhopSettings[slot] = new BhopSettings());
@@ -65,15 +62,15 @@ public class Bhop : VipFeatureBase
         });
     }
 
-    public override void OnPlayerLoaded(CCSPlayerController player, string group)
+    public override void OnPlayerAuthorized(CCSPlayerController player, string group)
     {
         if (PlayerHasFeature(player))
             _bhopSettings[player.Slot].Enabled = GetPlayerFeatureState(player) == FeatureState.Enabled;
     }
 
-    public override void OnSelectItem(CCSPlayerController player, FeatureState state)
+    public override void OnSelectItem(CCSPlayerController player, VipFeature feature)
     {
-        _bhopSettings[player.Slot].Enabled = state == FeatureState.Enabled;
+        _bhopSettings[player.Slot].Enabled = GetPlayerFeatureState(player) == FeatureState.Enabled;
     }
 
     private void SetBunnyhop(CCSPlayerController player, bool value)
@@ -115,13 +112,15 @@ public class Bhop : VipFeatureBase
             {
                 settings.Active = false;
 
-                if (!IsClientVip(player) ||
+                if (!IsPlayerVip(player) ||
                     !PlayerHasFeature(player) ||
                     GetPlayerFeatureState(player) is not FeatureState.Enabled) continue;
 
                 SetBunnyhop(player, false);
 
-                var bhopSettings = GetFeatureValue<BhopSettings>(player);
+                var bhopSettings = GetValue(player);
+                if (bhopSettings is null) continue;
+
                 settings.MaxSpeed = bhopSettings.MaxSpeed;
 
                 PrintToChat(player, GetTranslatedText("bhop.TimeToActivation", bhopSettings.Timer));

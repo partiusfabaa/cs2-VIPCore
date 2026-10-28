@@ -15,37 +15,45 @@
 
 | **Command**                             | **Description**                                               | **Flag** |
 |-------------------------------------|-----------------------------------------------------------|----------------|
-| **`css_vip_reload` or `!vip_reload`**    | Reloads the configuration | **@css/root** |
+| **`css_vip`** or **`!vip`** | Opens the VIP menu | |
+| **`css_vip_admin`** or **`!vip_admin`** | Opens the VIP admin menu: give or remove VIP, reload configs and players | `AdminMenuPermission` |
 | **`css_vip_adduser <steamid or accountid> <vipgroup> <time or 0 permanently>`** | Adds a VIP player | **@css/root** |
 | **`css_vip_updateuser <steamid or accountid> <group or -s> <time or -s>`** | Updates the player's VIP | **@css/root** |
-| **`css_vip_deleteuser <steamid or accountid>`** | Allows you to delete a player by SteamID identifier | **@css/root** |
-| **`css_vip`** or **`!vip`** | Opens the VIP menu | 
+| **`css_vip_deleteuser <steamid or accountid>`** | Removes the player's VIP | **@css/root** |
+| **`css_reload_vip_player <steamid>`** | Reloads the player's VIP from the database | **@css/root** |
+| **`css_vip_reload`** or **`!vip_reload`** | Reloads the configuration | **@css/root** |
 | **`css_vip_help`** or **`!vip_help`** | Lists all VIP admin commands | **@css/root** |
 
 ## Configs
 All configs are in `addons/counterstrikesharp/configs/plugins/VIPCore`. Module configs are in `VIPCore/Modules`.
 
+Configs from VIPCore 1.x are converted on the first start: groups are taken out of `Groups`/`Values`, `Delay` and `UseCenterHtmlMenu` move to `vip_core.json`. The old files are kept as `vip.json.old` and `vip_core.json.old`.
+
 ### vip_core.json
 
 | Option | Default | Description |
 |---|---|---|
+| `Delay` | `2` | Delay in seconds after spawn before VIP features are applied |
 | `TimeMode` | `0` | Unit for VIP time in commands: `0` seconds, `1` minutes, `2` hours, `3` days |
 | `ServerId` | `0` | Server ID, VIPs are stored per server |
-| `UseCenterHtmlMenu` | `true` | `true` - menu in the center of the screen, `false` - in chat. |
 | `ServerIP` | `0.0.0.0` | Server IP |
 | `ServerPort` | `27015` | Server port |
+| `MenuType` | `center` | `center` - menu in the center of the screen, `chat` - in chat, `console` - in console |
 | `ReOpenMenuAfterItemClick` | `false` | Reopen the VIP menu after selecting an item |
+| `AdminMenuPermission` | `["@css/root"]` | Permissions needed for `css_vip_admin` |
 | `VipLogging` | `true` | Log VIPCore actions |
 | `Connection` | | MySQL connection |
 
 ```json
 {
+  "Delay": 2,
   "TimeMode": 1,
   "ServerId": 0,
-  "UseCenterHtmlMenu": true,
   "ServerIP": "0.0.0.0",
   "ServerPort": 27015,
+  "MenuType": "center",
   "ReOpenMenuAfterItemClick": false,
+  "AdminMenuPermission": ["@css/root"],
   "VipLogging": true,
   "Connection": {
     "Host": "localhost",
@@ -59,28 +67,22 @@ All configs are in `addons/counterstrikesharp/configs/plugins/VIPCore`. Module c
 
 ### vip.json
 
-`Delay` - delay in seconds after spawn before VIP features are applied.
+VIP groups. The key is the group name, the value is the features of the group. Each module describes its value in its own README.
 
-`Groups` - VIP groups. The key is the group name, `Values` are the features of the group. Each module describes its value in its own README.
+`$inherit` - takes all features of another group, the group's own features override them.
 
 ```json
 {
-  "Delay": 2.0,
-  "Groups": {
-    "VIP": {
-      "Values": {
-        "Health": 120,
-        "Money": "++1000",
-        "Tag": { "ScoreboardTag": "VIP", "ChatTag": "[VIP]", "ColorTag": "lime" }
-      }
-    },
-    "PREMIUM": {
-      "Values": {
-        "Health": 150,
-        "Money": "++3000",
-        "Tag": ["PREMIUM_TAGS"]
-      }
-    }
+  "VIP": {
+    "Health": 120,
+    "Money": "++1000",
+    "Tag": { "ScoreboardTag": "VIP", "ChatTag": "[VIP]", "ColorTag": "lime" }
+  },
+  "PREMIUM": {
+    "$inherit": "VIP",
+    "Health": 150,
+    "Money": "++3000",
+    "Tag": ["PREMIUM_TAGS"]
   }
 }
 ```
@@ -88,9 +90,10 @@ All configs are in `addons/counterstrikesharp/configs/plugins/VIPCore`. Module c
 ## Example Module
 ```csharp
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
 using VipCoreApi;
+using VipCoreApi.Args;
+using VipCoreApi.Enums;
 
 namespace VIPMyModule;
 
@@ -100,71 +103,62 @@ public class VIPMyModule : BasePlugin
     public override string ModuleName => "[VIP] My Module";
     public override string ModuleVersion => "1.0.0";
 
-    private MyPlugin _myPlugin;
-
-    private IVipCoreApi? _api;
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
+    private MyFeature? _myFeature;
 
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
-        if (_api == null) return;
+        var api = IVipCoreApi.Capability.Get();
+        if (api == null) return;
 
-        _api.OnCoreReady += () =>
-        {
-            _myPlugin = new MyPlugin(this, _api);
-            _api.RegisterFeature(_myPlugin);
-        };
+        _myFeature = new MyFeature(this, api);
     }
 
     public override void Unload(bool hotReload)
     {
-        _api?.UnRegisterFeature(_myPlugin);
+        _myFeature?.Dispose();
     }
 }
 
-public class MyPlugin : VipFeatureBase
+public class MyFeature : VipFeature<int>
 {
-    public override string Feature => "MyFeature";
-    private TestConfig _config;
+    private readonly TestConfig _config;
 
-    public MyPlugin(VIPMyModule vipMyModule, IVipCoreApi api) : base(api)
+    public MyFeature(VIPMyModule plugin, IVipCoreApi api) : base("MyFeature", api)
     {
-        vipMyModule.AddCommand("css_viptestcommand", "", OnCmdVipCommand);
+        plugin.AddCommand("css_viptestcommand", "", OnCmdVipCommand);
         _config = LoadConfig<TestConfig>("VIPMyModule");
     }
 
-    public override void OnPlayerSpawn(CCSPlayerController player)
+    public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
-        if (PlayerHasFeature(player))
-        {
-            PrintToChat(player, $"VIP player - {player.PlayerName} has spawned");
-        }
+        if (!vip || !IsPlayerValid(player)) return;
+
+        PrintToChat(player, $"VIP player - {player.PlayerName} has spawned, value: {GetValue(player)}");
     }
 
-    public override void OnSelectItem(CCSPlayerController player, IVipCoreApi.FeatureState state)
+    public override void OnSelectItem(CCSPlayerController player, VipFeature feature)
     {
-        if (state == IVipCoreApi.FeatureState.Enabled)
-        {
-            PrintToChat(player, "Enabled");
-        }
-        else
-        {
-            PrintToChat(player, "Disabled");
-        }
+        PrintToChat(player, GetPlayerFeatureState(player) == FeatureState.Enabled ? "Enabled" : "Disabled");
     }
-    
+
+    public override void OnFeatureDisplay(FeatureDisplayArgs args)
+    {
+        if (args.State == FeatureState.Enabled)
+            args.Display = $"[{GetValue(args.Controller)}]";
+    }
+
+    public override void OnPlayerRemoved(CCSPlayerController player, string group)
+    {
+        PrintToChat(player, $"You lost the {group} group");
+    }
+
     public void OnCmdVipCommand(CCSPlayerController? player, CommandInfo info)
     {
         if (player == null) return;
 
-        if (IsClientVip(player) && PlayerHasFeature(player))
-        {
-            PrintToChat(player, $"{player.PlayerName} is a VIP player");
-            return;
-        }
-
-        PrintToChat(player, $"{player.PlayerName} not a VIP player");
+        PrintToChat(player, IsPlayerVip(player) && PlayerHasFeature(player)
+            ? $"{player.PlayerName} is a VIP player"
+            : $"{player.PlayerName} not a VIP player");
     }
 }
 

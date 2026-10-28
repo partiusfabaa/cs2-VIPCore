@@ -2,7 +2,7 @@
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Commands;
 using VipCoreApi;
-using static VipCoreApi.IVipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_ResetDeaths;
 
@@ -10,9 +10,9 @@ public class VipResetDeaths : BasePlugin
 {
     public override string ModuleAuthor => "WodiX";
     public override string ModuleName => "[VIP] ResetDeaths";
-    public override string ModuleVersion => "v1.0.0";
+    public override string ModuleVersion => "v2.0.0";
 
-    private ResetDeaths _resetDeaths;
+    private ResetDeaths? _resetDeaths;
     private IVipCoreApi? _api;
     
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
@@ -25,21 +25,18 @@ public class VipResetDeaths : BasePlugin
         _api.OnCoreReady += () =>
         {
             _resetDeaths = new ResetDeaths(this, _api);
-            _api.RegisterFeature(_resetDeaths);
         };
     }
     
     public override void Unload(bool hotReload)
     {
-        _api?.UnRegisterFeature(_resetDeaths);
+        _resetDeaths?.Dispose();
     }
 }
 
-public class ResetDeaths : VipFeatureBase
+public class ResetDeaths : VipFeature<bool>
 {
-    public override string Feature => "ResetDeaths";
-
-    public ResetDeaths(VipResetDeaths vipResetDeaths, IVipCoreApi api) : base(api)
+    public ResetDeaths(VipResetDeaths vipResetDeaths, IVipCoreApi api) : base("ResetDeaths", api)
     {
         vipResetDeaths.AddCommand("css_rd", "ResetDeaths", OnResetDeathsCommand);
         vipResetDeaths.AddCommand("css_resetdeaths", "ResetDeaths", OnResetDeathsCommand);
@@ -50,7 +47,7 @@ public class ResetDeaths : VipFeatureBase
     {
         if (player == null) return;
         
-        if (!IsClientVip(player) || !PlayerHasFeature(player))
+        if (!IsPlayerVip(player) || !PlayerHasFeature(player))
         {
             PrintToChat(player, GetTranslatedText("vip.NoAccess"));
             return;
@@ -62,7 +59,7 @@ public class ResetDeaths : VipFeatureBase
         
         var scoreDeaths = player.ActionTrackingServices!.MatchStats;
         var playerPawnValue = player.PlayerPawn.Value;
-        var scoreValue = GetFeatureValue<bool>(player);
+        var scoreValue = GetValue(player);
 
         if (!scoreValue) return;
         if (playerPawnValue == null) return;

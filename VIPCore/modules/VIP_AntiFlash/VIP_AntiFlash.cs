@@ -1,7 +1,7 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
-using static VipCoreApi.IVipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_AntiFlash;
 
@@ -9,7 +9,7 @@ public class VipAntiFlash : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Anti Flash";
-    public override string ModuleVersion => "v1.0.3";
+    public override string ModuleVersion => "v2.0.0";
    
     private IVipCoreApi? _api;
     private AntiFlash? _antiFlash;
@@ -23,33 +23,27 @@ public class VipAntiFlash : BasePlugin
         _api.OnCoreReady += () =>
         {
             _antiFlash = new AntiFlash(this, _api);
-            _api.RegisterFeature(_antiFlash);
         };
     }
 
     public override void Unload(bool hotReload)
     {
-        if (_antiFlash != null)
-        {
-            _api?.UnRegisterFeature(_antiFlash);
-        }
+        _antiFlash?.Dispose();
     }
 }
 
-public class AntiFlash : VipFeatureBase
+public class AntiFlash : VipFeature<int>
 {
-    public override string Feature => "Antiflash";
-
-    public AntiFlash(VipAntiFlash vipAntiFlash, IVipCoreApi api) : base(api)
+    public AntiFlash(VipAntiFlash vipAntiFlash, IVipCoreApi api) : base("Antiflash", api)
     {
         vipAntiFlash.RegisterEventHandler<EventPlayerBlind>((@event, info) =>
         {
             var player = @event.Userid;
             if (player == null || !player.IsValid) return HookResult.Continue;
 
-            if (!IsClientVip(player) || !PlayerHasFeature(player) || GetPlayerFeatureState(player) is not FeatureState.Enabled) return HookResult.Continue;
+            if (!IsPlayerVip(player) || !PlayerHasFeature(player) || GetPlayerFeatureState(player) is not FeatureState.Enabled) return HookResult.Continue;
 
-            var featureValue = GetFeatureValue<int>(player);
+            var featureValue = GetValue(player);
             var attacker = @event.Attacker;
             var playerPawn = player.PlayerPawn.Value;
 

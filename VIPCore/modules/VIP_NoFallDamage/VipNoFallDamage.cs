@@ -3,7 +3,7 @@ using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using VipCoreApi;
-using static VipCoreApi.IVipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_NoFallDamage;
 
@@ -11,10 +11,10 @@ public class VipNoFallDamage : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] No Fall Damage";
-    public override string ModuleVersion => "v1.0.0";
+    public override string ModuleVersion => "v2.0.0";
 
     private IVipCoreApi? _api;
-    private NoFallDamage _noFallDamage;
+    private NoFallDamage? _noFallDamage;
 
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
@@ -24,21 +24,17 @@ public class VipNoFallDamage : BasePlugin
         if (_api == null) return;
 
         _noFallDamage = new NoFallDamage(_api);
-        _api.RegisterFeature(_noFallDamage);
     }
 
     public override void Unload(bool hotReload)
     {
-        _noFallDamage.Dispose();
-        _api?.UnRegisterFeature(_noFallDamage);
+        _noFallDamage?.Dispose();
     }
 }
 
-public class NoFallDamage : VipFeatureBase, IDisposable
+public class NoFallDamage : VipFeature<bool>
 {
-    public override string Feature => "NoFallDamage";
-
-    public NoFallDamage(IVipCoreApi api) : base(api)
+    public NoFallDamage(IVipCoreApi api) : base("NoFallDamage", api)
     {
         VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(OnTakeDamage, HookMode.Pre);
     }
@@ -55,9 +51,9 @@ public class NoFallDamage : VipFeatureBase, IDisposable
         var damageInfo = hook.GetParam<CTakeDamageInfo>(1);
 
         if (damageInfo.BitsDamageType.HasFlag(DamageTypes_t.DMG_FALL) 
-            && IsClientVip(player) 
+            && IsPlayerVip(player) 
             && PlayerHasFeature(player) 
-            && GetFeatureValue<bool>(player)
+            && GetValue(player)
             && GetPlayerFeatureState(player) is FeatureState.Enabled)
         {
             return HookResult.Handled;
@@ -84,8 +80,9 @@ public class NoFallDamage : VipFeatureBase, IDisposable
         return null;
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Unhook(OnTakeDamage, HookMode.Pre);
+        base.Dispose();
     }
 }

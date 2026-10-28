@@ -2,7 +2,6 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
-using static VipCoreApi.IVipCoreApi;
 using CounterStrikeSharp.API.Modules.Cvars;
 
 namespace VIP_Money;
@@ -11,10 +10,10 @@ public class VipMoney : BasePlugin
 {
     public override string ModuleAuthor => "WodiX";
     public override string ModuleName => "[VIP] Money";
-    public override string ModuleVersion => "v1.0.2";
+    public override string ModuleVersion => "v2.0.0";
 
     private IVipCoreApi? _api;
-    private Money _money;
+    private Money? _money;
 
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
@@ -24,33 +23,26 @@ public class VipMoney : BasePlugin
         if (_api == null) return;
 
         _money = new Money(_api);
-        _api.RegisterFeature(_money);
     }
 
     public override void Unload(bool hotReload)
     {
-        _api?.UnRegisterFeature(_money);
+        _money?.Dispose();
     }
 }
 
-public class Money : VipFeatureBase
+public class Money(IVipCoreApi api) : VipFeature<string>("Money", api)
 {
-    public override string Feature => "Money";
-    
-    public Money(IVipCoreApi api) : base(api)
+    public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
-    }
-
-    public override void OnPlayerSpawn(CCSPlayerController player)
-    {
+        if (!vip) return;
         if (IsPistolRound()) return;
-        if (!PlayerHasFeature(player)) return;
-        if (GetPlayerFeatureState(player) is not FeatureState.Enabled) return;
+        if (!IsPlayerValid(player)) return;
 
         var moneyServices = player.InGameMoneyServices;
         if (moneyServices == null) return;
 
-        var moneyValue = GetFeatureValue<string>(player);
+        var moneyValue = GetValue(player);
 
         if (string.IsNullOrWhiteSpace(moneyValue)) return;
 

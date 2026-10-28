@@ -12,10 +12,9 @@
     <PackageReference Include="MySqlConnector" Version="2.3.7" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="VipCoreApi">
-      <HintPath>..\..\VipCoreApi.dll</HintPath>
+    <ProjectReference Include="..\..\VipCoreApi\VipCoreApi.csproj">
       <Private>False</Private>
-    </Reference>
+    </ProjectReference>
   </ItemGroup>
 
 </Project>

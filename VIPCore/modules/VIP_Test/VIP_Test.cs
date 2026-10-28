@@ -15,7 +15,7 @@ public class VipTest : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Test";
-    public override string ModuleVersion => "v1.0.0";
+    public override string ModuleVersion => "v2.0.0";
 
     private static readonly string Feature = "vip_test_count";
     private IVipCoreApi? _api;
@@ -38,7 +38,7 @@ public class VipTest : BasePlugin
 
         if (!_config.VipTestEnabled) return;
 
-        if (_api.IsClientVip(controller))
+        if (_api.IsPlayerVip(controller))
         {
             _api.PrintToChat(controller, _api.GetTranslatedText("vip.AlreadyVipPrivileges"));
             return;
@@ -87,7 +87,7 @@ public class VipTest : BasePlugin
             _api.PrintToChat(player,
                 _api.GetTranslatedText("viptest.SuccessfullyPassed",
                     timeRemaining.ToString(timeRemaining.Hours > 0 ? @"h\:mm\:ss" : @"m\:ss")));
-            _api.GiveClientVip(player, vipTest.VipTestGroup, vipTest.VipTestDuration);
+            _api.GivePlayerVip(player, vipTest.VipTestGroup, vipTest.VipTestDuration);
         });
     }
 
@@ -106,7 +106,7 @@ public class VipTest : BasePlugin
     {
         try
         {
-            await using var dbConnection = new MySqlConnection(_api.GetDatabaseConnectionString);
+            await using var dbConnection = new MySqlConnection(_api.DatabaseConnectionString);
             dbConnection.Open();
 
             var insertUserQuery = @"
@@ -126,7 +126,7 @@ public class VipTest : BasePlugin
     {
         try
         {
-            await using var dbConnection = new MySqlConnection(_api.GetDatabaseConnectionString);
+            await using var dbConnection = new MySqlConnection(_api.DatabaseConnectionString);
             dbConnection.Open();
 
             var updateCountQuery = @"
@@ -147,7 +147,7 @@ public class VipTest : BasePlugin
     {
         try
         {
-            await using var dbConnection = new MySqlConnection(_api.GetDatabaseConnectionString);
+            await using var dbConnection = new MySqlConnection(_api.DatabaseConnectionString);
             dbConnection.Open();
     
             var result = await dbConnection.QuerySingleOrDefaultAsync<long>(@"
@@ -167,7 +167,7 @@ public class VipTest : BasePlugin
     {
         try
         {
-            await using var dbConnection = new MySqlConnection(_api.GetDatabaseConnectionString);
+            await using var dbConnection = new MySqlConnection(_api.DatabaseConnectionString);
             dbConnection.Open();
 
             var checkUserQuery = @"
@@ -190,7 +190,7 @@ public class VipTest : BasePlugin
     {
         try
         {
-            await using var dbConnection = new MySqlConnection(_api.GetDatabaseConnectionString);
+            await using var dbConnection = new MySqlConnection(_api.DatabaseConnectionString);
             dbConnection.Open();
 
             var createKeysTable = @"

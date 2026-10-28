@@ -2,6 +2,7 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_FastReload;
 
@@ -9,7 +10,7 @@ public class VIPFastReload : BasePlugin
 {
     public override string ModuleAuthor => "T3Marius";
     public override string ModuleName => "[VIP] FastReload";
-    public override string ModuleVersion => "1.0.0";
+    public override string ModuleVersion => "v2.0.0";
 
     private IVipCoreApi? _api;
     private FastReload? _fastReloadFeature;
@@ -21,22 +22,16 @@ public class VIPFastReload : BasePlugin
         if (_api == null) return;
 
         _fastReloadFeature = new FastReload(this, _api);
-        _api.RegisterFeature(_fastReloadFeature);
     }
 
     public override void Unload(bool hotReload)
     {
-        if (_api != null && _fastReloadFeature != null)
-        {
-            _api?.UnRegisterFeature(_fastReloadFeature);
-        }
+        _fastReloadFeature?.Dispose();
     }
 
-    public class FastReload : VipFeatureBase
+    public class FastReload : VipFeature
     {
-        public override string Feature => "FastReload";
-
-        public FastReload(VIPFastReload vipFastReload, IVipCoreApi api) : base(api)
+        public FastReload(VIPFastReload vipFastReload, IVipCoreApi api) : base("FastReload", api)
         {
             vipFastReload.RegisterEventHandler<EventWeaponReload>(OnWeaponReload);
         }
@@ -54,7 +49,7 @@ public class VIPFastReload : BasePlugin
         private void ApplyFastReload(CCSPlayerController player)
         {
             if (!PlayerHasFeature(player)) return;
-            if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled or IVipCoreApi.FeatureState.NoAccess) return;
+            if (GetPlayerFeatureState(player) is FeatureState.Disabled or FeatureState.NoAccess) return;
 
             CBasePlayerWeapon? activeWeapon = player.PlayerPawn.Value?.WeaponServices?.ActiveWeapon.Value;
             if (activeWeapon == null) return;

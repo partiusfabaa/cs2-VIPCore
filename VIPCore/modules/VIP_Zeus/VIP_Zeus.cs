@@ -1,6 +1,7 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_Zeus;
 
@@ -8,7 +9,7 @@ public class VipZeus : BasePlugin
 {
     public override string ModuleAuthor => "panda";
     public override string ModuleName => "[VIP] Zeus";
-    public override string ModuleVersion => "v1.1";
+    public override string ModuleVersion => "v2.0.0";
     
     private Zeus? _zeus;
     private IVipCoreApi? _api;
@@ -20,23 +21,17 @@ public class VipZeus : BasePlugin
         if (_api == null) return;
 
         _zeus = new Zeus(_api);
-        _api.RegisterFeature(_zeus);
     }
     
     public override void Unload(bool hotReload)
     {   
-        if(_api != null && _zeus != null)
-        {
-            _api?.UnRegisterFeature(_zeus);
-        }
+        _zeus?.Dispose();
     }
 }
 
-public class Zeus : VipFeatureBase
+public class Zeus : VipFeature<bool>
 {
-    public override string Feature => "Zeus";
-    
-    public Zeus(IVipCoreApi api) : base(api)
+    public Zeus(IVipCoreApi api) : base("Zeus", api)
     {
     }
 
@@ -58,11 +53,12 @@ public class Zeus : VipFeatureBase
         }
         return false;
     }
-    public override void OnPlayerSpawn(CCSPlayerController player)
+    public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
+        if (!vip) return;
         if (!PlayerHasFeature(player)) return;
-        if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
-            or IVipCoreApi.FeatureState.NoAccess) return;
+        if (GetPlayerFeatureState(player) is FeatureState.Disabled
+            or FeatureState.NoAccess) return;
             
         if (player == null) return;    
         

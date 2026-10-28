@@ -2,7 +2,7 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
-using static VipCoreApi.IVipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_FastDefuse;
 
@@ -10,10 +10,10 @@ public class VipFastDefuse : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Fast Defuse";
-    public override string ModuleVersion => "v1.0.0";
+    public override string ModuleVersion => "v2.0.0";
 
     private IVipCoreApi? _api;
-    private FastDefuse _fastDefuse;
+    private FastDefuse? _fastDefuse;
 
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
@@ -23,20 +23,17 @@ public class VipFastDefuse : BasePlugin
         if (_api == null) return;
 
         _fastDefuse = new FastDefuse(this, _api);
-        _api.RegisterFeature(_fastDefuse);
     }
 
     public override void Unload(bool hotReload)
     {
-        _api?.UnRegisterFeature(_fastDefuse);
+        _fastDefuse?.Dispose();
     }
 }
 
-public class FastDefuse : VipFeatureBase
+public class FastDefuse : VipFeature<float>
 {
-    public override string Feature => "fastdefuse";
-
-    public FastDefuse(BasePlugin basePlugin, IVipCoreApi api) : base(api)
+    public FastDefuse(BasePlugin basePlugin, IVipCoreApi api) : base("fastdefuse", api)
     {
         basePlugin.RegisterEventHandler<EventBombBegindefuse>((@event, info) =>
         {
@@ -46,9 +43,9 @@ public class FastDefuse : VipFeatureBase
             var playerPawn = player.PlayerPawn.Value;
             if (playerPawn == null) return HookResult.Continue;
             
-            if (!IsClientVip(player) || !PlayerHasFeature(player) || GetPlayerFeatureState(player) is not FeatureState.Enabled || !player.PawnIsAlive) return HookResult.Continue;
+            if (!IsPlayerVip(player) || !PlayerHasFeature(player) || GetPlayerFeatureState(player) is not FeatureState.Enabled || !player.PawnIsAlive) return HookResult.Continue;
             
-            var featureValue = GetFeatureValue<float>(player);
+            var featureValue = GetValue(player);
             var bomb = Utilities.FindAllEntitiesByDesignerName<CPlantedC4>("planted_c4").First();
             
             Server.NextFrame(() =>

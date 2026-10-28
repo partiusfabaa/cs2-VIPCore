@@ -11,7 +11,7 @@ public class VipTeammatesHeal : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Teammates Heal";
-    public override string ModuleVersion => "v1.0.0";
+    public override string ModuleVersion => "v2.0.0";
 
     private IVipCoreApi? _api;
     private TeammatesHeal? _flags;
@@ -25,15 +25,11 @@ public class VipTeammatesHeal : BasePlugin
         if (_api == null) return;
 
         _flags = new TeammatesHeal(_api);
-        _api.RegisterFeature(_flags);
     }
 
     public override void Unload(bool hotReload)
     {
-        if (_flags is null) return;
-
-        _flags.Dispose();
-        _api?.UnRegisterFeature(_flags);
+        _flags?.Dispose();
     }
 }
 
@@ -44,24 +40,24 @@ public class Config
     public int HealPerShot { get; set; } = 25;
 }
 
-public class TeammatesHeal : VipFeatureBase, IDisposable
+public class TeammatesHeal : VipFeature<float>
 {
-    public override string Feature => "TeammatesHeal";
 
     private readonly Config _config;
     private readonly float[] _healPercentages = new float[70];
 
-    public TeammatesHeal(IVipCoreApi api) : base(api)
+    public TeammatesHeal(IVipCoreApi api) : base("TeammatesHeal", api)
     {
         VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(OnTakeDamage, HookMode.Pre);
         _config = LoadConfig<Config>("vip_teammates_heal");
     }
 
-    public override void OnPlayerSpawn(CCSPlayerController player)
+    public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
+        if (!vip) return;
         if (!PlayerHasFeature(player)) return;
 
-        _healPercentages[player.Slot] = GetFeatureValue<float>(player);
+        _healPercentages[player.Slot] = GetValue(player);
     }
 
     private HookResult OnTakeDamage(DynamicHook hook)
@@ -84,7 +80,7 @@ public class TeammatesHeal : VipFeatureBase, IDisposable
 
         if (attacker != player &&
             attacker.Team == player.Team &&
-            IsClientVip(attacker) &&
+            IsPlayerVip(attacker) &&
             PlayerHasFeature(attacker))
         {
             var weapon = damageInfo.Inflictor.Value?.As<CBasePlayerWeapon>();
@@ -146,8 +142,9 @@ public class TeammatesHeal : VipFeatureBase, IDisposable
         return null;
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Unhook(OnTakeDamage, HookMode.Pre);
+        base.Dispose();
     }
 }

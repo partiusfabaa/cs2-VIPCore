@@ -37,7 +37,7 @@ public class VipGiftPlugin : BasePlugin, IPluginConfig<VIP_GiftConfig>
 {
     public override string ModuleName => "VIP Gifts";
     public override string ModuleAuthor => "GSM-RO";
-    public override string ModuleVersion => "1.0.0";
+    public override string ModuleVersion => "v2.0.0";
 
     public VIP_GiftConfig Config { get; set; } = new();
     private readonly Random _random = new();

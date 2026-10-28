@@ -1,13 +1,14 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_Grenades;
 public class VipGrenades : BasePlugin
 {
     public override string ModuleAuthor => "panda.";
     public override string ModuleName => "[VIP] Grenades";
-    public override string ModuleVersion => "1.0";
+    public override string ModuleVersion => "v2.0.0";
 
     private Grenades _grenades = null!;
     private IVipCoreApi? _api;
@@ -20,18 +21,16 @@ public class VipGrenades : BasePlugin
         if (_api == null) return;
 
         _grenades = new Grenades(_api);
-        _api.RegisterFeature(_grenades);
     }
 
     public override void Unload(bool hotReload)
     {
-        _api?.UnRegisterFeature(_grenades);
+        _grenades?.Dispose();
     }
 }
-public class Grenades : VipFeatureBase
+public class Grenades : VipFeature<Dictionary<string, Dictionary<string, int>>>
 {
-    public override string Feature => "Grenades";
-    public Grenades(IVipCoreApi api) : base(api)
+    public Grenades(IVipCoreApi api) : base("Grenades", api)
     {
     }
 
@@ -44,11 +43,11 @@ public class Grenades : VipFeatureBase
         ["weapon_molotov"] = 16,
         ["weapon_hegrenade"] = 13
     };
-    public override void OnPlayerSpawn(CCSPlayerController player)
+    public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
-        if (!PlayerHasFeature(player)) return;
-        if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
-            or IVipCoreApi.FeatureState.NoAccess) return;
+        if (!vip || !PlayerHasFeature(player)) return;
+        if (GetPlayerFeatureState(player) is FeatureState.Disabled
+            or FeatureState.NoAccess) return;
 
         var teamKey = player.TeamNum switch
         {
@@ -59,7 +58,7 @@ public class Grenades : VipFeatureBase
 
         if (teamKey == null) return;
 
-        var teamGrenadeConfig = GetFeatureValue<Dictionary<string, Dictionary<string, int>>?>(player);
+        var teamGrenadeConfig = GetValue(player);
         if (teamGrenadeConfig == null || !teamGrenadeConfig.ContainsKey(teamKey)) return;
 
         var grenadeConfig = teamGrenadeConfig[teamKey];

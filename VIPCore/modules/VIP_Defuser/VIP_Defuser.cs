@@ -2,6 +2,7 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_Defuser;
 
@@ -9,7 +10,7 @@ public class VipDefuser : BasePlugin
 {
     public override string ModuleAuthor => "panda";
     public override string ModuleName => "[VIP] Defuser";
-    public override string ModuleVersion => "v1.1";
+    public override string ModuleVersion => "v2.0.0";
     
     private Defuser? _defuser;
     private IVipCoreApi? _api;
@@ -21,22 +22,17 @@ public class VipDefuser : BasePlugin
         if (_api == null) return;
 
         _defuser = new Defuser(_api);
-        _api.RegisterFeature(_defuser);
     }
     
     public override void Unload(bool hotReload)
     {
-        if (_api != null && _defuser != null)
-        {
-            _api.UnRegisterFeature(_defuser);
-        }
+        _defuser?.Dispose();
     }
 }
 
-public class Defuser : VipFeatureBase
+public class Defuser : VipFeature
 {
-    public override string Feature => "Defuser";
-    public Defuser(IVipCoreApi api) : base(api)
+    public Defuser(IVipCoreApi api) : base("Defuser", api)
     {
     }
     
@@ -58,11 +54,12 @@ public class Defuser : VipFeatureBase
         }
         return false;
     }
-    public override void OnPlayerSpawn(CCSPlayerController player)
+    public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
+        if (!vip) return;
         if (!PlayerHasFeature(player)) return;
-        if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
-            or IVipCoreApi.FeatureState.NoAccess) return;
+        if (GetPlayerFeatureState(player) is FeatureState.Disabled
+            or FeatureState.NoAccess) return;
             
         if (player == null) return;
         

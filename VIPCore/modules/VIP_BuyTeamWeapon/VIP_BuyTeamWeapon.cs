@@ -4,7 +4,7 @@ using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
 using VipCoreApi;
-using static VipCoreApi.IVipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_BuyTeamWeapon;
 
@@ -12,9 +12,9 @@ public class VipBuyTeamWeapon : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] BuyTeamWeapon";
-    public override string ModuleVersion => "v1.0.0";
+    public override string ModuleVersion => "v2.0.0";
     
-    private BuyTeamWeapon _buyTeamWeapon;
+    private BuyTeamWeapon? _buyTeamWeapon;
     private IVipCoreApi? _api;
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
@@ -24,19 +24,17 @@ public class VipBuyTeamWeapon : BasePlugin
         if (_api == null) return;
 
         _buyTeamWeapon = new BuyTeamWeapon(this, _api);
-        _api.RegisterFeature(_buyTeamWeapon, FeatureType.Hide);
     }
     
     public override void Unload(bool hotReload)
     {
-        _api?.UnRegisterFeature(_buyTeamWeapon);
+        _buyTeamWeapon?.Dispose();
     }
 }
 
-public class BuyTeamWeapon : VipFeatureBase
+public class BuyTeamWeapon : VipFeature<bool>
 {
-    public override string Feature => "BuyTeamWeapon";
-    public BuyTeamWeapon(BasePlugin basePlugin, IVipCoreApi api) : base(api)
+    public BuyTeamWeapon(BasePlugin basePlugin, IVipCoreApi api) : base("BuyTeamWeapon", api, FeatureType.Hide)
     {
         basePlugin.RegisterEventHandler<EventRoundStart>(EventRoundStart);
         
@@ -49,7 +47,7 @@ public class BuyTeamWeapon : VipFeatureBase
     
     private HookResult EventRoundStart(EventRoundStart @event, GameEventInfo info)
     {
-        foreach (var player in Utilities.GetPlayers().Where(u => IsClientVip(u) && PlayerHasFeature(u) && GetFeatureValue<bool>(u) && u.PawnIsAlive))
+        foreach (var player in Utilities.GetPlayers().Where(u => IsPlayerVip(u) && PlayerHasFeature(u) && GetValue(u) && u.PawnIsAlive))
         {
             PrintToChat(player, 
                 GetTranslatedText("buyteamweapon.round_start", 
@@ -65,7 +63,7 @@ public class BuyTeamWeapon : VipFeatureBase
     {
         if (player is null) return;
         
-        if (!IsClientVip(player) || !PlayerHasFeature(player) || !GetFeatureValue<bool>(player) || !player.PawnIsAlive)
+        if (!IsPlayerVip(player) || !PlayerHasFeature(player) || !GetValue(player) || !player.PawnIsAlive)
         {
             PrintToChat(player, GetTranslatedText("vip.NoAccess"));
             return;

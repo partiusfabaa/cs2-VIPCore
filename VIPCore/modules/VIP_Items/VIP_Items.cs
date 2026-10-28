@@ -1,6 +1,7 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_Items;
 
@@ -8,7 +9,7 @@ public class VipItems : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Items";
-    public override string ModuleVersion => "1.0.1";
+    public override string ModuleVersion => "v2.0.0";
 
     private Items _items = null!;
     private IVipCoreApi? _api;
@@ -21,19 +22,16 @@ public class VipItems : BasePlugin
         if (_api == null) return;
 
         _items = new Items(_api);
-        _api.RegisterFeature(_items);
     }
 
     public override void Unload(bool hotReload)
     {
-        _api?.UnRegisterFeature(_items);
+        _items?.Dispose();
     }
 }
 
-public class Items : VipFeatureBase
+public class Items : VipFeature<Dictionary<string, List<string>>>
 {
-    public override string Feature => "Items";
-    
     private readonly Dictionary<string, int> _grenadeIndex = new()
     {
         ["flashbang"] = 14, 
@@ -44,19 +42,19 @@ public class Items : VipFeatureBase
         ["hegrenade"] = 13
     };
     
-    public Items(IVipCoreApi api) : base(api)
+    public Items(IVipCoreApi api) : base("Items", api)
     {
     }
 
-    public override void OnPlayerSpawn(CCSPlayerController player)
+    public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
-        if (IsPistolRound()) return;
+        if (!vip || IsPistolRound()) return;
 
         if (!PlayerHasFeature(player)) return;
-        if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
-            or IVipCoreApi.FeatureState.NoAccess) return;
+        if (GetPlayerFeatureState(player) is FeatureState.Disabled
+            or FeatureState.NoAccess) return;
 
-        var itemsConfig = GetFeatureValue<Dictionary<string, List<string>>?>(player);
+        var itemsConfig = GetValue(player);
         if (itemsConfig == null) return;
 
         var teamKey = player.TeamNum switch

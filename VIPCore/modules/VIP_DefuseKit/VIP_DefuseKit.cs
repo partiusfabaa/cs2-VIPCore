@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Utils;
 using VipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIPCore;
 
@@ -10,7 +11,7 @@ public class VIP_DefuseKit : BasePlugin
 {
     public override string ModuleAuthor => "T3Marius";
     public override string ModuleName => "[VIP] DefuseKit";
-    public override string ModuleVersion => "1.0";
+    public override string ModuleVersion => "v2.0.0";
     private IVipCoreApi? VIP_API;
     private DefuseKit? defuseKit;
     private PluginCapability<IVipCoreApi> pluginCapabilty { get; } = new("vipcore:core");
@@ -21,26 +22,23 @@ public class VIP_DefuseKit : BasePlugin
         VIP_API.OnCoreReady += () =>
         {
             defuseKit = new DefuseKit(this, VIP_API);
-            VIP_API.RegisterFeature(defuseKit);
         };
     }
     public override void Unload(bool hotReload)
     {
-        VIP_API?.UnRegisterFeature(defuseKit);
+        defuseKit?.Dispose();
     }
-    public class DefuseKit : VipFeatureBase
+    public class DefuseKit : VipFeature
     {
-        public override string Feature => "DefuseKit";
-
-        public DefuseKit(VIP_DefuseKit defuseKit, IVipCoreApi api) : base(api)
+        public DefuseKit(VIP_DefuseKit defuseKit, IVipCoreApi api) : base("DefuseKit", api)
         {
 
         }
-        public override void OnPlayerSpawn(CCSPlayerController player)
+        public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
         {
-            if (!IsClientVip(player) ||
+            if (!IsPlayerVip(player) ||
                 !PlayerHasFeature(player) ||
-                GetPlayerFeatureState(player) is not IVipCoreApi.FeatureState.Enabled) return;
+                GetPlayerFeatureState(player) is not FeatureState.Enabled) return;
 
             if (player.Team == CsTeam.Terrorist)
                 return;

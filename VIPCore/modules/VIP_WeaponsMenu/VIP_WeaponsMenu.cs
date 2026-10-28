@@ -6,7 +6,7 @@ using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Text.Json;
 using VipCoreApi;
-using static VipCoreApi.IVipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_WeaponsMenu;
 
@@ -14,9 +14,9 @@ public class VipWeaponsMenu : BasePlugin
 {
     public override string ModuleAuthor => "daffyy";
     public override string ModuleName => "[VIP] WeaponsMenu";
-    public override string ModuleVersion => "v1.0.2";
+    public override string ModuleVersion => "v2.0.0";
     
-    private WeaponsMenu _weaponsMenu;
+    private WeaponsMenu? _weaponsMenu;
     private IVipCoreApi? _api;
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
@@ -26,16 +26,15 @@ public class VipWeaponsMenu : BasePlugin
         if (_api == null) return;
 
         _weaponsMenu = new WeaponsMenu(this, _api);
-        _api.RegisterFeature(_weaponsMenu, FeatureType.Hide);
     }
     
     public override void Unload(bool hotReload)
     {
-        _api?.UnRegisterFeature(_weaponsMenu);
+        _weaponsMenu?.Dispose();
     }
 }
 
-public class WeaponsMenu : VipFeatureBase
+public class WeaponsMenu : VipFeature
 {
     private VipWeaponsMenu _weaponsMenu;
     private static CCSGameRules? _gameRules;
@@ -52,9 +51,7 @@ public class WeaponsMenu : VipFeatureBase
         ["hegrenade"] = 13
     };
 
-    public override string Feature => "WeaponsMenu";
-
-    public WeaponsMenu(VipWeaponsMenu weaponsMenu, IVipCoreApi api) : base(api)
+    public WeaponsMenu(VipWeaponsMenu weaponsMenu, IVipCoreApi api) : base("WeaponsMenu", api, FeatureType.Hide)
     {
         _weaponsMenu = weaponsMenu;
         _weaponsMenu.RegisterEventHandler<EventPlayerSpawn>(EventPlayerSpawn);
@@ -66,7 +63,7 @@ public class WeaponsMenu : VipFeatureBase
     private void OnVwMenuCommand(CCSPlayerController? caller, CommandInfo command)
     {
         if (caller == null || !caller.IsValid) return;
-        if (!IsClientVip(caller) || !PlayerHasFeature(caller) || GetPlayerFeatureState(caller) is not FeatureState.Enabled)
+        if (!IsPlayerVip(caller) || !PlayerHasFeature(caller) || GetPlayerFeatureState(caller) is not FeatureState.Enabled)
             return;
 
         RemovePlayerSelection(caller);
@@ -104,7 +101,7 @@ public class WeaponsMenu : VipFeatureBase
         if (player == null || !player.IsValid || player.IsBot || player.TeamNum < 2)
             return HookResult.Continue;
 
-        if (!IsClientVip(player) || !PlayerHasFeature(player) || GetPlayerFeatureState(player) is not FeatureState.Enabled)
+        if (!IsPlayerVip(player) || !PlayerHasFeature(player) || GetPlayerFeatureState(player) is not FeatureState.Enabled)
             return HookResult.Continue;
 
         MenuManager.CloseActiveMenu(player);

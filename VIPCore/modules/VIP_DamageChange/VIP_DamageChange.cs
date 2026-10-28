@@ -4,7 +4,7 @@ using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using VipCoreApi;
-using static VipCoreApi.IVipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_DamageChange;
 
@@ -12,7 +12,7 @@ public class VipDamageChange : BasePlugin
 {
     public override string ModuleAuthor => "panda.";
     public override string ModuleName => "[VIP] Damage Multiplier";
-    public override string ModuleVersion => "v1.1";
+    public override string ModuleVersion => "v2.0.0";
     private IVipCoreApi? _api;
     private DamageMultiplier? _damageMultiplier;
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
@@ -23,7 +23,6 @@ public class VipDamageChange : BasePlugin
         if (_api == null) return;
 
         _damageMultiplier = new DamageMultiplier(_api);
-        _api.RegisterFeature(_damageMultiplier);
 
         VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(_damageMultiplier.OnTakeDamage, HookMode.Pre);
     }
@@ -32,17 +31,15 @@ public class VipDamageChange : BasePlugin
     {
         if (_api != null && _damageMultiplier != null)
         {
-            _api?.UnRegisterFeature(_damageMultiplier);
+            _damageMultiplier.Dispose();
             VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Unhook(_damageMultiplier.OnTakeDamage, HookMode.Pre);
         }
     }
 }
 
-public class DamageMultiplier : VipFeatureBase
+public class DamageMultiplier : VipFeature<float>
 {
-    public override string Feature => "DamageMultiplier";
-
-    public DamageMultiplier(IVipCoreApi api) : base(api)
+    public DamageMultiplier(IVipCoreApi api) : base("DamageMultiplier", api)
     {
     }
 
@@ -78,7 +75,7 @@ public class DamageMultiplier : VipFeatureBase
                     weaponData.GearSlot != gear_slot_t.GEAR_SLOT_PISTOL)
                     return HookResult.Continue;
 
-                var damageModifierValue = GetFeatureValue<float>(player);
+                var damageModifierValue = GetValue(player);
                 
                 if (damageModifierValue < 1.0f)
                     return HookResult.Continue;

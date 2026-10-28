@@ -2,7 +2,7 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
-using static VipCoreApi.IVipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_Endurance;
 
@@ -10,11 +10,11 @@ public class VipEndurance : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Endurance";
-    public override string ModuleVersion => "v1.0.1";
+    public override string ModuleVersion => "v2.0.0";
 
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
     private IVipCoreApi? _api;
-    private Endurance _endurance;
+    private Endurance? _endurance;
 
     public override void OnAllPluginsLoaded(bool hotReload)
     {
@@ -24,32 +24,29 @@ public class VipEndurance : BasePlugin
         _api.OnCoreReady += () =>
         {
             _endurance = new Endurance(this, _api);
-            _api.RegisterFeature(_endurance);
         };
     }
 
     public override void Unload(bool hotReload)
     {
-        _api?.UnRegisterFeature(_endurance);
+        _endurance?.Dispose();
     }
 }
 
-public class Endurance : VipFeatureBase
+public class Endurance : VipFeature
 {
-    public override string Feature => "endurance";
-
     private readonly bool[] _enduranceEnabled = new bool[64];
 
-    public Endurance(BasePlugin basePlugin, IVipCoreApi api) : base(api)
+    public Endurance(BasePlugin basePlugin, IVipCoreApi api) : base("endurance", api)
     {
         basePlugin.RegisterListener<Listeners.OnTick>(() =>
         {
             foreach (var players in Utilities.GetPlayers().Where(u =>
-                         u is { IsValid: true, PawnIsAlive: true } && IsClientVip(u) && PlayerHasFeature(u) && _enduranceEnabled[u.Slot]))
+                         u is { IsValid: true, PawnIsAlive: true } && IsPlayerVip(u) && PlayerHasFeature(u) && _enduranceEnabled[u.Slot]))
             {
                 var playerPawn = players.PlayerPawn.Value;
                 if (playerPawn == null) continue;
-                
+
                 if (playerPawn is { IsValid: true, VelocityModifier: < 1.0f })
                 {
                     playerPawn.VelocityModifier = 1.0f;
@@ -58,15 +55,15 @@ public class Endurance : VipFeatureBase
         });
     }
 
-    public override void OnPlayerLoaded(CCSPlayerController player, string group)
+    public override void OnPlayerAuthorized(CCSPlayerController player, string group)
     {
         if (!PlayerHasFeature(player)) return;
-        
+
         _enduranceEnabled[player.Slot] = GetPlayerFeatureState(player) == FeatureState.Enabled;
     }
 
-    public override void OnSelectItem(CCSPlayerController player, FeatureState state)
+    public override void OnSelectItem(CCSPlayerController player, VipFeature feature)
     {
-        _enduranceEnabled[player.Slot] = state == FeatureState.Enabled;
+        _enduranceEnabled[player.Slot] = GetPlayerFeatureState(player) == FeatureState.Enabled;
     }
 }

@@ -4,7 +4,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Utils;
 using VipCoreApi;
-using static VipCoreApi.IVipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_Gravity;
 
@@ -12,10 +12,10 @@ public class VipGravity : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Gravity";
-    public override string ModuleVersion => "1.0.1";
+    public override string ModuleVersion => "v2.0.0";
 
     private IVipCoreApi? _api;
-    private Gravity _gravity;
+    private Gravity? _gravity;
 
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
@@ -25,28 +25,25 @@ public class VipGravity : BasePlugin
         if (_api == null) return;
 
         _gravity = new Gravity(this, _api);
-        _api.RegisterFeature(_gravity);
     }
 
     public override void Unload(bool hotReload)
     {
-        _api?.UnRegisterFeature(_gravity);
+        _gravity?.Dispose();
     }
 }
 
-public class Gravity : VipFeatureBase
+public class Gravity : VipFeature<float>
 {
-    public override string Feature => "Gravity";
-
     private readonly MoveType_t[] _oldMoveType = new MoveType_t[70];
 
-    public Gravity(VipGravity vipGravity, IVipCoreApi api) : base(api)
+    public Gravity(VipGravity vipGravity, IVipCoreApi api) : base("Gravity", api)
     {
         vipGravity.RegisterListener<Listeners.OnTick>(() =>
         {
             foreach (var player in Utilities.GetPlayers()
                          .Where(u => u.IsValid &&
-                                     IsClientVip(u) &&
+                                     IsPlayerVip(u) &&
                                      PlayerHasFeature(u) &&
                                      GetPlayerFeatureState(u) is FeatureState.Enabled))
             {
@@ -56,7 +53,7 @@ public class Gravity : VipFeatureBase
                 if (_oldMoveType[player.Slot] is MoveType_t.MOVETYPE_LADDER &&
                     playerPawn.ActualMoveType is not MoveType_t.MOVETYPE_LADDER)
                 {
-                    playerPawn.GravityScale = GetFeatureValue<float>(player);
+                    playerPawn.GravityScale = GetValue(player);
                 }
 
                 _oldMoveType[player.Slot] = playerPawn.ActualMoveType;
@@ -64,20 +61,21 @@ public class Gravity : VipFeatureBase
         });
     }
 
-    public override void OnPlayerSpawn(CCSPlayerController player)
+    public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
-        if (!PlayerHasFeature(player)) return;
+        if (!vip || !PlayerHasFeature(player)) return;
         if (GetPlayerFeatureState(player) is not FeatureState.Enabled) return;
 
         var playerPawnValue = player.PlayerPawn.Value;
 
         if (playerPawnValue == null) return;
 
-        playerPawnValue.GravityScale = GetFeatureValue<float>(player);
+        playerPawnValue.GravityScale = GetValue(player);
     }
 
-    public override void OnSelectItem(CCSPlayerController player, FeatureState state)
+    public override void OnSelectItem(CCSPlayerController player, VipFeature feature)
     {
+        var state = GetPlayerFeatureState(player);
         Console.WriteLine(state);
         var playerPawnValue = player.PlayerPawn.Value;
 
@@ -89,6 +87,6 @@ public class Gravity : VipFeatureBase
         }
 
         if (playerPawnValue != null)
-            playerPawnValue.GravityScale = GetFeatureValue<float>(player);
+            playerPawnValue.GravityScale = GetValue(player);
     }
 }

@@ -2,7 +2,7 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
-using static VipCoreApi.IVipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_FastPlant;
 
@@ -10,10 +10,10 @@ public class VipFastPlant : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Fast Defuse";
-    public override string ModuleVersion => "v1.0.0";
+    public override string ModuleVersion => "v2.0.0";
 
     private IVipCoreApi? _api;
-    private FastPlant _fastPlant;
+    private FastPlant? _fastPlant;
 
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
@@ -23,20 +23,17 @@ public class VipFastPlant : BasePlugin
         if (_api == null) return;
 
         _fastPlant = new FastPlant(this, _api);
-        _api.RegisterFeature(_fastPlant);
     }
 
     public override void Unload(bool hotReload)
     {
-        _api?.UnRegisterFeature(_fastPlant);
+        _fastPlant?.Dispose();
     }
 }
 
-public class FastPlant : VipFeatureBase
+public class FastPlant : VipFeature<bool>
 {
-    public override string Feature => "fastplant";
-
-    public FastPlant(BasePlugin basePlugin, IVipCoreApi api) : base(api)
+    public FastPlant(BasePlugin basePlugin, IVipCoreApi api) : base("fastplant", api)
     {
         basePlugin.RegisterEventHandler<EventBombBeginplant>((@event, info) =>
         {
@@ -46,11 +43,11 @@ public class FastPlant : VipFeatureBase
             var playerPawn = player.PlayerPawn.Value;
             if (playerPawn == null) return HookResult.Continue;
 
-            if (!IsClientVip(player) || !PlayerHasFeature(player) ||
+            if (!IsPlayerVip(player) || !PlayerHasFeature(player) ||
                 GetPlayerFeatureState(player) is not FeatureState.Enabled ||
                 !player.PawnIsAlive) return HookResult.Continue;
 
-            if (!GetFeatureValue<bool>(player)) return HookResult.Continue;
+            if (!GetValue(player)) return HookResult.Continue;
 
             var weaponService = playerPawn.WeaponServices?.ActiveWeapon;
             if (weaponService == null) return HookResult.Continue;

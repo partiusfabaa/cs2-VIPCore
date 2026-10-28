@@ -29,7 +29,7 @@ public class VIP_NightVip : BasePlugin
 {
     public override string ModuleAuthor => "panda.";
     public override string ModuleName => "[VIP] Night VIP";
-    public override string ModuleVersion => "v1.3";
+    public override string ModuleVersion => "v2.0.0";
     public override string ModuleDescription => "Gives VIP between a certain period of time.";
 
     private IVipCoreApi? _api;
@@ -164,7 +164,7 @@ public class VIP_NightVip : BasePlugin
         foreach (var player in Utilities.GetPlayers())
         {
             if (!IsPlayerValid(player)) continue;
-            if (_api.IsClientVip(player)) continue;
+            if (_api.IsPlayerVip(player)) continue;
 
             GiveVIP(player);
         }
@@ -182,11 +182,11 @@ public class VIP_NightVip : BasePlugin
             ? now >= _startTime && now < _endTime
             : now >= _startTime || now < _endTime;
 
-        if (!isVipTime || _api.IsClientVip(player))
+        if (!isVipTime || _api.IsPlayerVip(player))
             return;
 
         var remainingMinutes = CalculateRemainingVipTimeMinutes(_endTime, now);
-        _api.GiveClientTemporaryVip(player, Config.VIPGroup, remainingMinutes);
+        _api.GivePlayerTemporaryVip(player, Config.VIPGroup, remainingMinutes);
         _api.PrintToChat(player, $" \x02{Config.Tag} \x01{Config.VipGrantedMessage}");
 
         LogInfo($"Gave temporary VIP ({Config.VIPGroup}) to {player?.PlayerName} for {remainingMinutes} minutes.");

@@ -4,6 +4,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Utils;
 using VipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_Jumps;
 
@@ -11,7 +12,7 @@ public class VipJumps : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius,GSM-RO";
     public override string ModuleName => "[VIP] Jumps";
-    public override string ModuleVersion => "v1.0.2";
+    public override string ModuleVersion => "v2.0.0";
 
     private IVipCoreApi? _api;
     private Jumps? _jumps;
@@ -26,23 +27,20 @@ public class VipJumps : BasePlugin
         _api.OnCoreReady += () =>
         {
             _jumps = new Jumps(this, _api);
-            _api.RegisterFeature(_jumps);
         };
     }
 
     public override void Unload(bool hotReload)
     {
-        if(_jumps != null)
-            _api?.UnRegisterFeature(_jumps);
+        _jumps?.Dispose();
     }
 }
 
-public class Jumps : VipFeatureBase
+public class Jumps : VipFeature
 {
-    public override string Feature => "Jumps";
     private static readonly UserSettings?[] UserSettings = new UserSettings?[65];
 
-    public Jumps(VipJumps vipJumps, IVipCoreApi api) : base(api)
+    public Jumps(VipJumps vipJumps, IVipCoreApi api) : base("Jumps", api)
     {
         vipJumps.RegisterListener<Listeners.OnClientAuthorized>((slot, id) =>
             UserSettings[slot + 1] = new UserSettings());
@@ -55,8 +53,8 @@ public class Jumps : VipFeatureBase
                 if (UserSettings[player.Index] == null ||
                     player.TeamNum is not ((int)CsTeam.Terrorist or (int)CsTeam.CounterTerrorist)) continue;
 
-                if (IsClientVip(player) && PlayerHasFeature(player) &&
-                    GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Enabled)
+                if (IsPlayerVip(player) && PlayerHasFeature(player) &&
+                    GetPlayerFeatureState(player) is FeatureState.Enabled)
                     OnTick(player);
             }
         });
@@ -99,8 +97,9 @@ public class Jumps : VipFeatureBase
         }
     }
 
-    public override void OnPlayerSpawn(CCSPlayerController player)
+    public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
+        if (!vip) return;
         if (UserSettings[player.Index] == null) return;
         if (!PlayerHasFeature(player)) return;
 

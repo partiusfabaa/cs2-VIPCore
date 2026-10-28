@@ -3,7 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Menu;
 using VipCoreApi;
-using static VipCoreApi.IVipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_Fov;
 
@@ -11,10 +11,10 @@ public class VipFov : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Fov";
-    public override string ModuleVersion => "v1.0.1";
+    public override string ModuleVersion => "v2.0.0";
     
     private IVipCoreApi? _api;
-    private Fov _fov;
+    private Fov? _fov;
 
     private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
@@ -24,27 +24,25 @@ public class VipFov : BasePlugin
         if (_api == null) return;
 
         _fov = new Fov(this, _api);
-        _api.RegisterFeature(_fov, FeatureType.Selectable);
     }
 
     public override void Unload(bool hotReload)
     {
-        _api?.UnRegisterFeature(_fov);
+        _fov?.Dispose();
     }
 }
 
-public class Fov : VipFeatureBase
+public class Fov : VipFeature<List<int>>
 {
-    public override string Feature => "Fov";
     private readonly int[] _fovSettings = new int[67];
 
-    public Fov(BasePlugin vipFov, IVipCoreApi api) : base(api)
+    public Fov(BasePlugin vipFov, IVipCoreApi api) : base("Fov", api, FeatureType.Selectable)
     {
         vipFov.RegisterEventHandler<EventPlayerDisconnect>((@event, info) =>
         {
             var player = @event.Userid;
 
-            if (player != null && !IsClientVip(player))
+            if (player != null && !IsPlayerVip(player))
             {
                 _fovSettings[player.Slot] = 90;
                 ChangeFov(player);
@@ -53,18 +51,18 @@ public class Fov : VipFeatureBase
         });
     }
 
-    public override void OnPlayerLoaded(CCSPlayerController player, string group)
+    public override void OnPlayerAuthorized(CCSPlayerController player, string group)
     {
-        var cookie = GetPlayerCookie<int>(player.SteamID, "player_fov");
+        var cookie = GetPlayerCookie<int>(player, "player_fov");
 
         _fovSettings[player.Slot] = cookie == 0 ? 90 : cookie;
     }
 
-    public override void OnSelectItem(CCSPlayerController player, FeatureState state)
+    public override void OnSelectItem(CCSPlayerController player, VipFeature feature)
     {
-        var userFov = GetFeatureValue<List<int>>(player);
+        var userFov = GetValue(player);
 
-        var menu = CreateMenu(GetTranslatedText(Feature));
+        var menu = CreateMenu(GetTranslatedText(Name));
         menu.AddMenuOption(GetTranslatedText("fov.Disable"), (controller, option) =>
         {
             _fovSettings[player.Slot] = 90;
@@ -90,15 +88,17 @@ public class Fov : VipFeatureBase
     {
         var fov = (uint)_fovSettings[player.Slot];
         
-        if(IsClientVip(player))
-            SetPlayerCookie(player.SteamID, "player_fov", fov);
+        if(IsPlayerVip(player))
+            SetPlayerCookie(player, "player_fov", fov);
         
         player.DesiredFOV = fov;
         Utilities.SetStateChanged(player, "CBasePlayerController", "m_iDesiredFOV");
     }
 
-    public override void OnPlayerSpawn(CCSPlayerController player)
+    public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
+        if (!vip) return;
+
         if (!PlayerHasFeature(player))
             _fovSettings[player.Slot] = 90;
 

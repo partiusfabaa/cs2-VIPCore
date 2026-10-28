@@ -9,7 +9,7 @@ using CounterStrikeSharp.API.Modules.Utils;
 using CS2_SimpleAdminApi;
 using Microsoft.Extensions.Logging;
 using VipCoreApi;
-using static VipCoreApi.IVipCoreApi;
+using VipCoreApi.Enums;
 
 namespace VIP_Tag;
 
@@ -17,7 +17,7 @@ public class VIPTag : BasePlugin
 {
     public override string ModuleAuthor => "Toil";
     public override string ModuleName => "[VIP] Tag";
-    public override string ModuleVersion => "v1.2.0";
+    public override string ModuleVersion => "v2.0.0";
 
     private IVipCoreApi? _api;
     private Tag? _tag;
@@ -30,12 +30,11 @@ public class VIPTag : BasePlugin
         if (_api == null) return;
 
         _tag = new Tag(this, _api);
-        _api.RegisterFeature(_tag, FeatureType.Selectable);
     }
 
     public override void Unload(bool hotReload)
     {
-        if (_tag != null) _api?.UnRegisterFeature(_tag);
+        _tag?.Dispose();
     }
 }
 
@@ -67,10 +66,8 @@ public class TagsConfig
     public Dictionary<string, JsonElement> Players { get; set; } = new();
 }
 
-public class Tag : VipFeatureBase
+public class Tag : VipFeature<JsonElement>
 {
-    public override string Feature => "Tag";
-
     private const string ChoiceCookie = "player_tag";
     private const string ChoiceOff = "off";
 
@@ -86,7 +83,7 @@ public class Tag : VipFeatureBase
     private AdminPlusGagReader? _adminPlus;
     private IksAdminGagReader? _iksAdmin;
 
-    public Tag(VIPTag vipTag, IVipCoreApi api) : base(api)
+    public Tag(VIPTag vipTag, IVipCoreApi api) : base("Tag", api, FeatureType.Selectable)
     {
         _plugin = vipTag;
 
@@ -224,7 +221,7 @@ public class Tag : VipFeatureBase
 
         if (PlayerHasFeature(player))
         {
-            try { tags.AddRange(ParseTags(GetFeatureValue<JsonElement>(player))); }
+            try { tags.AddRange(ParseTags(GetValue(player))); }
             catch { }
         }
 
@@ -236,7 +233,7 @@ public class Tag : VipFeatureBase
         var tags = GetAvailableTags(player);
         if (tags.Count == 0) return null;
 
-        var choice = GetPlayerCookie<string>(player.SteamID, ChoiceCookie);
+        var choice = GetPlayerCookie<string>(player, ChoiceCookie);
         if (choice == ChoiceOff) return null;
 
         return tags.FirstOrDefault(t => TagKey(t) == choice) ?? tags[0];
@@ -282,7 +279,7 @@ public class Tag : VipFeatureBase
     }
 
 
-    public override void OnSelectItem(CCSPlayerController player, FeatureState state)
+    public override void OnSelectItem(CCSPlayerController player, VipFeature feature)
     {
         OpenTagMenu(player);
     }
@@ -293,11 +290,11 @@ public class Tag : VipFeatureBase
         if (tags.Count == 0) return;
 
         var current = GetActiveTag(player);
-        var menu = CreateMenu(GetTranslatedText(Feature));
+        var menu = CreateMenu(GetTranslatedText(Name));
 
         menu.AddMenuOption(GetTranslatedText("tag.Disable"), (controller, _) =>
         {
-            SetPlayerCookie(controller.SteamID, ChoiceCookie, ChoiceOff);
+            SetPlayerCookie(controller, ChoiceCookie, ChoiceOff);
             PrintToChat(controller, GetTranslatedText("tag.Off"));
             ApplyScoreboard(controller);
         }, current == null);
@@ -307,7 +304,7 @@ public class Tag : VipFeatureBase
             var key = TagKey(tag);
             menu.AddMenuOption(TagName(tag), (controller, _) =>
             {
-                SetPlayerCookie(controller.SteamID, ChoiceCookie, key);
+                SetPlayerCookie(controller, ChoiceCookie, key);
                 PrintToChat(controller, GetTranslatedText("tag.On", TagName(tag)));
                 ApplyScoreboard(controller);
             }, current != null && TagKey(current) == key);

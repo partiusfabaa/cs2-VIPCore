@@ -1,4 +1,4 @@
-![Static Badge](https://img.shields.io/badge/ver-1.3-darkgreen)
+![Static Badge](https://img.shields.io/badge/ver-2.0.0-darkgreen)
 
 ## `[VIP] Night VIP`
 Gives players a temporary VIP group during a specific time window (for example at night).

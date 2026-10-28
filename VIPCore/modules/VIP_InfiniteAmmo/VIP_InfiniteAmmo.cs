@@ -1,6 +1,7 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
+using VipCoreApi.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace VIP_InfiniteAmmo;
@@ -9,7 +10,7 @@ public class VipInfiniteAmmo : BasePlugin
 {
 	public override string ModuleAuthor => "panda";
 	public override string ModuleName => "[VIP] Infinite Ammo";
-	public override string ModuleVersion => "v1.1";
+	public override string ModuleVersion => "v2.0.0";
 
 	private IVipCoreApi? _api;
 	private InfiniteAmmo? _infiniteAmmoFeature;
@@ -20,24 +21,19 @@ public class VipInfiniteAmmo : BasePlugin
 		if (_api == null) return;
 
 		_infiniteAmmoFeature = new InfiniteAmmo(this, _api);
-		_api.RegisterFeature(_infiniteAmmoFeature);
 	}
 
 	public override void Unload(bool hotReload)
     {
-        if (_api != null && _infiniteAmmoFeature != null)
-        {
-            _api?.UnRegisterFeature(_infiniteAmmoFeature);
-        }
+        _infiniteAmmoFeature?.Dispose();
     }
 }
 
-public class InfiniteAmmo : VipFeatureBase
+public class InfiniteAmmo : VipFeature<Config>
 {
-	public override string Feature => "InfiniteAmmo";
 	private Config _config;
 
-	public InfiniteAmmo(VipInfiniteAmmo vipAmmo, IVipCoreApi api) : base(api)
+	public InfiniteAmmo(VipInfiniteAmmo vipAmmo, IVipCoreApi api) : base("InfiniteAmmo", api)
 	{
 		vipAmmo.RegisterEventHandler<EventWeaponFire>(OnWeaponFire);
 		vipAmmo.RegisterEventHandler<EventWeaponReload>(OnWeaponReload);
@@ -68,10 +64,10 @@ public class InfiniteAmmo : VipFeatureBase
 		if (player == null) return;
 		
 		if (!PlayerHasFeature(player)) return;
-        if (GetPlayerFeatureState(player) is IVipCoreApi.FeatureState.Disabled
-            or IVipCoreApi.FeatureState.NoAccess) return;
+        if (GetPlayerFeatureState(player) is FeatureState.Disabled
+            or FeatureState.NoAccess) return;
 		
-		_config = GetFeatureValue<Config>(player);
+		_config = GetValue(player);
 
 		var activeWeapon = player.PlayerPawn.Value?.WeaponServices?.ActiveWeapon?.Value;
 		if (activeWeapon == null) return;
