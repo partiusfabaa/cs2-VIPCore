@@ -1,3 +1,4 @@
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using CounterStrikeSharp.API.Core;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,7 +14,8 @@ public class ConfigSystem
     {
         WriteIndented = true,
         ReadCommentHandling = JsonCommentHandling.Skip,
-        AllowTrailingCommas = true
+        AllowTrailingCommas = true,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
 
     private readonly IServiceCollection _serviceCollection;
