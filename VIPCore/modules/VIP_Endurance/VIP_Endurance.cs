@@ -35,16 +35,27 @@ public class VipEndurance : BasePlugin
 
 public class Endurance : VipFeature
 {
-    private readonly bool[] _enduranceEnabled = new bool[64];
+    private readonly CCSPlayerController?[] _players = new CCSPlayerController?[65];
 
     public Endurance(BasePlugin basePlugin, IVipCoreApi api) : base("endurance", api)
     {
+        basePlugin.RegisterListener<Listeners.OnClientDisconnectPost>(slot => _players[slot] = null);
         basePlugin.RegisterListener<Listeners.OnTick>(() =>
         {
-            foreach (var players in Utilities.GetPlayers().Where(u =>
-                         u is { IsValid: true, PawnIsAlive: true } && IsPlayerVip(u) && PlayerHasFeature(u) && _enduranceEnabled[u.Slot]))
+            for (var slot = 0; slot < _players.Length; slot++)
             {
-                var playerPawn = players.PlayerPawn.Value;
+                var player = _players[slot];
+                if (player is null) continue;
+
+                if (!player.IsValid)
+                {
+                    _players[slot] = null;
+                    continue;
+                }
+
+                if (!player.PawnIsAlive) continue;
+
+                var playerPawn = player.PlayerPawn.Value;
                 if (playerPawn == null) continue;
 
                 if (playerPawn is { IsValid: true, VelocityModifier: < 1.0f })
@@ -53,17 +64,28 @@ public class Endurance : VipFeature
                 }
             }
         });
+
+        Server.NextWorldUpdate(() =>
+        {
+            foreach (var player in Utilities.GetPlayers())
+                UpdatePlayer(player);
+        });
     }
 
-    public override void OnPlayerAuthorized(CCSPlayerController player, string group)
-    {
-        if (!PlayerHasFeature(player)) return;
+    public override void OnPlayerAuthorized(CCSPlayerController player, string group) => UpdatePlayer(player);
 
-        _enduranceEnabled[player.Slot] = GetPlayerFeatureState(player) == FeatureState.Enabled;
-    }
+    public override void OnPlayerSpawn(CCSPlayerController player, bool vip) => UpdatePlayer(player);
 
-    public override void OnSelectItem(CCSPlayerController player, VipFeature feature)
+    public override void OnSelectItem(CCSPlayerController player, VipFeature feature) => UpdatePlayer(player);
+
+    public override void OnPlayerRemoved(CCSPlayerController player, string group) => _players[player.Slot] = null;
+
+    public override void OnPlayerDisconnect(CCSPlayerController player, bool vip) => _players[player.Slot] = null;
+
+    private void UpdatePlayer(CCSPlayerController player)
     {
-        _enduranceEnabled[player.Slot] = GetPlayerFeatureState(player) == FeatureState.Enabled;
+        if (player is not { IsValid: true, IsBot: false }) return;
+
+        _players[player.Slot] = IsPlayerValid(player) ? player : null;
     }
 }

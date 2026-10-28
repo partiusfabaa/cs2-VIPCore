@@ -39,25 +39,60 @@ public class VipJumps : BasePlugin
 public class Jumps : VipFeature
 {
     private static readonly UserSettings?[] UserSettings = new UserSettings?[65];
+    private readonly CCSPlayerController?[] _players = new CCSPlayerController?[65];
 
     public Jumps(VipJumps vipJumps, IVipCoreApi api) : base("Jumps", api)
     {
         vipJumps.RegisterListener<Listeners.OnClientAuthorized>((slot, id) =>
             UserSettings[slot + 1] = new UserSettings());
-        vipJumps.RegisterListener<Listeners.OnClientDisconnectPost>(slot => UserSettings[slot + 1] = null);
+        vipJumps.RegisterListener<Listeners.OnClientDisconnectPost>(slot =>
+        {
+            UserSettings[slot + 1] = null;
+            _players[slot] = null;
+        });
         vipJumps.RegisterListener<Listeners.OnTick>(() =>
         {
-            foreach (var player in Utilities.GetPlayers()
-                         .Where(player => player is { IsValid: true, IsBot: false, PawnIsAlive: true }))
+            for (var slot = 0; slot < _players.Length; slot++)
             {
-                if (UserSettings[player.Index] == null ||
+                var player = _players[slot];
+                if (player is null) continue;
+
+                if (!player.IsValid)
+                {
+                    _players[slot] = null;
+                    continue;
+                }
+
+                if (!player.PawnIsAlive || UserSettings[player.Index] == null ||
                     player.TeamNum is not ((int)CsTeam.Terrorist or (int)CsTeam.CounterTerrorist)) continue;
 
-                if (IsPlayerVip(player) && PlayerHasFeature(player) &&
-                    GetPlayerFeatureState(player) is FeatureState.Enabled)
-                    OnTick(player);
+                OnTick(player);
             }
         });
+
+        Server.NextWorldUpdate(() =>
+        {
+            foreach (var player in Utilities.GetPlayers().Where(p => p is { IsValid: true, IsBot: false }))
+            {
+                UserSettings[player.Index] ??= new UserSettings();
+                UpdatePlayer(player);
+            }
+        });
+    }
+
+    public override void OnPlayerAuthorized(CCSPlayerController player, string group) => UpdatePlayer(player);
+
+    public override void OnSelectItem(CCSPlayerController player, VipFeature feature) => UpdatePlayer(player);
+
+    public override void OnPlayerRemoved(CCSPlayerController player, string group) => _players[player.Slot] = null;
+
+    public override void OnPlayerDisconnect(CCSPlayerController player, bool vip) => _players[player.Slot] = null;
+
+    private void UpdatePlayer(CCSPlayerController player)
+    {
+        if (player is not { IsValid: true, IsBot: false }) return;
+
+        _players[player.Slot] = IsPlayerValid(player) ? player : null;
     }
 
     private void OnTick(CCSPlayerController player)
@@ -99,6 +134,8 @@ public class Jumps : VipFeature
 
     public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
+        UpdatePlayer(player);
+
         if (!vip) return;
         if (UserSettings[player.Index] == null) return;
         if (!PlayerHasFeature(player)) return;

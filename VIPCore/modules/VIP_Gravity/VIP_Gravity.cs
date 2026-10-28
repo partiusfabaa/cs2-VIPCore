@@ -36,33 +36,61 @@ public class VipGravity : BasePlugin
 public class Gravity : VipFeature<float>
 {
     private readonly MoveType_t[] _oldMoveType = new MoveType_t[70];
+    private readonly CCSPlayerController?[] _players = new CCSPlayerController?[65];
 
     public Gravity(VipGravity vipGravity, IVipCoreApi api) : base("Gravity", api)
     {
+        vipGravity.RegisterListener<Listeners.OnClientDisconnectPost>(slot => _players[slot] = null);
         vipGravity.RegisterListener<Listeners.OnTick>(() =>
         {
-            foreach (var player in Utilities.GetPlayers()
-                         .Where(u => u.IsValid &&
-                                     IsPlayerVip(u) &&
-                                     PlayerHasFeature(u) &&
-                                     GetPlayerFeatureState(u) is FeatureState.Enabled))
+            for (var slot = 0; slot < _players.Length; slot++)
             {
-                var playerPawn = player.PlayerPawn.Value;
-                if (playerPawn is null) return;
+                var player = _players[slot];
+                if (player is null) continue;
 
-                if (_oldMoveType[player.Slot] is MoveType_t.MOVETYPE_LADDER &&
+                if (!player.IsValid)
+                {
+                    _players[slot] = null;
+                    continue;
+                }
+
+                var playerPawn = player.PlayerPawn.Value;
+                if (playerPawn is null) continue;
+
+                if (_oldMoveType[slot] is MoveType_t.MOVETYPE_LADDER &&
                     playerPawn.ActualMoveType is not MoveType_t.MOVETYPE_LADDER)
                 {
                     playerPawn.GravityScale = GetValue(player);
                 }
 
-                _oldMoveType[player.Slot] = playerPawn.ActualMoveType;
+                _oldMoveType[slot] = playerPawn.ActualMoveType;
             }
         });
+
+        Server.NextWorldUpdate(() =>
+        {
+            foreach (var player in Utilities.GetPlayers())
+                UpdatePlayer(player);
+        });
+    }
+
+    public override void OnPlayerAuthorized(CCSPlayerController player, string group) => UpdatePlayer(player);
+
+    public override void OnPlayerRemoved(CCSPlayerController player, string group) => _players[player.Slot] = null;
+
+    public override void OnPlayerDisconnect(CCSPlayerController player, bool vip) => _players[player.Slot] = null;
+
+    private void UpdatePlayer(CCSPlayerController player)
+    {
+        if (player is not { IsValid: true, IsBot: false }) return;
+
+        _players[player.Slot] = IsPlayerValid(player) ? player : null;
     }
 
     public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
+        UpdatePlayer(player);
+
         if (!vip || !PlayerHasFeature(player)) return;
         if (GetPlayerFeatureState(player) is not FeatureState.Enabled) return;
 
@@ -75,8 +103,9 @@ public class Gravity : VipFeature<float>
 
     public override void OnSelectItem(CCSPlayerController player, VipFeature feature)
     {
+        UpdatePlayer(player);
+
         var state = GetPlayerFeatureState(player);
-        Console.WriteLine(state);
         var playerPawnValue = player.PlayerPawn.Value;
 
         if (state == FeatureState.Disabled)

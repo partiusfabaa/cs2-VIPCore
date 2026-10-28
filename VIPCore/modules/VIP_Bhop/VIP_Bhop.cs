@@ -40,41 +40,91 @@ public class Bhop : VipFeature<BhopSettings>
 {
     private readonly VIP_Bhop _vipBhop;
     private readonly BhopSettings[] _bhopSettings = new BhopSettings[70];
+    private readonly CCSPlayerController?[] _players = new CCSPlayerController?[65];
+    private readonly bool[] _bunnyhopReplicated = new bool[65];
 
     public Bhop(VIP_Bhop vipBhop, IVipCoreApi api) : base("Bhop", api)
     {
         _vipBhop = vipBhop;
+        for (var i = 0; i < _bhopSettings.Length; i++)
+            _bhopSettings[i] = new BhopSettings();
+
         vipBhop.RegisterListener<Listeners.OnClientConnected>(slot => _bhopSettings[slot] = new BhopSettings());
-        vipBhop.RegisterListener<Listeners.OnClientDisconnectPost>(slot => _bhopSettings[slot] = new BhopSettings());
+        vipBhop.RegisterListener<Listeners.OnClientDisconnectPost>(slot =>
+        {
+            _bhopSettings[slot] = new BhopSettings();
+            _players[slot] = null;
+            _bunnyhopReplicated[slot] = false;
+        });
 
         vipBhop.RegisterEventHandler<EventRoundStart>(EventRoundStart);
 
         vipBhop.RegisterListener<Listeners.OnTick>(() =>
         {
-            foreach (var player in Utilities.GetPlayers()
-                         .Where(player => player is { IsValid: true, IsBot: false, PawnIsAlive: true }))
+            for (var slot = 0; slot < _players.Length; slot++)
             {
-                var settings = _bhopSettings[player.Slot];
-                if (!settings.Active || !settings.Enabled) continue;
+                var player = _players[slot];
+                if (player is null) continue;
+
+                if (!player.IsValid)
+                {
+                    _players[slot] = null;
+                    continue;
+                }
+
+                if (!player.PawnIsAlive || !_bhopSettings[slot].Active) continue;
 
                 OnTick(player);
             }
         });
+
+        Server.NextWorldUpdate(() =>
+        {
+            foreach (var player in Utilities.GetPlayers())
+                UpdatePlayer(player);
+        });
     }
 
-    public override void OnPlayerAuthorized(CCSPlayerController player, string group)
+    public override void OnPlayerAuthorized(CCSPlayerController player, string group) => UpdatePlayer(player);
+
+    public override void OnPlayerSpawn(CCSPlayerController player, bool vip) => UpdatePlayer(player);
+
+    public override void OnSelectItem(CCSPlayerController player, VipFeature feature) => UpdatePlayer(player);
+
+    public override void OnPlayerRemoved(CCSPlayerController player, string group) => RemovePlayer(player);
+
+    public override void OnPlayerDisconnect(CCSPlayerController player, bool vip) => RemovePlayer(player);
+
+    private void UpdatePlayer(CCSPlayerController player)
     {
-        if (PlayerHasFeature(player))
-            _bhopSettings[player.Slot].Enabled = GetPlayerFeatureState(player) == FeatureState.Enabled;
+        if (player is not { IsValid: true, IsBot: false }) return;
+
+        if (!IsPlayerValid(player))
+        {
+            RemovePlayer(player);
+            return;
+        }
+
+        _players[player.Slot] = player;
+        _bhopSettings[player.Slot].Enabled = true;
     }
 
-    public override void OnSelectItem(CCSPlayerController player, VipFeature feature)
+    private void RemovePlayer(CCSPlayerController player)
     {
-        _bhopSettings[player.Slot].Enabled = GetPlayerFeatureState(player) == FeatureState.Enabled;
+        if (player.Slot is < 0 or >= 65) return;
+
+        _players[player.Slot] = null;
+        _bhopSettings[player.Slot].Enabled = false;
+
+        if (player.IsValid)
+            SetBunnyhop(player, false);
     }
 
     private void SetBunnyhop(CCSPlayerController player, bool value)
     {
+        if (_bunnyhopReplicated[player.Slot] == value) return;
+        _bunnyhopReplicated[player.Slot] = value;
+
         player.ReplicateConVar("sv_autobunnyhopping", Convert.ToString(value));
         player.ReplicateConVar("sv_enablebunnyhopping", Convert.ToString(value));
     }
@@ -126,6 +176,8 @@ public class Bhop : VipFeature<BhopSettings>
                 PrintToChat(player, GetTranslatedText("bhop.TimeToActivation", bhopSettings.Timer));
                 _vipBhop.AddTimer(bhopSettings.Timer + gamerules.FreezeTime, () =>
                 {
+                    if (!player.IsValid) return;
+
                     PrintToChat(player, GetTranslatedText("bhop.Activated"));
                     settings.Active = true;
                     SetBunnyhop(player, true);
