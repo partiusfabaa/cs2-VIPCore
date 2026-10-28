@@ -84,6 +84,9 @@
   "flags": "Прапори",
   "ShowDamage": "Показ урону",
   "BuyTeamWeapon": "Купити зброю для команди",
+  "buyteamweapon.round_start": "Ви можете придбати зброю ворожої команди: {red}{0}",
+  "buyteamweapon.in_buy_zone": "Ви повинні перебувати в зоні закупівлі!",
+  "buyteamweapon.no_money": "У вас недостатньо коштів для купівлі зброї",
   "DamageMultiplier": "Множник урону",
   "DefuseKit": "Набір для розмінування",
   "exp_multiplier": "Множник досвіду",
@@ -95,5 +98,14 @@
   "SoundDMG": "Звук урону",
   "Tag": "Тег",
   "TeammatesHeal": "Лікування союзників",
-  "WeaponsMenu": "Меню зброї"
+  "WeaponsMenu": "Меню зброї",
+  "weaponsmenu.title": "Оберіть набір зброї:",
+  "weaponsmenu.fromround": "[З {0} раунду]",
+  "weaponsmenu.wanttosave": "Зберегти цей набір?",
+  "weaponsmenu.wanttosave.yes": "Так",
+  "weaponsmenu.wanttosave.no": "Ні",
+  "weaponsmenu.saved": "Ваш безкоштовний набір збережено, ви отримаєте його, щойно це буде можливо!",
+  "weaponsmenu.resetinfo.reset": "Ваш безкоштовний набір скинуто, оберіть новий у наступному раунді!",
+  "weaponsmenu.resetinfo.info": "Хочете змінити набір? Використайте команду {orange}!vwmenu{default}, щоб обрати новий у наступному раунді.",
+  "weaponsmenu.notsaved": "Ваш безкоштовний набір не збережено, ви зможете обрати новий у наступному раунді."
 }

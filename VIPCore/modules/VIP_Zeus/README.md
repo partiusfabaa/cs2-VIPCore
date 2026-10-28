@@ -4,6 +4,3 @@
 
 ### in vip.json
 `"Zeus": 1`
-
-# in lang (not necessarily)
-EN: `"Zeus": "Taser"`

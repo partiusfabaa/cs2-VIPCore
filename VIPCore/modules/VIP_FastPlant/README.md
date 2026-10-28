@@ -4,13 +4,3 @@
 
 ### in vip.json
 `"fastplant": true`
-
-
-RU: 
-
-`"fastplant": "Быстрая закладка бомбы"`
-
-EN: 
-
-`"fastplant": "Fast Plant"`
- 

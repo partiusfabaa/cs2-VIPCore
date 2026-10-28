@@ -45,12 +45,4 @@
 ```
 ![image](https://github.com/user-attachments/assets/c01b41d6-fb9f-43d9-893f-46c90f0f17d2)
 
-# in lang (not necessarily)
-
-
-EN: 
-```json
-"CustomDefaultAmmo" : "Custom Default Ammo"
-```
-
 ## Many thanks for the base to **https://github.com/1Mack/CS2-CustomDefaultAmmo**

@@ -10,9 +10,3 @@
 	"Interval": 3 	//Interval between armor regeneration (in seconds)
 }
 ```
-
-# in lang (not necessarily)
-
-RU: `"ArmorRegen": "Регенерация брони"`
-
-EN: `"ArmorRegen": "Armor Regeneration"`

@@ -9,21 +9,3 @@
   "MaxSpeed": 350 // maximum jump speed
 }
 ```
-
-# in lang (not necessarily)
-
-RU: 
-
-`"Bhop": "Банихоп"`
-
-`"bhop.TimeToActivation": "Банихоп будет активен через {red}{0}{default} секунд"`
-
-`"bhop.Activated": "Банихоп активирован!"`
-
-EN: 
-
-`"Bhop": "Bunnyhop"`
-
-`"bhop.TimeToActivation": "Bunnyhop will be active in {red}{0}{default} seconds"`
-
-`"bhop.Activated": "Bunnyhop activated!"`

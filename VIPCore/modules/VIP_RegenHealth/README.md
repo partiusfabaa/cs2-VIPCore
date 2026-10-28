@@ -10,9 +10,3 @@
 	"Interval": 5 	//Interval between health regeneration (in seconds)
 },
 ```
-
-# in lang (not necessarily)
-
-RU: `"HealthRegen": "Регенерация здоровья"`
-
-EN: `"HealthRegen": "Health Regeneration"`

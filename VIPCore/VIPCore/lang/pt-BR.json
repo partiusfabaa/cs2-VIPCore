@@ -84,6 +84,9 @@
   "flags": "Flags",
   "ShowDamage": "Mostrar Dano",
   "BuyTeamWeapon": "Comprar Arma para o Time",
+  "buyteamweapon.round_start": "Você pode comprar armas do time inimigo: {red}{0}",
+  "buyteamweapon.in_buy_zone": "Você precisa estar na zona de compra!",
+  "buyteamweapon.no_money": "Você não tem dinheiro suficiente para comprar armas",
   "DamageMultiplier": "Multiplicador de Dano",
   "DefuseKit": "Kit de Desarme",
   "exp_multiplier": "Multiplicador de Experiência",
@@ -95,5 +98,14 @@
   "SoundDMG": "Som de Dano",
   "Tag": "Tag",
   "TeammatesHeal": "Curar Companheiros",
-  "WeaponsMenu": "Menu de Armas"
+  "WeaponsMenu": "Menu de Armas",
+  "weaponsmenu.title": "Selecione o pacote de armas:",
+  "weaponsmenu.fromround": "[A partir da rodada {0}]",
+  "weaponsmenu.wanttosave": "Deseja salvar este conjunto?",
+  "weaponsmenu.wanttosave.yes": "Sim",
+  "weaponsmenu.wanttosave.no": "Não",
+  "weaponsmenu.saved": "Seu conjunto gratuito foi salvo, você o receberá quando for possível!",
+  "weaponsmenu.resetinfo.reset": "Seu conjunto gratuito foi redefinido, escolha um novo na próxima rodada!",
+  "weaponsmenu.resetinfo.info": "Quer trocar seu conjunto? Use o comando {orange}!vwmenu{default} para escolher um novo na próxima rodada.",
+  "weaponsmenu.notsaved": "Seu conjunto gratuito não foi salvo, você poderá escolher um novo na próxima rodada."
 }

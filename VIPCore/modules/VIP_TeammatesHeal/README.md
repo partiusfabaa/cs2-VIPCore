@@ -17,13 +17,3 @@ The config is located at the path: `addons/counterstrikesharp/configs/plugins/VI
 `"TeammatesHeal": 50` // 50% of the shot's damage is restored to the teammate
 
 The value is read when the VIP player spawns, so a change applies after the next respawn.
-
-# in translations
-
-RU:
-
-`"TeammatesHeal": "Лечение союзников"`
-
-EN:
-
-`"TeammatesHeal": "Teammates Heal"`

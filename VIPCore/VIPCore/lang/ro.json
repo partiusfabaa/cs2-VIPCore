@@ -84,6 +84,9 @@
   "flags": "Flaguri",
   "ShowDamage": "Afisare Damage",
   "BuyTeamWeapon": "Cumpara Arma pentru Echipa",
+  "buyteamweapon.round_start": "Poți cumpăra armele echipei adverse: {red}{0}",
+  "buyteamweapon.in_buy_zone": "Trebuie să fii în zona de cumpărare!",
+  "buyteamweapon.no_money": "Nu ai suficienți bani pentru a cumpăra arme",
   "DamageMultiplier": "Multiplicator Damage",
   "DefuseKit": "Kit Dezamorsare",
   "exp_multiplier": "Multiplicator Experienta",
@@ -95,5 +98,14 @@
   "SoundDMG": "Sunet Damage",
   "Tag": "Tag",
   "TeammatesHeal": "Vindecare Coechipieri",
-  "WeaponsMenu": "Meniu Arme"
+  "WeaponsMenu": "Meniu Arme",
+  "weaponsmenu.title": "Selectează pachetul de arme:",
+  "weaponsmenu.fromround": "[Din runda {0}]",
+  "weaponsmenu.wanttosave": "Vrei să salvezi acest set?",
+  "weaponsmenu.wanttosave.yes": "Da",
+  "weaponsmenu.wanttosave.no": "Nu",
+  "weaponsmenu.saved": "Setul tău gratuit a fost salvat, îl vei primi când va fi posibil!",
+  "weaponsmenu.resetinfo.reset": "Setul tău gratuit a fost resetat, alege unul nou în runda următoare!",
+  "weaponsmenu.resetinfo.info": "Vrei să schimbi setul? Folosește comanda {orange}!vwmenu{default} pentru a alege unul nou în runda următoare.",
+  "weaponsmenu.notsaved": "Setul tău gratuit nu a fost salvat, vei putea alege unul nou în runda următoare."
 }

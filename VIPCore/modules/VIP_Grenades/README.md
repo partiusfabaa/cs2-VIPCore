@@ -19,10 +19,3 @@
     }
 }
 ```
-
-
-
-
-# in lang (not necessarily)
-
-EN: `"Grenades": "Grenades"`

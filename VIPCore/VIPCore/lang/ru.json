@@ -84,6 +84,9 @@
   "flags": "Флаги",
   "ShowDamage": "Показ урона",
   "BuyTeamWeapon": "Купить оружие для команды",
+  "buyteamweapon.round_start": "Вы можете приобрести оружие вражеской команды: {red}{0}",
+  "buyteamweapon.in_buy_zone": "Вы должны находиться в зоне покупки!",
+  "buyteamweapon.no_money": "У вас недостаточно средств для покупки оружия",
   "DamageMultiplier": "Множитель урона",
   "DefuseKit": "Набор для разминирования",
   "exp_multiplier": "Множитель опыта",
@@ -95,5 +98,14 @@
   "SoundDMG": "Звук урона",
   "Tag": "Тег",
   "TeammatesHeal": "Лечение союзников",
-  "WeaponsMenu": "Меню оружия"
+  "WeaponsMenu": "Меню оружия",
+  "weaponsmenu.title": "Выберите набор оружия:",
+  "weaponsmenu.fromround": "[С {0} раунда]",
+  "weaponsmenu.wanttosave": "Сохранить этот набор?",
+  "weaponsmenu.wanttosave.yes": "Да",
+  "weaponsmenu.wanttosave.no": "Нет",
+  "weaponsmenu.saved": "Ваш бесплатный набор сохранён, вы получите его, когда это будет возможно!",
+  "weaponsmenu.resetinfo.reset": "Ваш бесплатный набор сброшен, выберите новый в следующем раунде!",
+  "weaponsmenu.resetinfo.info": "Хотите сменить набор? Используйте команду {orange}!vwmenu{default}, чтобы выбрать новый в следующем раунде.",
+  "weaponsmenu.notsaved": "Ваш бесплатный набор не сохранён, вы сможете выбрать новый в следующем раунде."
 }

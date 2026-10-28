@@ -9,7 +9,3 @@
     "LimitPerRound": 5 // set 0 for no limit
 }
 ```
-# in lang (not necessarily)
-
-RU: `"Jumps": "Дополнительные прыжки"`
-EN: `"Jumps": "Additional jumps"`

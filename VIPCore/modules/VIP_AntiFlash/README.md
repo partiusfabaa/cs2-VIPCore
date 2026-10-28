@@ -12,8 +12,3 @@
 3 - removes dazzle from the team and from yourself.
 
 **any other numbers** - does not blind at all
-
-# in lang (not necessarily)
-
-RU: `"Antiflash": "Анти-Флеш"`
-EN: `"Antiflash": "Anti-Flash"`

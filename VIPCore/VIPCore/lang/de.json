@@ -84,6 +84,9 @@
   "flags": "Flags",
   "ShowDamage": "Schadensanzeige",
   "BuyTeamWeapon": "Teamwaffe kaufen",
+  "buyteamweapon.round_start": "Du kannst Waffen des gegnerischen Teams kaufen: {red}{0}",
+  "buyteamweapon.in_buy_zone": "Du musst dich in der Kaufzone befinden!",
+  "buyteamweapon.no_money": "Du hast nicht genug Geld, um Waffen zu kaufen",
   "DamageMultiplier": "Schadensmultiplikator",
   "DefuseKit": "Entschärfungskit",
   "exp_multiplier": "Erfahrungsmultiplikator",
@@ -95,5 +98,14 @@
   "SoundDMG": "Schadenston",
   "Tag": "Tag",
   "TeammatesHeal": "Teamkameraden heilen",
-  "WeaponsMenu": "Waffenmenü"
+  "WeaponsMenu": "Waffenmenü",
+  "weaponsmenu.title": "Waffenpaket auswählen:",
+  "weaponsmenu.fromround": "[Ab Runde {0}]",
+  "weaponsmenu.wanttosave": "Möchtest du dieses Set speichern?",
+  "weaponsmenu.wanttosave.yes": "Ja",
+  "weaponsmenu.wanttosave.no": "Nein",
+  "weaponsmenu.saved": "Dein kostenloses Set wurde gespeichert, du erhältst es, sobald es möglich ist!",
+  "weaponsmenu.resetinfo.reset": "Dein kostenloses Set wurde zurückgesetzt, wähle in der nächsten Runde ein neues!",
+  "weaponsmenu.resetinfo.info": "Möchtest du dein Set ändern? Nutze den Befehl {orange}!vwmenu{default}, um in der nächsten Runde ein neues zu wählen.",
+  "weaponsmenu.notsaved": "Dein kostenloses Set wurde nicht gespeichert, du kannst in der nächsten Runde ein neues wählen."
 }
