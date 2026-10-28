@@ -53,7 +53,7 @@ public class ResetDeaths : VipFeature<bool>
             return;
         }
 
-        if (GetPlayerFeatureState(player) is FeatureState.NoAccess) return;
+        if (!IsFeatureEnabled(player)) return;
 
         if (player.ActionTrackingServices == null) return;
         

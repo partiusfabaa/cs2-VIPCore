@@ -47,20 +47,11 @@ public class TeammatesHeal : VipFeature<float>
 {
 
     private readonly Config _config;
-    private readonly float[] _healPercentages = new float[70];
 
     public TeammatesHeal(IVipCoreApi api) : base("TeammatesHeal", api)
     {
         VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(OnTakeDamage, HookMode.Pre);
         _config = LoadConfig<Config>("vip_teammates_heal");
-    }
-
-    public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
-    {
-        if (!vip) return;
-        if (!PlayerHasFeature(player)) return;
-
-        _healPercentages[player.Slot] = GetValue(player);
     }
 
     private HookResult OnTakeDamage(DynamicHook hook)
@@ -85,17 +76,12 @@ public class TeammatesHeal : VipFeature<float>
             attacker.Team == player.Team &&
             IsFeatureEnabled(attacker))
         {
-            var weapon = damageInfo.Inflictor.Value?.As<CBasePlayerWeapon>();
-            if (weapon is null)
-            {
-                weapon = attacker.PlayerPawn.Value?.WeaponServices?.ActiveWeapon.Value;
-                if (weapon is null)
-                {
-                    return HookResult.Continue;
-                }
-            }
+            var weaponName = GetWeaponName(damageInfo.Inflictor.Value, attacker);
+            if (weaponName is null)
+                return HookResult.Continue;
 
-            if (_config.WeaponBlacklist.Contains(weapon.DesignerName))
+            if (_config.WeaponBlacklist.Contains(weaponName) ||
+                (weaponName == "weapon_molotov" && _config.WeaponBlacklist.Contains("weapon_incgrenade")))
                 return HookResult.Continue;
 
             var health = playerPawn.Health;
@@ -108,7 +94,7 @@ public class TeammatesHeal : VipFeature<float>
             
             if (health >= maxHealth) return HookResult.Continue;
             
-            var healPercentage = _healPercentages[attacker.Slot];
+            var healPercentage = GetValue(attacker);
             
             var calculatedGain = (int)MathF.Ceiling(damageInfo.Damage / 100.0f * healPercentage);
             
@@ -124,6 +110,20 @@ public class TeammatesHeal : VipFeature<float>
         }
 
         return HookResult.Continue;
+    }
+
+    private static string? GetWeaponName(CEntityInstance? inflictor, CCSPlayerController attacker)
+    {
+        var name = inflictor?.DesignerName;
+        if (string.IsNullOrEmpty(name) || name == "player")
+            return attacker.PlayerPawn.Value?.WeaponServices?.ActiveWeapon.Value?.DesignerName;
+
+        return name switch
+        {
+            "inferno" or "molotov_projectile" => "weapon_molotov",
+            _ when name.EndsWith("_projectile") => "weapon_" + name[..^"_projectile".Length],
+            _ => name
+        };
     }
 
     private static CCSPlayerController? GetPlayer(CBaseEntity? ent)

@@ -88,9 +88,11 @@ public class RainbowModel : VipFeature<bool>
         var playerPawn = player.PlayerPawn.Value;
         if (playerPawn == null) return;
 
-        if (GetPlayerFeatureState(player) == FeatureState.Disabled)
+        _rainbowTimer[player.Slot]?.Kill();
+        _rainbowTimer[player.Slot] = null;
+
+        if (GetPlayerFeatureState(player) == FeatureState.Disabled || !GetValue(player))
         {
-            _rainbowTimer[player.Slot]?.Kill();
             SetRainbowModel(playerPawn);
             return;
         }
@@ -100,8 +102,20 @@ public class RainbowModel : VipFeature<bool>
                 Random.Shared.Next(0, 255), Random.Shared.Next(0, 255)), TimerFlags.REPEAT);
     }
 
+    public override void OnPlayerRemoved(CCSPlayerController player, string group)
+    {
+        _rainbowTimer[player.Slot]?.Kill();
+        _rainbowTimer[player.Slot] = null;
+
+        var playerPawn = player.PlayerPawn.Value;
+        if (playerPawn != null)
+            SetRainbowModel(playerPawn);
+    }
+
     private void SetRainbowModel(CCSPlayerPawn pawn, int r = 255, int g = 255, int b = 255)
     {
+        if (!pawn.IsValid) return;
+
         pawn.Render = Color.FromArgb(255, r, g, b);
         Utilities.SetStateChanged(pawn, "CBaseModelEntity", "m_clrRender");
     }

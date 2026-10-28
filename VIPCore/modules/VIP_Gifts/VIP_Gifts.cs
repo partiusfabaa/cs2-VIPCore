@@ -4,6 +4,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
 using Microsoft.Extensions.Logging;
 using CounterStrikeSharp.API.Modules.Utils;
+using VipCoreApi;
 
 namespace VIP_Gift;
 
@@ -42,11 +43,19 @@ public class VipGiftPlugin : BasePlugin, IPluginConfig<VIP_GiftConfig>
     public VIP_GiftConfig Config { get; set; } = new();
     private readonly Random _random = new();
     private bool _giftGiven = false;
+    private IVipCoreApi? _vipApi;
     public void OnConfigParsed(VIP_GiftConfig config)
     {
         Config = config;
     }
-   
+
+    public override void OnAllPluginsLoaded(bool hotReload)
+    {
+        _vipApi = IVipCoreApi.Capability.Get();
+        if (_vipApi == null)
+            Logger.LogWarning("[VipGiftPlugin] VIPCore API not found, players who already have VIP can receive gifts.");
+    }
+
 
     public override void Load(bool hotReload)
     {
@@ -70,13 +79,14 @@ public class VipGiftPlugin : BasePlugin, IPluginConfig<VIP_GiftConfig>
 
         _giftGiven = true;
 
-        int giftsToGive = Math.Min(Config.MaxGiftedPlayers, players.Count);
+        var candidates = players.Where(p => _vipApi == null || !_vipApi.IsPlayerVip(p)).ToList();
+        int giftsToGive = Math.Min(Config.MaxGiftedPlayers, candidates.Count);
         if (giftsToGive <= 0)
         {
-            Logger.LogInformation("[VipGiftPlugin] No gifts to give, MaxGiftedPlayers is set to 0.");
+            Logger.LogInformation("[VipGiftPlugin] No gifts to give (MaxGiftedPlayers is 0 or every player already has VIP).");
             return HookResult.Continue;
         }
-        var selected = players.OrderBy(_ => _random.Next()).Take(giftsToGive);
+        var selected = candidates.OrderBy(_ => _random.Next()).Take(giftsToGive);
 
         foreach (var player in selected)
         {
@@ -122,9 +132,19 @@ public class VipGiftPlugin : BasePlugin, IPluginConfig<VIP_GiftConfig>
         {
             string command = gift.Value
                 .Replace("{STEAMID}", player.SteamID.ToString())
-                .Replace("{PLAYERNAME}", player.PlayerName ?? "Player");
+                .Replace("{PLAYERNAME}", SanitizeName(player.PlayerName));
 
             Server.ExecuteCommand(command);
         }
+    }
+
+    private static string SanitizeName(string? name)
+    {
+        var safe = new string((name ?? string.Empty)
+            .Where(c => c is not (';' or '"' or '\'' or '\\' or '`' or '|' or '&' or '$' or '{' or '}' or '/') && !char.IsControl(c))
+            .ToArray())
+            .Trim();
+
+        return string.IsNullOrEmpty(safe) ? "Player" : safe;
     }
 }

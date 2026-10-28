@@ -40,12 +40,13 @@ public class RegenArmor : VipFeature<Regen>
     private readonly bool[] _isRegenActive = new bool[65];
     private readonly Regen[] _regen = new Regen[65];
     private readonly float[] _regenInterval = new float[65];
+    private CounterStrikeSharp.API.Modules.Timers.Timer? _timer;
 
     public RegenArmor(VipRegenArmor vipRegenArmor, IVipCoreApi api) : base("ArmorRegen", api)
     {
         _api = api;
-        vipRegenArmor.RegisterListener<Listeners.OnMapStart>(name =>
-            vipRegenArmor.AddTimer(1.0f, Timer_ArmorRegen, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE));
+        StartTimer(vipRegenArmor);
+        vipRegenArmor.RegisterListener<Listeners.OnMapStart>(name => StartTimer(vipRegenArmor));
         vipRegenArmor.RegisterListener<Listeners.OnClientConnected>(slot => _isRegenActive[slot] = false);
         vipRegenArmor.RegisterListener<Listeners.OnClientDisconnectPost>(slot => _isRegenActive[slot] = false);
 
@@ -62,6 +63,12 @@ public class RegenArmor : VipFeature<Regen>
 
             return HookResult.Continue;
         });
+    }
+
+    private void StartTimer(BasePlugin plugin)
+    {
+        _timer?.Kill();
+        _timer = plugin.AddTimer(1.0f, Timer_ArmorRegen, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
     }
 
     private void Timer_ArmorRegen()

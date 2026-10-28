@@ -56,10 +56,9 @@ public class Zeus : VipFeature<bool>
     public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
         if (!vip) return;
-        if (!IsFeatureEnabled(player)) return;
-            
-        if (player == null) return;    
-        
+        if (player == null || !player.IsValid || !player.PawnIsAlive) return;
+        if (!IsFeatureEnabled(player) || !GetValue(player)) return;
+
         if ((player.TeamNum == 3 || player.TeamNum == 2) && !HasWeapon(player, "weapon_taser"))
         {   
             player.GiveNamedItem("weapon_taser");

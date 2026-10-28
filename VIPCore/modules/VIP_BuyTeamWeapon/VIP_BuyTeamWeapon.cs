@@ -52,8 +52,8 @@ public class BuyTeamWeapon : VipFeature<bool>
             PrintToChat(player, 
                 GetTranslatedText("buyteamweapon.round_start", 
                     player.Team is CsTeam.Terrorist 
-                ? "!m4a1, !m4a4, !glock"
-                : "!ak47, !usp"));
+                ? "!m4a1, !m4a4, !usp"
+                : "!ak47, !glock"));
         }
 
         return HookResult.Continue;

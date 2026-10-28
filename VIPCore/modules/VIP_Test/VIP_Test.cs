@@ -51,44 +51,59 @@ public class VipTest : BasePlugin
         Task.Run(() => GivePlayerVipTest(controller, authorizedSteamId, _config));
     }
 
-    private async void GivePlayerVipTest(CCSPlayerController player, SteamID steamId, Config vipTest)
+    private async Task GivePlayerVipTest(CCSPlayerController player, SteamID steamId, Config vipTest)
     {
-        var vipTestEndTime = await GetEndTime(steamId.SteamId2);
-        var vipTestCount = _api.GetPlayerCookie<int>(steamId.SteamId64, Feature);
-        
-        if (vipTestCount >= vipTest.VipTestCount)
+        try
         {
+            var vipTestEndTime = await GetEndTime(steamId.SteamId2);
+            var vipTestCount = await Server.NextFrameAsync(() => _api.GetPlayerCookie<int>(steamId.SteamId64, Feature));
+
+            if (vipTestCount >= vipTest.VipTestCount)
+            {
+                Server.NextFrame(() =>
+                {
+                    if (!player.IsValid) return;
+                    _api.PrintToChat(player, _api.GetTranslatedText("viptest.YouCanNoLongerTakeTheVip"));
+                });
+                return;
+            }
+
+            if (vipTestEndTime > DateTimeOffset.UtcNow.ToUnixTimeSeconds())
+            {
+                var time = DateTimeOffset.FromUnixTimeSeconds(vipTestEndTime) - DateTimeOffset.UtcNow;
+                var timeRemainingFormatted =
+                    $"{(time.Days == 0 ? "" : $"{time.Days}d")} {time.Hours:D2}:{time.Minutes:D2}:{time.Seconds:D2}";
+
+                Server.NextFrame(() =>
+                {
+                    if (!player.IsValid) return;
+                    _api.PrintToChat(player, _api.GetTranslatedText("viptest.RetakenThrough", timeRemainingFormatted));
+                });
+                return;
+            }
+
+            var coolDownTime = DateTimeOffset.UtcNow.AddSeconds(vipTest.VipTestCooldown).ToUnixTimeSeconds();
+            var endTime = DateTimeOffset.UtcNow.AddSeconds(vipTest.VipTestDuration).ToUnixTimeSeconds();
+
+            await AddUserOrUpdateVipTestAsync(steamId.SteamId2, (int)coolDownTime);
+
+            var timeRemaining = DateTimeOffset.FromUnixTimeSeconds(endTime) - DateTimeOffset.UtcNow;
+
             Server.NextFrame(() =>
-                _api.PrintToChat(player, _api.GetTranslatedText("viptest.YouCanNoLongerTakeTheVip")));
-            return;
+            {
+                if (!player.IsValid) return;
+
+                _api.SetPlayerCookie(steamId.SteamId64, Feature, vipTestCount + 1);
+                _api.PrintToChat(player,
+                    _api.GetTranslatedText("viptest.SuccessfullyPassed",
+                        timeRemaining.ToString(timeRemaining.Hours > 0 ? @"h\:mm\:ss" : @"m\:ss")));
+                _api.GivePlayerVip(player, vipTest.VipTestGroup, vipTest.VipTestDuration);
+            });
         }
-
-        if (vipTestEndTime > DateTimeOffset.UtcNow.ToUnixTimeSeconds())
+        catch (Exception e)
         {
-            var time = DateTimeOffset.FromUnixTimeSeconds(vipTestEndTime) - DateTimeOffset.UtcNow;
-            var timeRemainingFormatted =
-                $"{(time.Days == 0 ? "" : $"{time.Days}d")} {time.Hours:D2}:{time.Minutes:D2}:{time.Seconds:D2}";
-
-            Server.NextFrame(() =>
-                _api.PrintToChat(player, _api.GetTranslatedText("viptest.RetakenThrough", timeRemainingFormatted)));
-            return;
+            Console.WriteLine(e);
         }
-
-        var coolDownTime = DateTimeOffset.UtcNow.AddSeconds(vipTest.VipTestCooldown).ToUnixTimeSeconds();
-        var endTime = DateTimeOffset.UtcNow.AddSeconds(vipTest.VipTestDuration).ToUnixTimeSeconds();
-
-        await AddUserOrUpdateVipTestAsync(steamId.SteamId2, (int)coolDownTime);
-        _api.SetPlayerCookie(steamId.SteamId64, Feature, vipTestCount + 1);
-
-        var timeRemaining = DateTimeOffset.FromUnixTimeSeconds(endTime) - DateTimeOffset.UtcNow;
-
-        Server.NextFrame(() =>
-        {
-            _api.PrintToChat(player,
-                _api.GetTranslatedText("viptest.SuccessfullyPassed",
-                    timeRemaining.ToString(timeRemaining.Hours > 0 ? @"h\:mm\:ss" : @"m\:ss")));
-            _api.GivePlayerVip(player, vipTest.VipTestGroup, vipTest.VipTestDuration);
-        });
     }
 
     private async Task AddUserOrUpdateVipTestAsync(string steamId, int endTime)

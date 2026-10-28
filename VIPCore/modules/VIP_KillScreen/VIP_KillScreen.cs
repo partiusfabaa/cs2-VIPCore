@@ -39,7 +39,7 @@ public class KillScreen : VipFeature<bool>
         {
             var attacker = @event.Attacker;
             if (attacker is null || !attacker.IsValid) return HookResult.Continue;
-            if (@event.Userid is not null && attacker.PlayerName == @event.Userid.PlayerName) return HookResult.Continue;
+            if (@event.Userid is not null && attacker.Slot == @event.Userid.Slot) return HookResult.Continue;
 
             if (!IsFeatureEnabled(attacker)) return HookResult.Continue;
             if(!GetValue(attacker)) return HookResult.Continue;

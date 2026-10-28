@@ -66,7 +66,7 @@ public class Defuser : VipFeature
            
         if (player.TeamNum == 3 && !HasWeapon(player, "item_defuser"))
         {
-            if (playerPawn != null)
+            if (playerPawn.ItemServices != null)
             {
                 var itemServices = new CCSPlayer_ItemServices(playerPawn.ItemServices.Handle);
                     itemServices.HasDefuser = true;

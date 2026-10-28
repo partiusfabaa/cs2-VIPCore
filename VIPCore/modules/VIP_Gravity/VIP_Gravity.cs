@@ -54,6 +54,13 @@ public class Gravity : VipFeature<float>
                     continue;
                 }
 
+                if (!IsFeatureEnabled(player))
+                {
+                    _players[slot] = null;
+                    ResetGravity(player);
+                    continue;
+                }
+
                 var playerPawn = player.PlayerPawn.Value;
                 if (playerPawn is null || !player.PawnIsAlive ||
                     playerPawn.ActualMoveType is MoveType_t.MOVETYPE_LADDER) continue;
@@ -83,7 +90,16 @@ public class Gravity : VipFeature<float>
     {
         if (player is not { IsValid: true, IsBot: false }) return;
 
-        _players[player.Slot] = IsFeatureEnabled(player) ? player : null;
+        if (IsFeatureEnabled(player))
+        {
+            _players[player.Slot] = player;
+            return;
+        }
+
+        if (_players[player.Slot] is null) return;
+
+        _players[player.Slot] = null;
+        ResetGravity(player);
     }
 
     public override void OnPlayerSpawn(CCSPlayerController player, bool vip)

@@ -43,6 +43,7 @@ public class Flags : VipFeature<List<string>>
 {
     private readonly VipFlags _vipFlags;
     private readonly Dictionary<ulong, List<string>> _flags = new();
+    private readonly Timer?[] _timers = new Timer?[64];
 
     public Flags(VipFlags vipFlags, IVipCoreApi api) : base("flags", api, FeatureType.Hide)
     {
@@ -53,10 +54,8 @@ public class Flags : VipFeature<List<string>>
 
             if (player is null || !player.IsValid) return HookResult.Continue;
 
-            if (IsPlayerVip(player) && PlayerHasFeature(player))
-            {
-                RemovePlayerPermissions(player);
-            }
+            KillTimer(player.Slot);
+            RemovePlayerPermissions(player);
 
             return HookResult.Continue;
         });
@@ -64,19 +63,32 @@ public class Flags : VipFeature<List<string>>
 
     public override void OnPlayerAuthorized(CCSPlayerController player, string group)
     {
+        KillTimer(player.Slot);
+        RemovePlayerPermissions(player);
+
         if (!PlayerHasFeature(player)) return;
 
-        Timer timer = null!;
+        var slot = player.Slot;
 
-        timer = _vipFlags.AddTimer(1f, () =>
+        _timers[slot] = _vipFlags.AddTimer(1f, () =>
         {
-            if (!player.IsValid || player.Connected != PlayerConnectedState.Connected)
+            if (!player.IsValid || player.Connected is PlayerConnectedState.Disconnecting
+                    or PlayerConnectedState.Disconnected)
+            {
+                KillTimer(slot);
                 return;
+            }
+
+            if (player.Connected != PlayerConnectedState.Connected)
+                return;
+
+            KillTimer(slot);
+
+            var flagsOrGroups = GetValue(player);
+            if (flagsOrGroups is null) return;
 
             if (!_flags.ContainsKey(player.SteamID))
                 _flags.Add(player.SteamID, []);
-
-            var flagsOrGroups = GetValue(player);
 
             var steamId = new SteamID(player.SteamID);
             foreach (var flagOrGroup in flagsOrGroups)
@@ -88,14 +100,19 @@ public class Flags : VipFeature<List<string>>
 
                 _flags[player.SteamID].Add(flagOrGroup);
             }
-
-            timer.Kill();
         }, TimerFlags.REPEAT);
     }
 
     public override void OnPlayerRemoved(CCSPlayerController player, string group)
     {
+        KillTimer(player.Slot);
         RemovePlayerPermissions(player);
+    }
+
+    private void KillTimer(int slot)
+    {
+        _timers[slot]?.Kill();
+        _timers[slot] = null;
     }
 
     private void RemovePlayerPermissions(CCSPlayerController player)

@@ -94,8 +94,9 @@ public class VipCoreApi : IVipCoreApi
 
         if (raw is T typed) return typed;
 
+        var cacheable = typeof(T).IsValueType || typeof(T) == typeof(string);
         var key = (feature, typeof(T));
-        if (vipPlayer.FeatureValues.TryGetValue(key, out var cached)) return (T?)cached;
+        if (cacheable && vipPlayer.FeatureValues.TryGetValue(key, out var cached)) return (T?)cached;
 
         try
         {
@@ -103,7 +104,9 @@ public class VipCoreApi : IVipCoreApi
                 ? element.Deserialize<T>(ConfigSystem.ConfigJsonOptions)
                 : JsonSerializer.Deserialize<T>(JsonSerializer.Serialize(raw), ConfigSystem.ConfigJsonOptions);
 
-            vipPlayer.FeatureValues[key] = value;
+            if (cacheable)
+                vipPlayer.FeatureValues[key] = value;
+
             return value;
         }
         catch (Exception e)
@@ -150,8 +153,12 @@ public class VipCoreApi : IVipCoreApi
 
     private void GivePlayerVip(CCSPlayerController player, string group, int time, bool isTemporary)
     {
-        if (IsPlayerVip(player))
-            throw new InvalidOperationException($"Player {player.PlayerName} already has a VIP");
+        if (_players.TryGetPlayer(player, out var vipPlayer) && vipPlayer.IsVip)
+        {
+            _plugin.LogWarning("GivePlayerVip: player {name} already has VIP '{group}'", player.PlayerName,
+                vipPlayer.Group);
+            return;
+        }
 
         if (!GroupExists(group)) return;
 
@@ -226,7 +233,20 @@ public class VipCoreApi : IVipCoreApi
     public event OnPlayerDisconnectDelegate? OnPlayerDisconnect;
     public event OnPlayerSpawnDelegate? OnPlayerSpawn;
     public event OnPlayerUseFeatureDelegate? OnPlayerUseFeature;
-    public event Action? OnCoreReady;
+    private Action? _onCoreReady;
+    private bool _coreReady;
+
+    public event Action? OnCoreReady
+    {
+        add
+        {
+            if (_coreReady)
+                Invoke(value, h => h());
+            else
+                _onCoreReady += value;
+        }
+        remove => _onCoreReady -= value;
+    }
 
     public void InvokeOnPlayerSpawn(CCSPlayerController player, bool isVip) =>
         Invoke(OnPlayerSpawn, h => h(player, isVip));
@@ -234,7 +254,12 @@ public class VipCoreApi : IVipCoreApi
     public void InvokeOnPlayerUseFeature(PlayerUseFeatureEventArgs args) =>
         Invoke(OnPlayerUseFeature, h => h(args));
 
-    public void InvokeOnCoreReady() => Invoke(OnCoreReady, h => h());
+    public void InvokeOnCoreReady()
+    {
+        _coreReady = true;
+        Invoke(_onCoreReady, h => h());
+        _onCoreReady = null;
+    }
 
     private void Invoke<T>(T? handlers, Action<T> invoke) where T : Delegate
     {

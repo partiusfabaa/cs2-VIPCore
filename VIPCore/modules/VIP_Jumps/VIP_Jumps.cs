@@ -63,6 +63,12 @@ public class Jumps : VipFeature
                     continue;
                 }
 
+                if (!IsFeatureEnabled(player))
+                {
+                    _players[slot] = null;
+                    continue;
+                }
+
                 if (!player.PawnIsAlive || UserSettings[player.Index] == null ||
                     player.TeamNum is not ((int)CsTeam.Terrorist or (int)CsTeam.CounterTerrorist)) continue;
 

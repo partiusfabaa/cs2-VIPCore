@@ -77,6 +77,7 @@ public class Tag : VipFeature<JsonElement>
     private Dictionary<string, List<TagValue>> _tagSets = new(StringComparer.OrdinalIgnoreCase);
     private Dictionary<ulong, List<TagValue>> _personalTags = new();
     private readonly HashSet<string> _missingSets = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<ulong> _taggedPlayers = new();
 
     // Gag/silence sources, auto-detected at load. Any, all, or none may be present.
     private ICS2_SimpleAdminApi? _simpleAdmin;
@@ -284,6 +285,16 @@ public class Tag : VipFeature<JsonElement>
         OpenTagMenu(player);
     }
 
+    public override void OnPlayerRemoved(CCSPlayerController player, string group)
+    {
+        Server.NextFrame(() => ApplyScoreboard(player));
+    }
+
+    public override void OnPlayerDisconnect(CCSPlayerController player, bool vip)
+    {
+        _taggedPlayers.Remove(player.SteamID);
+    }
+
     private void OpenTagMenu(CCSPlayerController player)
     {
         var tags = GetAvailableTags(player);
@@ -372,8 +383,16 @@ public class Tag : VipFeature<JsonElement>
     {
         if (player is not { IsValid: true } || player.IsBot || player.IsHLTV) return;
 
-        if (GetAvailableTags(player).Count == 0) return;
+        if (GetAvailableTags(player).Count == 0)
+        {
+            if (!_taggedPlayers.Remove(player.SteamID)) return;
 
+            player.Clan = string.Empty;
+            Utilities.SetStateChanged(player, "CCSPlayerController", "m_szClan");
+            return;
+        }
+
+        _taggedPlayers.Add(player.SteamID);
         player.Clan = GetActiveTag(player)?.ScoreboardTag ?? string.Empty;
         Utilities.SetStateChanged(player, "CCSPlayerController", "m_szClan");
     }

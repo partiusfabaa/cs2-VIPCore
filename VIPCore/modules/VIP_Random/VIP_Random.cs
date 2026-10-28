@@ -82,7 +82,6 @@ public class VIP_Random : BasePlugin
                 {
                     GetRandomVIP();
                     _currentRound = 0; // Reset the round counter after selecting a VIP
-                    _vipAssigned = true; // Set the flag to indicate a VIP has been assigned
                 }
             }
             else
@@ -96,9 +95,10 @@ public class VIP_Random : BasePlugin
     public HookResult OnPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
     {
         var player = @event.Userid;
-        if (player == RandomVIP)
+        if (player != null && RandomVIP != null && player.Slot == RandomVIP.Slot)
         {
-            _vipApi?.RemovePlayerVip(RandomVIP!);
+            _vipApi?.RemovePlayerVip(player);
+            RandomVIP = null;
             _vipAssigned = false; // Reset the VIP assignment flag if the VIP disconnects
         }
         return HookResult.Continue;
@@ -107,6 +107,7 @@ public class VIP_Random : BasePlugin
     public void OnMapStart(string mapName)
     {
         _currentRound = 0;
+        RandomVIP = null;
         _vipAssigned = false; // Reset the flag for the new map
     }
 
@@ -122,7 +123,7 @@ public class VIP_Random : BasePlugin
                 string message = localizedMessage.Replace("{playerName}", player.PlayerName);
                 Server.PrintToChatAll(Localizer["prefix"] + message);
                 player.PrintToChat(Localizer["prefix"] + Localizer["vip.player.message"]);
-                _vipApi.GivePlayerVip(player, _config.RandomVIPGroup, 1800); // Adding a duration parameter
+                _vipApi.GivePlayerTemporaryVip(player, _config.RandomVIPGroup, 1800);
                 RandomVIP = player;
                 _vipAssigned = true; // Set the flag to indicate a VIP has been assigned
             }

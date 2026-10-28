@@ -46,10 +46,13 @@ public class FastDefuse : VipFeature<float>
             if (!IsFeatureEnabled(player) || !player.PawnIsAlive) return HookResult.Continue;
             
             var featureValue = GetValue(player);
-            var bomb = Utilities.FindAllEntitiesByDesignerName<CPlantedC4>("planted_c4").First();
-            
+            var bomb = Utilities.FindAllEntitiesByDesignerName<CPlantedC4>("planted_c4").FirstOrDefault();
+            if (bomb == null) return HookResult.Continue;
+
             Server.NextFrame(() =>
             {
+                if (!bomb.IsValid || !playerPawn.IsValid) return;
+
                 float countDown;
                 if (bomb.DefuseCountDown < Server.CurrentTime)
                     countDown = 10;

@@ -38,7 +38,7 @@ public class VipExperienceMultiplier : BasePlugin
 
 public class ExperienceMultiplier : VipFeature<float>
 {
-    private readonly float[] _multiplier = new float[70];
+    private readonly float[] _multiplier = Enumerable.Repeat(1f, 70).ToArray();
 
     public ExperienceMultiplier(BasePlugin basePlugin, IVipCoreApi api, IRanksApi ranksApi) : base("exp_multiplier", api)
     {
@@ -54,16 +54,29 @@ public class ExperienceMultiplier : VipFeature<float>
         });
     }
 
+    public override void OnPlayerAuthorized(CCSPlayerController player, string group)
+    {
+        UpdateMultiplier(player);
+    }
+
+    public override void OnPlayerRemoved(CCSPlayerController player, string group)
+    {
+        _multiplier[player.Slot] = 1;
+    }
+
     public override void OnSelectItem(CCSPlayerController player, VipFeature feature)
     {
-        _multiplier[player.Slot] = GetPlayerFeatureState(player) is FeatureState.Enabled ? GetValue(player) : 1;
+        UpdateMultiplier(player);
     }
 
     public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
-        if (!vip || !PlayerHasFeature(player)) return;
+        UpdateMultiplier(player);
+    }
 
-        _multiplier[player.Slot] = GetPlayerFeatureState(player) is FeatureState.Enabled ? GetValue(player) : 1;
+    private void UpdateMultiplier(CCSPlayerController player)
+    {
+        _multiplier[player.Slot] = IsFeatureEnabled(player) ? GetValue(player) : 1;
     }
 
     public override void OnFeatureDisplay(FeatureDisplayArgs args)

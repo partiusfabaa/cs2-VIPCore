@@ -39,18 +39,15 @@ public class VipRespawn : BasePlugin
 public class Respawn : VipFeature<int>
 {
     private readonly VipRespawn _vipRespawn;
-    private readonly int?[] _usedRespawns = new int?[65];
+    private readonly Dictionary<ulong, int> _usedRespawns = new();
 
     public Respawn(VipRespawn vipRespawn, IVipCoreApi api) : base("Respawn", api, FeatureType.Selectable)
     {
         _vipRespawn = vipRespawn;
-        
-        vipRespawn.RegisterListener<Listeners.OnClientConnected>(slot => _usedRespawns[slot + 1] = 0);
-        vipRespawn. RegisterListener<Listeners.OnClientDisconnectPost>(slot => _usedRespawns[slot + 1] = null);
+
         vipRespawn.RegisterEventHandler<EventRoundStart>((@event, info) =>
         {
-            for (var i = 0; i < _usedRespawns.Length; i ++)
-                _usedRespawns[i] = 0;
+            _usedRespawns.Clear();
 
             return HookResult.Continue;
         });
@@ -74,7 +71,7 @@ public class Respawn : VipFeature<int>
         if (!IsPlayerVip(player)) return;
         if (!PlayerHasFeature(player)) return;
         
-        if (GetValue(player) <= _usedRespawns[player.Index])
+        if (GetValue(player) <= _usedRespawns.GetValueOrDefault(player.SteamID))
         {
             PrintToChat(player, GetTranslatedText("respawn.Limit"));
             return;
@@ -98,14 +95,14 @@ public class Respawn : VipFeature<int>
 
         VirtualFunctions.CBasePlayerController_SetPawnFunc.Invoke(player, playerPawn, true, false);
         VirtualFunction.CreateVoid<CCSPlayerController>(player.Handle, GameData.GetOffset("CCSPlayerController_Respawn"))(player);
-        _usedRespawns[player.Index] ++;
+        _usedRespawns[player.SteamID] = _usedRespawns.GetValueOrDefault(player.SteamID) + 1;
         PrintToChat(player, GetTranslatedText("respawn.Success"));
     }
 
     public override void OnFeatureDisplay(FeatureDisplayArgs args)
     {
         var limit = GetValue(args.Controller);
-        var left = Math.Max(limit - (_usedRespawns[args.Controller.Index] ?? 0), 0);
+        var left = Math.Max(limit - _usedRespawns.GetValueOrDefault(args.Controller.SteamID), 0);
 
         args.Display = $"[{left}/{limit}]";
     }

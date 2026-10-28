@@ -76,7 +76,7 @@ public class DecoyTeleport : VipFeature<int>
         var playerPawn = controller.PlayerPawn.Value;
 
         //if (bodyComponent == null) return HookResult.Continue;
-        if (playerPawn == null) return HookResult.Continue;
+        if (playerPawn == null || !controller.PawnIsAlive) return HookResult.Continue;
 
         var decoysPerRound = GetValue(controller);
         if (_decoyCount[entityIndex] >= decoysPerRound && decoysPerRound > 0)

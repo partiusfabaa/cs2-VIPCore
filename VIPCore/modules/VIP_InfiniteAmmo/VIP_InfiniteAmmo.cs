@@ -65,7 +65,9 @@ public class InfiniteAmmo : VipFeature<Config>
 		
 		if (!IsFeatureEnabled(player)) return;
 		
-		_config = GetValue(player);
+		var config = GetValue(player);
+		if (config == null) return;
+		_config = config;
 
 		var activeWeapon = player.PlayerPawn.Value?.WeaponServices?.ActiveWeapon?.Value;
 		if (activeWeapon == null) return;

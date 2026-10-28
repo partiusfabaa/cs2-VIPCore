@@ -71,7 +71,7 @@ public class Grenades : VipFeature<Dictionary<string, Dictionary<string, int>>>
             
             if (_grenadeIndex.TryGetValue(grenadeName, out int ammoIndex))
             {
-                if (ammoIndex < 0 || ammoIndex >= weaponService.Ammo.Length) return;
+                if (ammoIndex < 0 || ammoIndex >= weaponService.Ammo.Length) continue;
                 
                 int currentGrenades = weaponService.Ammo[ammoIndex];
 

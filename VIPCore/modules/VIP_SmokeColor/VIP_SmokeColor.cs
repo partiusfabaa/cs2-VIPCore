@@ -59,7 +59,8 @@ public class SmokeColor : VipFeature<int[]>
 
             if (!IsFeatureEnabled(controller)) return;
             
-            var smokeColor = GetValue(controller)!;
+            var smokeColor = GetValue(controller);
+            if (smokeColor == null || smokeColor.Length < 3) return;
 
             smokeGrenade.SmokeColor.X = smokeColor[0] == -1 ? Random.Shared.NextSingle() * 255.0f : smokeColor[0];
             smokeGrenade.SmokeColor.Y = smokeColor[1] == -1 ? Random.Shared.NextSingle() * 255.0f : smokeColor[1];

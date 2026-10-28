@@ -29,7 +29,7 @@ public class VipPlayer(CCSPlayerController controller, SteamID steamId)
 
     private static bool IsEmpty(object value) => value switch
     {
-        JsonElement { ValueKind: JsonValueKind.Null or JsonValueKind.Undefined } => true,
+        JsonElement { ValueKind: JsonValueKind.Null or JsonValueKind.Undefined or JsonValueKind.False } => true,
         JsonElement { ValueKind: JsonValueKind.String } element => string.IsNullOrEmpty(element.GetString()),
         JsonElement => false,
         _ => string.IsNullOrEmpty(value.ToString())

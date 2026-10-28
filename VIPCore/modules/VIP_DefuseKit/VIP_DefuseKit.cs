@@ -46,10 +46,10 @@ public class VIP_DefuseKit : BasePlugin
                 return;
 
             var pawn = player.PlayerPawn.Value;
-            if (pawn == null)
+            if (pawn?.ItemServices == null)
                 return;
 
-            var itemServices = new CCSPlayer_ItemServices(pawn.ItemServices!.Handle);
+            var itemServices = new CCSPlayer_ItemServices(pawn.ItemServices.Handle);
             itemServices.HasDefuser = true;
         }
     }

@@ -74,6 +74,12 @@ public class Bhop : VipFeature<BhopSettings>
                     continue;
                 }
 
+                if (!IsFeatureEnabled(player))
+                {
+                    RemovePlayer(player);
+                    continue;
+                }
+
                 if (!player.PawnIsAlive || !_bhopSettings[slot].Active) continue;
 
                 OnTick(player);
@@ -177,7 +183,7 @@ public class Bhop : VipFeature<BhopSettings>
                 PrintToChat(player, GetTranslatedText("bhop.TimeToActivation", bhopSettings.Timer));
                 _vipBhop.AddTimer(bhopSettings.Timer + gamerules.FreezeTime, () =>
                 {
-                    if (!player.IsValid) return;
+                    if (!player.IsValid || _players[player.Slot] is null || !IsFeatureEnabled(player)) return;
 
                     PrintToChat(player, GetTranslatedText("bhop.Activated"));
                     settings.Active = true;

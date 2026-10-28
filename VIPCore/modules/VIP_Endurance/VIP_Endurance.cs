@@ -53,6 +53,12 @@ public class Endurance : VipFeature
                     continue;
                 }
 
+                if (!IsFeatureEnabled(player))
+                {
+                    _players[slot] = null;
+                    continue;
+                }
+
                 if (!player.PawnIsAlive) continue;
 
                 var playerPawn = player.PlayerPawn.Value;

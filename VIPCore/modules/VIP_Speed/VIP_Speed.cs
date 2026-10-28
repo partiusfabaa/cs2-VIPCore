@@ -49,7 +49,7 @@ public class SpeedModifier : VipFeature<float>
                 var player = _players[slot];
                 if (player is null) continue;
 
-                if (!player.IsValid)
+                if (!player.IsValid || !IsFeatureEnabled(player))
                 {
                     _players[slot] = null;
                     continue;

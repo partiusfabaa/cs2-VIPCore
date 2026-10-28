@@ -91,46 +91,11 @@ public class VipCustomDefaultAmmo : BasePlugin
 public class CustomDefaultAmmo : VipFeature<string>
 {
     private readonly VipCustomDefaultAmmo _vipCustomAmmo;
-    private readonly bool[] _customEnabled = new bool[64];
 
     public CustomDefaultAmmo(VipCustomDefaultAmmo vipCustomAmmo, IVipCoreApi api) : base("CustomDefaultAmmo", api)
     {
         _vipCustomAmmo = vipCustomAmmo;
         vipCustomAmmo.RegisterListener<Listeners.OnEntityCreated>(OnEntityCreated);
-
-        // Re-apply the VIP group's custom ammo when a VIP picks a weapon up off the ground.
-        vipCustomAmmo.RegisterEventHandler<EventItemPickup>(OnItemPickup);
-    }
-
-    private HookResult OnItemPickup(EventItemPickup @event, GameEventInfo info)
-    {
-        var player = @event.Userid;
-        if (player == null || !player.IsValid || player.IsBot ||
-            player.Connected != PlayerConnectedState.Connected)
-            return HookResult.Continue;
-
-        if (!IsFeatureEnabled(player) || !_customEnabled[player.Slot])
-            return HookResult.Continue;
-
-        var groupName = GetValue(player);
-        if (string.IsNullOrEmpty(groupName) ||
-            !_vipCustomAmmo._ammoConfig.TryGetValue(groupName, out var weaponSettings))
-            return HookResult.Continue;
-
-        // The picked-up weapon becomes the player's active weapon a frame later; apply then.
-        Server.NextFrame(() =>
-        {
-            if (!player.IsValid) return;
-
-            var pawn = player.PlayerPawn.Value;
-            var activeWeaponHandle = pawn?.WeaponServices?.ActiveWeapon;
-            var active = activeWeaponHandle is { IsValid: true } ? activeWeaponHandle.Value : null;
-            if (active == null || !active.IsValid) return;
-
-            ApplyAmmoToWeapon(active, weaponSettings);
-        });
-
-        return HookResult.Continue;
     }
 
     /// <summary>
@@ -197,7 +162,7 @@ public class CustomDefaultAmmo : VipFeature<string>
             if (ownerController.IsBot || ownerController.Connected != PlayerConnectedState.Connected)
                 return;
 
-            if (!IsFeatureEnabled(ownerController) || !_customEnabled[ownerController.Slot])
+            if (!IsFeatureEnabled(ownerController))
                 return;
 
             var groupName = GetValue(ownerController);
@@ -208,18 +173,6 @@ public class CustomDefaultAmmo : VipFeature<string>
             // NOTE: ApplyAmmoToWeapon only sets this instance's live ammo, never the shared VData.
             ApplyAmmoToWeapon(weapon, weaponSettings);
         });
-    }
-
-    public override void OnPlayerAuthorized(CCSPlayerController player, string group)
-    {
-        if (!PlayerHasFeature(player)) return;
-
-        _customEnabled[player.Slot] = GetPlayerFeatureState(player) == FeatureState.Enabled;
-    }
-
-    public override void OnSelectItem(CCSPlayerController player, VipFeature feature)
-    {
-        _customEnabled[player.Slot] = GetPlayerFeatureState(player) == FeatureState.Enabled;
     }
 
     public bool CheckIfWeapon(string weaponName, int weaponDefIndex)

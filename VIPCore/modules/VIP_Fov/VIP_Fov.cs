@@ -54,8 +54,16 @@ public class Fov : VipFeature<List<int>>
     public override void OnPlayerAuthorized(CCSPlayerController player, string group)
     {
         var cookie = GetPlayerCookie<int>(player, "player_fov");
+        var userFov = GetValue(player);
 
-        _fovSettings[player.Slot] = cookie == 0 ? 90 : cookie;
+        _fovSettings[player.Slot] = cookie != 0 && userFov != null && userFov.Contains(cookie) ? cookie : 90;
+        ChangeFov(player, false);
+    }
+
+    public override void OnPlayerRemoved(CCSPlayerController player, string group)
+    {
+        _fovSettings[player.Slot] = 90;
+        ChangeFov(player, false);
     }
 
     public override void OnSelectItem(CCSPlayerController player, VipFeature feature)
@@ -84,11 +92,11 @@ public class Fov : VipFeature<List<int>>
         menu.Open(player);
     }
 
-    private void ChangeFov(CCSPlayerController player)
+    private void ChangeFov(CCSPlayerController player, bool saveCookie = true)
     {
         var fov = (uint)_fovSettings[player.Slot];
-        
-        if(IsPlayerVip(player))
+
+        if(saveCookie && IsPlayerVip(player))
             SetPlayerCookie(player, "player_fov", fov);
         
         player.DesiredFOV = fov;

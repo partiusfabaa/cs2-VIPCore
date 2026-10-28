@@ -74,15 +74,18 @@ public class Items : VipFeature<Dictionary<string, List<string>>>
 
         foreach (var item in items)
         {
-            var itemName = _grenadeIndex.ContainsKey(item) ? item : null;
-            var ammoIndex = itemName != null ? _grenadeIndex[item] : -1;
-            
-            if (itemName != null && weaponService.Ammo[ammoIndex] == 0)
-                player.GiveNamedItem(item);
+            var itemName = item.StartsWith("weapon_") || item.StartsWith("item_") ? item : $"weapon_{item}";
+            var shortName = itemName.StartsWith("weapon_") ? itemName["weapon_".Length..] : itemName;
+
+            if (_grenadeIndex.TryGetValue(shortName, out var ammoIndex))
+            {
+                if (weaponService.Ammo[ammoIndex] == 0)
+                    player.GiveNamedItem(itemName);
+            }
             else
             {
-                if (weaponService.MyWeapons.ToList().Find(m => m.Value != null && m.Value.DesignerName == item) == null)
-                    player.GiveNamedItem(item);
+                if (weaponService.MyWeapons.ToList().Find(m => m.Value != null && m.Value.DesignerName == itemName) == null)
+                    player.GiveNamedItem(itemName);
             }
         }
     }

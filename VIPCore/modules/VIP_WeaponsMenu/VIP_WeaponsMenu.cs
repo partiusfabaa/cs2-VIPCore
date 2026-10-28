@@ -162,6 +162,8 @@ public class WeaponsMenu : VipFeature
         {
             menu.AddMenuOption($"{GetTranslatedText("weaponsmenu.fromround", package.Value.Round)} {package.Key}", (_, _) =>
             {
+                if (!player.IsValid || !IsFeatureEnabled(player) || !player.PawnIsAlive || player.PlayerPawn.Value == null)
+                    return;
                 if (GetActualRound() < package.Value.Round)
                     return;
                 if (_gameRules is { BuyTimeEnded: true } || !player.PlayerPawn.Value.InBuyZone)

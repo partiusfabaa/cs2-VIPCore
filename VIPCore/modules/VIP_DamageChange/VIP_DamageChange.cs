@@ -50,7 +50,7 @@ public class DamageMultiplier : VipFeature<float>
         var damageInfo = hook.GetParam<CTakeDamageInfo>(1);
 
         var attacker = damageInfo.Attacker.Value;
-        if (attacker is null)
+        if (attacker is null || attacker.DesignerName != "player")
             return HookResult.Continue;
 
         var pawnController = new CCSPlayerPawn(attacker.Handle).Controller.Value;

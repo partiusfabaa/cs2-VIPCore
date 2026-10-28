@@ -9,7 +9,7 @@ namespace VIP_FastPlant;
 public class VipFastPlant : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
-    public override string ModuleName => "[VIP] Fast Defuse";
+    public override string ModuleName => "[VIP] Fast Plant";
     public override string ModuleVersion => "v2.0.0";
 
     private IVipCoreApi? _api;

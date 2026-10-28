@@ -40,11 +40,12 @@ public class RegenHealth : VipFeature<Regen>
     private readonly bool[] _isRegenActive = new bool[65];
     private readonly Regen[] _regen = new Regen[65];
     private readonly float[] _regenInterval = new float[65];
+    private CounterStrikeSharp.API.Modules.Timers.Timer? _timer;
 
     public RegenHealth(VipRegenHealth vipRegenHealth, IVipCoreApi api) : base("HealthRegen", api)
     {
-        vipRegenHealth.RegisterListener<Listeners.OnMapStart>(name =>
-            vipRegenHealth.AddTimer(1.0f, Timer_HealthRegen, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE));
+        StartTimer(vipRegenHealth);
+        vipRegenHealth.RegisterListener<Listeners.OnMapStart>(name => StartTimer(vipRegenHealth));
         vipRegenHealth.RegisterListener<Listeners.OnClientConnected>(slot => _isRegenActive[slot] = false);
         vipRegenHealth. RegisterListener<Listeners.OnClientDisconnectPost>(slot => _isRegenActive[slot] = false);
 
@@ -61,6 +62,12 @@ public class RegenHealth : VipFeature<Regen>
 
             return HookResult.Continue;
         });
+    }
+
+    private void StartTimer(BasePlugin plugin)
+    {
+        _timer?.Kill();
+        _timer = plugin.AddTimer(1.0f, Timer_HealthRegen, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
     }
 
     private void Timer_HealthRegen()
