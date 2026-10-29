@@ -57,14 +57,8 @@ public class VIPFastReload : BasePlugin
 
             if (activeWeapon.Clip1 < weaponData.MaxClip1)
             {
-                int reserve = activeWeapon.ReserveAmmo[0];
-                int amount = Math.Min(weaponData.MaxClip1 - activeWeapon.Clip1, reserve);
-                if (amount <= 0) return;
-
-                activeWeapon.Clip1 += amount;
-                activeWeapon.ReserveAmmo[0] = reserve - amount;
+                activeWeapon.Clip1 = weaponData.MaxClip1;
                 Utilities.SetStateChanged(activeWeapon, "CBasePlayerWeapon", "m_iClip1");
-                Utilities.SetStateChanged(activeWeapon, "CBasePlayerWeapon", "m_pReserveAmmo");
             }
         }
     }
