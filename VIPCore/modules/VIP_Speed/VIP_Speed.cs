@@ -14,11 +14,10 @@ public class VipSpeed : BasePlugin
     public override string ModuleVersion => "v2.0.0";
     private IVipCoreApi? _api;
     private SpeedModifier? _speedModifier;
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
-
+    
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null) return;
 
         _speedModifier = new SpeedModifier(this, _api);

@@ -12,6 +12,7 @@ public class VipConfig
     public string MenuType { get; init; } = "center";
     public bool ReOpenMenuAfterItemClick { get; init; } = false;
     public string[] AdminMenuPermission { get; init; } = ["@css/root"];
+    public string[] DisableOnPistolRound { get; init; } = ["Items", "Grenades"];
     public bool VipLogging { get; init; } = true;
 
     public VipConnection Connection { get; init; } = new()

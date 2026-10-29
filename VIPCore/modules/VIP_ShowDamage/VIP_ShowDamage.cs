@@ -13,23 +13,21 @@ public class VIP_ShowDamage : BasePlugin
     public override string ModuleAuthor => "GSM-RO";
     public override string ModuleName => "[VIP] ShowDamage";
     public override string ModuleVersion => "v2.0.0";
-    public override string ModuleDescription => "Shows damage dealt to enemies in the center text for VIP players + optional sound";
+
+    public override string ModuleDescription =>
+        "Shows damage dealt to enemies in the center text for VIP players + optional sound";
 
     private ShowDamageFeature? _feature;
     private SoundDamageFeature? _soundFeature;
     private IVipCoreApi? _api;
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null) return;
 
-        _api.OnCoreReady += () =>
-        {
-            _feature = new ShowDamageFeature(this, _api);
-            _soundFeature = new SoundDamageFeature(this, _api);
-        };
+        _feature = new ShowDamageFeature(this, _api);
+        _soundFeature = new SoundDamageFeature(this, _api);
     }
 
     public override void Unload(bool hotReload)
@@ -168,7 +166,9 @@ public class ShowDamageFeature : VipFeature
 
 public class SoundDamageFeature : VipFeature
 {
-    public SoundDamageFeature(VIP_ShowDamage plugin, IVipCoreApi api) : base("SoundDMG", api) { }
+    public SoundDamageFeature(VIP_ShowDamage plugin, IVipCoreApi api) : base("SoundDMG", api)
+    {
+    }
 
     public override void OnSelectItem(CCSPlayerController player, VipFeature feature)
     {

@@ -13,11 +13,9 @@ public class VipGrenades : BasePlugin
     private Grenades _grenades = null!;
     private IVipCoreApi? _api;
     
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
-    
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null) return;
 
         _grenades = new Grenades(_api);

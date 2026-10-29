@@ -33,7 +33,6 @@ public class VIP_NightVip : BasePlugin
     public override string ModuleDescription => "Gives VIP between a certain period of time.";
 
     private IVipCoreApi? _api;
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
     private VIP_NightVipConfig Config = null!;
 
@@ -50,12 +49,11 @@ public class VIP_NightVip : BasePlugin
         Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
     
-
     public override void OnAllPluginsLoaded(bool hotReload)
     {
         const string configName = "vip_night";
         
-        _api = PluginCapability.Get();
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null)
         {
             ForceLogError("VipCoreApi not available. Plugin disabled.");

@@ -24,6 +24,9 @@ public class VipCoreApi : IVipCoreApi
     private readonly Config<VipConfig> _coreConfig;
     private readonly Config<GroupsConfig> _groupsConfig;
 
+    private int _pistolRoundTick = -1;
+    private bool _pistolRound;
+
     public VipCoreApi(
         Plugin plugin,
         PlayersManager players,
@@ -41,12 +44,9 @@ public class VipCoreApi : IVipCoreApi
         _coreConfig = coreConfig;
         _groupsConfig = groupsConfig;
 
-        players.PlayerLoaded += player =>
-            Invoke(OnPlayerAuthorized, h => h(player.Controller, player.Group));
-        players.PlayerRemoved += (player, group) =>
-            Invoke(OnPlayerRemoved, h => h(player.Controller, group));
-        players.PlayerDisconnect += player =>
-            Invoke(OnPlayerDisconnect, h => h(player.Controller, player.IsVip));
+        players.PlayerLoaded += player => Invoke(OnPlayerAuthorized, h => h(player.Controller, player.Group));
+        players.PlayerRemoved += (player, group) => Invoke(OnPlayerRemoved, h => h(player.Controller, group));
+        players.PlayerDisconnect += player => Invoke(OnPlayerDisconnect, h => h(player.Controller, player.IsVip));
     }
 
     public string CoreConfigDirectory => ConfigSystem.CoreConfigDirectory;
@@ -60,7 +60,13 @@ public class VipCoreApi : IVipCoreApi
     {
         if (!IsPlayerVip(player, out var vipPlayer)) return FeatureState.NoAccess;
 
-        return vipPlayer.FeatureStates.GetValueOrDefault(feature, FeatureState.NoAccess);
+        var state = vipPlayer.FeatureStates.GetValueOrDefault(feature, FeatureState.NoAccess);
+
+        if (state is FeatureState.Enabled && _coreConfig.Value.DisableOnPistolRound.Contains(feature) &&
+            IsPistolRound())
+            return FeatureState.Disabled;
+
+        return state;
     }
 
     public void SetPlayerFeatureState(CCSPlayerController player, string feature, FeatureState newState)
@@ -194,6 +200,15 @@ public class VipCoreApi : IVipCoreApi
     public string GetTranslatedText(string name, params object[] args) => _plugin.Localizer[name, args];
 
     public bool IsPistolRound()
+    {
+        if (_pistolRoundTick == Server.TickCount) return _pistolRound;
+
+        _pistolRoundTick = Server.TickCount;
+        _pistolRound = CheckPistolRound();
+        return _pistolRound;
+    }
+
+    private static bool CheckPistolRound()
     {
         var gameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").FirstOrDefault()
             ?.GameRules;

@@ -14,10 +14,10 @@ public class VipInfiniteAmmo : BasePlugin
 
 	private IVipCoreApi? _api;
 	private InfiniteAmmo? _infiniteAmmoFeature;
-	private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
+	
 	public override void OnAllPluginsLoaded(bool hotReload)
 	{
-		_api = PluginCapability.Get();
+		_api = IVipCoreApi.Capability.Get();
 		if (_api == null) return;
 
 		_infiniteAmmoFeature = new InfiniteAmmo(this, _api);

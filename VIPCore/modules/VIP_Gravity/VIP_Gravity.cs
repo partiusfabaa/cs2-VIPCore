@@ -18,11 +18,9 @@ public class VipGravity : BasePlugin
     private IVipCoreApi? _api;
     private Gravity? _gravity;
 
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
-
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null) return;
 
         _gravity = new Gravity(this, _api);

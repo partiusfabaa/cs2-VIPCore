@@ -11,20 +11,16 @@ public class VipAntiFlash : BasePlugin
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Anti Flash";
     public override string ModuleVersion => "v2.0.0";
-   
+
     private IVipCoreApi? _api;
     private AntiFlash? _antiFlash;
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null) return;
 
-        _api.OnCoreReady += () =>
-        {
-            _antiFlash = new AntiFlash(this, _api);
-        };
+        _antiFlash = new AntiFlash(this, _api);
     }
 
     public override void Unload(bool hotReload)
@@ -48,7 +44,8 @@ public class AntiFlash : VipFeature<int>
             var attacker = @event.Attacker;
             var playerPawn = player.PlayerPawn.Value;
 
-            if (playerPawn == null || playerPawn.LifeState is not (byte)LifeState_t.LIFE_ALIVE) return HookResult.Continue;
+            if (playerPawn == null || playerPawn.LifeState is not (byte)LifeState_t.LIFE_ALIVE)
+                return HookResult.Continue;
 
             var sameTeam = attacker != null && attacker.Team == player.Team;
 

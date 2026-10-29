@@ -40,6 +40,7 @@ Configs from VIPCore 1.x are converted on the first start: groups are taken out 
 | `MenuType` | `center` | `center` - menu in the center of the screen, `chat` - in chat, `console` - in console |
 | `ReOpenMenuAfterItemClick` | `false` | Reopen the VIP menu after selecting an item |
 | `AdminMenuPermission` | `["@css/root"]` | Permissions needed for `css_vip_admin` |
+| `DisableOnPistolRound` | `["Items"]` | Features that do not work in pistol rounds (first round and first round after the side switch) |
 | `VipLogging` | `true` | Log VIPCore actions |
 | `Connection` | | MySQL connection |
 
@@ -53,6 +54,7 @@ Configs from VIPCore 1.x are converted on the first start: groups are taken out 
   "MenuType": "center",
   "ReOpenMenuAfterItemClick": false,
   "AdminMenuPermission": ["@css/root"],
+  "DisableOnPistolRound": ["Items"],
   "VipLogging": true,
   "Connection": {
     "Host": "localhost",

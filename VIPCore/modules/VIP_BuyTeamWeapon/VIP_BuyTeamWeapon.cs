@@ -16,11 +16,10 @@ public class VipBuyTeamWeapon : BasePlugin
     
     private BuyTeamWeapon? _buyTeamWeapon;
     private IVipCoreApi? _api;
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null) return;
 
         _buyTeamWeapon = new BuyTeamWeapon(this, _api);

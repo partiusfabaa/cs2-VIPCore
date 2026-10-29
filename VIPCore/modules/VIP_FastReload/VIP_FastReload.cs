@@ -14,11 +14,10 @@ public class VIPFastReload : BasePlugin
 
     private IVipCoreApi? _api;
     private FastReload? _fastReloadFeature;
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
-
+    
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null) return;
 
         _fastReloadFeature = new FastReload(this, _api);

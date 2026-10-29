@@ -19,3 +19,5 @@
     }
 }
 ```
+
+To skip grenades in pistol rounds, add `"Grenades"` to `DisableOnPistolRound` in `vip_core.json`.

@@ -16,11 +16,10 @@ public class VipVampirism : BasePlugin
 
     private Vampirism? _vampirism;
     private IVipCoreApi? _api;
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null) return;
 
         _vampirism = new Vampirism(this, _api);

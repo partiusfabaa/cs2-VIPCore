@@ -44,6 +44,7 @@ public class VipGiftPlugin : BasePlugin, IPluginConfig<VIP_GiftConfig>
     private readonly Random _random = new();
     private bool _giftGiven = false;
     private IVipCoreApi? _vipApi;
+    
     public void OnConfigParsed(VIP_GiftConfig config)
     {
         Config = config;
@@ -55,7 +56,6 @@ public class VipGiftPlugin : BasePlugin, IPluginConfig<VIP_GiftConfig>
         if (_vipApi == null)
             Logger.LogWarning("[VipGiftPlugin] VIPCore API not found, players who already have VIP can receive gifts.");
     }
-
 
     public override void Load(bool hotReload)
     {

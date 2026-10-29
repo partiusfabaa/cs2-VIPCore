@@ -17,11 +17,10 @@ public class VipExperienceMultiplier : BasePlugin
     private IVipCoreApi? _vipApi;
     private IRanksApi? _ranksApi;
     private ExperienceMultiplier? _experienceMultiplier;
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _vipApi = PluginCapability.Get();
+        _vipApi = IVipCoreApi.Capability.Get();
         if (_vipApi == null) return;
 
         _ranksApi = IRanksApi.Capability.Get();
@@ -40,7 +39,8 @@ public class ExperienceMultiplier : VipFeature<float>
 {
     private readonly float[] _multiplier = Enumerable.Repeat(1f, 70).ToArray();
 
-    public ExperienceMultiplier(BasePlugin basePlugin, IVipCoreApi api, IRanksApi ranksApi) : base("exp_multiplier", api)
+    public ExperienceMultiplier(BasePlugin basePlugin, IVipCoreApi api, IRanksApi ranksApi) : base("exp_multiplier",
+        api)
     {
         ranksApi.PlayerExperienceChanged += (controller, i) => (int)(i * _multiplier[controller.Slot]);
 

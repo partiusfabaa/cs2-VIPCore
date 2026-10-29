@@ -1,7 +1,5 @@
 ﻿using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
-using VipCoreApi.Enums;
 
 namespace VIP_Zeus;
 
@@ -10,21 +8,20 @@ public class VipZeus : BasePlugin
     public override string ModuleAuthor => "panda";
     public override string ModuleName => "[VIP] Zeus";
     public override string ModuleVersion => "v2.0.0";
-    
+
     private Zeus? _zeus;
     private IVipCoreApi? _api;
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null) return;
 
         _zeus = new Zeus(_api);
     }
-    
+
     public override void Unload(bool hotReload)
-    {   
+    {
         _zeus?.Dispose();
     }
 }
@@ -51,8 +48,10 @@ public class Zeus : VipFeature<bool>
                 return true;
             }
         }
+
         return false;
     }
+
     public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
         if (!vip) return;
@@ -60,7 +59,7 @@ public class Zeus : VipFeature<bool>
         if (!IsFeatureEnabled(player) || !GetValue(player)) return;
 
         if ((player.TeamNum == 3 || player.TeamNum == 2) && !HasWeapon(player, "weapon_taser"))
-        {   
+        {
             player.GiveNamedItem("weapon_taser");
         }
     }

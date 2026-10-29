@@ -15,11 +15,9 @@ public class VipArmor : BasePlugin
     private IVipCoreApi? _api;
     private Armor? _armor;
     
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
-
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null) return;
 
         _armor = new Armor(_api);

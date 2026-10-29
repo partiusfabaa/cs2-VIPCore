@@ -12,19 +12,15 @@ public class VipEndurance : BasePlugin
     public override string ModuleName => "[VIP] Endurance";
     public override string ModuleVersion => "v2.0.0";
 
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
     private IVipCoreApi? _api;
     private Endurance? _endurance;
 
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null) return;
 
-        _api.OnCoreReady += () =>
-        {
-            _endurance = new Endurance(this, _api);
-        };
+        _endurance = new Endurance(this, _api);
     }
 
     public override void Unload(bool hotReload)

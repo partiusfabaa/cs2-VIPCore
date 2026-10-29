@@ -12,28 +12,27 @@ public class VIP_DefuseKit : BasePlugin
     public override string ModuleAuthor => "T3Marius";
     public override string ModuleName => "[VIP] DefuseKit";
     public override string ModuleVersion => "v2.0.0";
-    private IVipCoreApi? VIP_API;
-    private DefuseKit? defuseKit;
-    private PluginCapability<IVipCoreApi> pluginCapabilty { get; } = new("vipcore:core");
+    private IVipCoreApi? _api;
+    private DefuseKit? _defuseKit;
+
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        VIP_API = pluginCapabilty.Get() ?? throw new Exception("Vip api not found");
+        _api = IVipCoreApi.Capability.Get() ?? throw new Exception("Vip api not found");
 
-        VIP_API.OnCoreReady += () =>
-        {
-            defuseKit = new DefuseKit(this, VIP_API);
-        };
+        _defuseKit = new DefuseKit(this, _api);
     }
+
     public override void Unload(bool hotReload)
     {
-        defuseKit?.Dispose();
+        _defuseKit?.Dispose();
     }
+
     public class DefuseKit : VipFeature
     {
         public DefuseKit(VIP_DefuseKit defuseKit, IVipCoreApi api) : base("DefuseKit", api)
         {
-
         }
+
         public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
         {
             if (!IsFeatureEnabled(player)) return;
@@ -41,7 +40,8 @@ public class VIP_DefuseKit : BasePlugin
             if (player.Team == CsTeam.Terrorist)
                 return;
 
-            var gameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").FirstOrDefault()?.GameRules;
+            var gameRules = Utilities.FindAllEntitiesByDesignerName<CCSGameRulesProxy>("cs_gamerules").FirstOrDefault()
+                ?.GameRules;
             if (gameRules == null || gameRules.WarmupPeriod)
                 return;
 

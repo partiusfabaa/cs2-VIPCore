@@ -1,8 +1,6 @@
 ﻿using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Commands;
 using VipCoreApi;
-using VipCoreApi.Enums;
 
 namespace VIP_ResetDeaths;
 
@@ -15,11 +13,9 @@ public class VipResetDeaths : BasePlugin
     private ResetDeaths? _resetDeaths;
     private IVipCoreApi? _api;
     
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
-
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null) return;
 
         _api.OnCoreReady += () =>

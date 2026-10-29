@@ -2,7 +2,7 @@ using System.Text.Json;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
-using VipCoreApi; 
+using VipCoreApi;
 
 namespace VIP_Random;
 
@@ -15,7 +15,7 @@ public class VIP_Random : BasePlugin
 
     private IVipCoreApi? _vipApi;
     private Config _config = null!;
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
+
     private CCSPlayerController? RandomVIP;
     private int _currentRound;
     private bool _vipAssigned; // Flag to track if VIP has been assigned
@@ -30,12 +30,13 @@ public class VIP_Random : BasePlugin
     public override void OnAllPluginsLoaded(bool hotReload)
     {
         base.OnAllPluginsLoaded(hotReload);
-        _vipApi = PluginCapability.Get();
+        _vipApi = IVipCoreApi.Capability.Get();
         if (_vipApi == null)
         {
             Server.PrintToChatAll("VIP API not found.");
             return;
         }
+
         _config = LoadConfig();
     }
 
@@ -46,6 +47,7 @@ public class VIP_Random : BasePlugin
         {
             return CreateConfig(configPath);
         }
+
         var configJson = File.ReadAllText(configPath);
         return JsonSerializer.Deserialize<Config>(configJson) ?? CreateConfig(configPath);
     }
@@ -58,14 +60,16 @@ public class VIP_Random : BasePlugin
             RandomVIPRound = 4,
             RandomVIPMinPlayers = 1
         };
-        File.WriteAllText(configPath, JsonSerializer.Serialize(defaultConfig, new JsonSerializerOptions { WriteIndented = true }));
+        File.WriteAllText(configPath,
+            JsonSerializer.Serialize(defaultConfig, new JsonSerializerOptions { WriteIndented = true }));
         return defaultConfig;
     }
 
     private void SaveConfig()
     {
         var configPath = Path.Combine(_vipApi!.ModulesConfigDirectory, "vip_random.json");
-        File.WriteAllText(configPath, JsonSerializer.Serialize(_config, new JsonSerializerOptions { WriteIndented = true }));
+        File.WriteAllText(configPath,
+            JsonSerializer.Serialize(_config, new JsonSerializerOptions { WriteIndented = true }));
     }
 
     public HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
@@ -89,6 +93,7 @@ public class VIP_Random : BasePlugin
                 Server.PrintToChatAll(Localizer["prefix"] + Localizer["vip.not.enough"]);
             }
         }
+
         return HookResult.Continue;
     }
 
@@ -101,6 +106,7 @@ public class VIP_Random : BasePlugin
             RandomVIP = null;
             _vipAssigned = false; // Reset the VIP assignment flag if the VIP disconnects
         }
+
         return HookResult.Continue;
     }
 
@@ -137,7 +143,8 @@ public class VIP_Random : BasePlugin
     private CCSPlayerController? GetRandomPlayer()
     {
         var players = Utilities.GetPlayers()
-            .Where(p => p != null && p.IsValid && p.PlayerPawn != null && p.PlayerPawn.IsValid && !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.Connected)
+            .Where(p => p != null && p.IsValid && p.PlayerPawn != null && p.PlayerPawn.IsValid && !p.IsBot &&
+                        !p.IsHLTV && p.Connected == PlayerConnectedState.Connected)
             .ToList();
         if (players.Count == 0) return null;
         var rand = new Random();

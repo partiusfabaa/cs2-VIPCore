@@ -12,14 +12,12 @@ public class VipSmokeColor : BasePlugin
     public override string ModuleName => "[VIP] Smoke Color";
     public override string ModuleVersion => "v2.0.0";
 
-
     private SmokeColor? _smokeColor;
     private IVipCoreApi? _api;
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null) return;
 
         _api.OnCoreReady += () =>

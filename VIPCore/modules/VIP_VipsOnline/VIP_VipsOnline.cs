@@ -16,11 +16,10 @@ public class VIPVipsOnline : BasePlugin
     public override string ModuleName => "[VIP] Vips Online";
     public override string ModuleVersion => "v2.0.0";
     private IVipCoreApi? _api;
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null) return;
 
         AddCommand("css_vips", "List online VIP players", ListVipOnlinePlayers);

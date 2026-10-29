@@ -16,11 +16,9 @@ public class VipDecoyTeleport : BasePlugin
     private DecoyTeleport? _decoyTeleport;
     private IVipCoreApi? _api;
 
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
-
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null) return;
 
         _decoyTeleport = new DecoyTeleport(this, _api);
@@ -39,7 +37,6 @@ public class DecoyTeleport : VipFeature<int>
     public DecoyTeleport(VipDecoyTeleport vipDecoyTeleport, IVipCoreApi api) : base("DecoyTp", api)
     {
         vipDecoyTeleport.RegisterEventHandler<EventDecoyFiring>(EventDecoyFiring);
-
         vipDecoyTeleport.RegisterEventHandler<EventRoundStart>((@event, info) =>
         {
             for (var i = 0; i < _decoyCount.Length; i ++)

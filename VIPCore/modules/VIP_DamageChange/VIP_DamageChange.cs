@@ -17,16 +17,13 @@ public class VipDamageChange : BasePlugin
     public override string ModuleVersion => "v2.0.0";
     private IVipCoreApi? _api;
     private DamageMultiplier? _damageMultiplier;
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
 
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null) return;
 
         _damageMultiplier = new DamageMultiplier(_api);
-
-        VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(_damageMultiplier.OnTakeDamage, HookMode.Pre);
     }
 
     public override void Unload(bool hotReload)
@@ -34,7 +31,6 @@ public class VipDamageChange : BasePlugin
         if (_api != null && _damageMultiplier != null)
         {
             _damageMultiplier.Dispose();
-            VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Unhook(_damageMultiplier.OnTakeDamage, HookMode.Pre);
         }
     }
 }
@@ -43,6 +39,7 @@ public class DamageMultiplier : VipFeature<float>
 {
     public DamageMultiplier(IVipCoreApi api) : base("DamageMultiplier", api)
     {
+        VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Hook(OnTakeDamage, HookMode.Pre);
     }
 
     public HookResult OnTakeDamage(DynamicHook hook)
@@ -94,5 +91,11 @@ public class DamageMultiplier : VipFeature<float>
     {
         if (args.State == FeatureState.Enabled)
             args.Display = $"[x{GetValue(args.Controller).ToString("0.##", CultureInfo.InvariantCulture)}]";
+    }
+
+    public override void Dispose()
+    {
+        VirtualFunctions.CBaseEntity_TakeDamageOldFunc.Unhook(OnTakeDamage, HookMode.Pre);
+        base.Dispose();
     }
 }

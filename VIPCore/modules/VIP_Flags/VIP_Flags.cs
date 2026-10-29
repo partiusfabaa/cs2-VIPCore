@@ -22,12 +22,9 @@ public class VipFlags : BasePlugin
     private IVipCoreApi? _api;
     private Flags? _flags;
 
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
-
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
-
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null) return;
 
         _flags = new Flags(this, _api);

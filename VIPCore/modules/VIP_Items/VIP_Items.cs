@@ -9,16 +9,14 @@ public class VipItems : BasePlugin
 {
     public override string ModuleAuthor => "thesamefabius";
     public override string ModuleName => "[VIP] Items";
-    public override string ModuleVersion => "v2.0.0";
+    public override string ModuleVersion => "v2.0.1";
 
     private Items _items = null!;
     private IVipCoreApi? _api;
 
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
-
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null) return;
 
         _items = new Items(_api);
@@ -38,7 +36,7 @@ public class Items : VipFeature<Dictionary<string, List<string>>>
 
     public override void OnPlayerSpawn(CCSPlayerController player, bool vip)
     {
-        if (!vip || IsPistolRound()) return;
+        if (!vip) return;
 
         if (!IsFeatureEnabled(player)) return;
 

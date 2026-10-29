@@ -15,11 +15,9 @@ public class VipFastPlant : BasePlugin
     private IVipCoreApi? _api;
     private FastPlant? _fastPlant;
 
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
-
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null) return;
 
         _fastPlant = new FastPlant(this, _api);

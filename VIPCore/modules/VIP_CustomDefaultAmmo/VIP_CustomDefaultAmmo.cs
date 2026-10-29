@@ -20,12 +20,12 @@ public class VipCustomDefaultAmmo : BasePlugin
 
     private IVipCoreApi? _api;
     private CustomDefaultAmmo? _customDefaultAmmoFeature;
-    private PluginCapability<IVipCoreApi> PluginCapability { get; } = new("vipcore:core");
+    
     public Dictionary<string, Dictionary<string, WeaponSettings>> _ammoConfig = new();
 
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        _api = PluginCapability.Get();
+        _api = IVipCoreApi.Capability.Get();
         if (_api == null) return;
 
         _customDefaultAmmoFeature = new CustomDefaultAmmo(this, _api);
