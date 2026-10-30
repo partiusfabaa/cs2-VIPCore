@@ -14,7 +14,7 @@ public class VIPFastReload : BasePlugin
 
     private IVipCoreApi? _api;
     private FastReload? _fastReloadFeature;
-    
+
     public override void OnAllPluginsLoaded(bool hotReload)
     {
         _api = IVipCoreApi.Capability.Get();
@@ -30,15 +30,14 @@ public class VIPFastReload : BasePlugin
 
     public class FastReload : VipFeature
     {
-        public FastReload(VIPFastReload vipFastReload, IVipCoreApi api) : base("FastReload", api)
+        public FastReload(VIPFastReload plugin, IVipCoreApi api) : base("FastReload", api)
         {
-            vipFastReload.RegisterEventHandler<EventWeaponReload>(OnWeaponReload);
+            plugin.RegisterEventHandler<EventWeaponReload>(OnWeaponReload);
         }
 
         private HookResult OnWeaponReload(EventWeaponReload @event, GameEventInfo info)
         {
-            CCSPlayerController? player = @event.Userid;
-            CBasePlayerWeapon? activeWeapon = player?.PlayerPawn.Value?.WeaponServices?.ActiveWeapon.Value;
+            var player = @event.Userid;
             if (player == null) return HookResult.Continue;
 
             ApplyFastReload(player);

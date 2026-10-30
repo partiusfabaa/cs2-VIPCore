@@ -218,8 +218,7 @@ public class VipCoreApi : IVipCoreApi
         var maxRounds = ConVar.Find("mp_maxrounds")!.GetPrimitiveValue<int>();
 
         return gameRules.TotalRoundsPlayed == 0 ||
-               (halftime && maxRounds / 2 == gameRules.TotalRoundsPlayed) ||
-               gameRules.GameRestart;
+               (halftime && maxRounds / 2 == gameRules.TotalRoundsPlayed);
     }
 
     public T LoadConfig<T>(string name, string path)
