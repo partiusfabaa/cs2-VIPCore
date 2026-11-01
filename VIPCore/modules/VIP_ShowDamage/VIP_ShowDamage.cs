@@ -2,6 +2,7 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Cvars;
 using System.Text;
+using System.Text.Json;
 using VipCoreApi;
 using VipCoreApi.Enums;
 using CounterStrikeSharp.API.Core.Capabilities;
@@ -12,7 +13,7 @@ public class VIP_ShowDamage : BasePlugin
 {
     public override string ModuleAuthor => "GSM-RO";
     public override string ModuleName => "[VIP] ShowDamage";
-    public override string ModuleVersion => "v2.0.0";
+    public override string ModuleVersion => "v2.0.1";
 
     public override string ModuleDescription =>
         "Shows damage dealt to enemies in the center text for VIP players + optional sound";
@@ -34,6 +35,21 @@ public class VIP_ShowDamage : BasePlugin
     {
         _feature?.Dispose();
         _soundFeature?.Dispose();
+    }
+}
+
+public static class FeatureValue
+{
+    // vip.json value of an on/off feature: 0 / false turns it off, any other value (1, true) turns it on
+    public static bool IsOn(IVipCoreApi api, CCSPlayerController player, string feature)
+    {
+        var value = api.GetFeatureValue<JsonElement>(player, feature);
+        return value.ValueKind switch
+        {
+            JsonValueKind.Number => value.GetDouble() != 0,
+            JsonValueKind.False or JsonValueKind.Null or JsonValueKind.Undefined => false,
+            _ => true
+        };
     }
 }
 
@@ -82,7 +98,8 @@ public class ShowDamageFeature : VipFeature
             try
             {
                 // Main check: is ShowDamage actually enabled?
-                if (Api.GetPlayerFeatureState(player, "ShowDamage") != FeatureState.Enabled)
+                if (Api.GetPlayerFeatureState(player, "ShowDamage") != FeatureState.Enabled ||
+                    !FeatureValue.IsOn(Api, player, "ShowDamage"))
                 {
                     _damageDone.Remove(attackerUserId);
                     return;
@@ -98,7 +115,8 @@ public class ShowDamageFeature : VipFeature
 
                 // Play sound only if SoundDMG is enabled
                 if (Api.PlayerHasFeature(player, "SoundDMG") &&
-                    Api.GetPlayerFeatureState(player, "SoundDMG") == FeatureState.Enabled)
+                    Api.GetPlayerFeatureState(player, "SoundDMG") == FeatureState.Enabled &&
+                    FeatureValue.IsOn(Api, player, "SoundDMG"))
                 {
                     player.ExecuteClientCommand($"play {_config.SoundPath}");
                 }
@@ -126,7 +144,7 @@ public class ShowDamageFeature : VipFeature
             return HookResult.Continue;
 
         // Must have ShowDamage AND be enabled
-        if (!IsFeatureEnabled(ev.Attacker))
+        if (!IsFeatureEnabled(ev.Attacker) || !FeatureValue.IsOn(Api, ev.Attacker, Name))
             return HookResult.Continue;
 
         int attackerUserId = ev.Attacker.UserId!.Value;
