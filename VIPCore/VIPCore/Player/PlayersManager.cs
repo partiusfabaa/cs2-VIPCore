@@ -26,6 +26,7 @@ public class PlayersManager
     public event Action<VipPlayer>? PlayerLoaded;
     public event Action<VipPlayer, string>? PlayerRemoved;
     public event Action<VipPlayer>? PlayerDisconnect;
+    public event Action<VipPlayer>? FeatureStatesRefreshed;
 
     public PlayersManager(
         Plugin plugin,
@@ -163,6 +164,8 @@ public class PlayersManager
 
         if (player.IsVip)
             PlayerLoaded?.Invoke(player);
+        else
+            FeatureStatesRefreshed?.Invoke(player);
     }
 
     public bool Remove(VipPlayer player, bool notify = false)
@@ -186,6 +189,7 @@ public class PlayersManager
             player.Features = ResolveGroup(player.Group);
             player.FeatureValues.Clear();
             ApplyFeatureStates(player);
+            FeatureStatesRefreshed?.Invoke(player);
         }
     }
 
