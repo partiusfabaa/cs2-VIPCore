@@ -14,7 +14,7 @@ using VipCoreApi.Enums;
 
 namespace VIPCore;
 
-public class VipCoreApi : IVipCoreApi
+public class VipCoreApi : IVipCoreApi, IVipFeatureStateApi
 {
     private readonly Plugin _plugin;
     private readonly PlayersManager _players;
@@ -47,6 +47,7 @@ public class VipCoreApi : IVipCoreApi
         players.PlayerLoaded += player => Invoke(OnPlayerAuthorized, h => h(player.Controller, player.Group));
         players.PlayerRemoved += (player, group) => Invoke(OnPlayerRemoved, h => h(player.Controller, group));
         players.PlayerDisconnect += player => Invoke(OnPlayerDisconnect, h => h(player.Controller, player.IsVip));
+        players.FeatureStatesRefreshed += player => NotifyFeatureStatesChanged(player.Controller);
     }
 
     public string CoreConfigDirectory => ConfigSystem.CoreConfigDirectory;
@@ -58,9 +59,9 @@ public class VipCoreApi : IVipCoreApi
 
     public FeatureState GetPlayerFeatureState(CCSPlayerController player, string feature)
     {
-        if (!IsPlayerVip(player, out var vipPlayer)) return FeatureState.NoAccess;
+        if (!_plugin.EnableConVar.Value) return FeatureState.NoAccess;
 
-        var state = vipPlayer.FeatureStates.GetValueOrDefault(feature, FeatureState.NoAccess);
+        var state = GetPlayerFeatureSelection(player, feature);
 
         if (state is FeatureState.Enabled && _coreConfig.Value.DisableOnPistolRound.Contains(feature) &&
             IsPistolRound())
@@ -69,16 +70,26 @@ public class VipCoreApi : IVipCoreApi
         return state;
     }
 
+    public FeatureState GetPlayerFeatureSelection(CCSPlayerController player, string feature) =>
+        _players.TryGetPlayer(player, out var vipPlayer) && vipPlayer.IsVip
+            ? vipPlayer.FeatureStates.GetValueOrDefault(feature, FeatureState.NoAccess)
+            : FeatureState.NoAccess;
+
     public void SetPlayerFeatureState(CCSPlayerController player, string feature, FeatureState newState)
     {
-        if (!_players.TryGetPlayer(player, out var vipPlayer) || !vipPlayer.FeatureStates.ContainsKey(feature))
+        if (!_players.TryGetPlayer(player, out var vipPlayer) ||
+            !vipPlayer.FeatureStates.TryGetValue(feature, out var oldState) || oldState == newState)
             return;
 
         if (newState is not FeatureState.NoAccess && !vipPlayer.HasFeature(feature))
             return;
 
         vipPlayer.FeatureStates[feature] = newState;
+        NotifyFeatureStatesChanged(player);
     }
+
+    private void NotifyFeatureStatesChanged(CCSPlayerController player) =>
+        Invoke(PlayerFeatureStatesChanged, handler => handler(player));
 
     public bool IsPlayerVip(CCSPlayerController player) => IsPlayerVip(player, out _);
 
@@ -253,6 +264,7 @@ public class VipCoreApi : IVipCoreApi
     public event OnPlayerDisconnectDelegate? OnPlayerDisconnect;
     public event OnPlayerSpawnDelegate? OnPlayerSpawn;
     public event OnPlayerUseFeatureDelegate? OnPlayerUseFeature;
+    public event Action<CCSPlayerController>? PlayerFeatureStatesChanged;
     private Action? _onCoreReady;
     private bool _coreReady;
 
