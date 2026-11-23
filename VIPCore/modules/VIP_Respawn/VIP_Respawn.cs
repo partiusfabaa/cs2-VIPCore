@@ -1,11 +1,10 @@
-﻿using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Capabilities;
-using CounterStrikeSharp.API.Modules.Commands;
+﻿using System.Runtime.InteropServices;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using VipCoreApi;
-using VipCoreApi.Enums;
 using VipCoreApi.Args;
+using VipCoreApi.Enums;
 
 namespace VIP_Respawn;
 
@@ -21,62 +20,79 @@ public class VipRespawn : BasePlugin
     public override void OnAllPluginsLoaded(bool hotReload)
     {
         _api = IVipCoreApi.Capability.Get();
-        if (_api == null) return;
-
-        _api.OnCoreReady += () =>
-        {
-            _respawn = new Respawn(this, _api);
-        };
+        if (_api != null)
+            _api.OnCoreReady += OnCoreReady;
     }
-    
+
+    private void OnCoreReady()
+    {
+        if (_api != null)
+            _respawn ??= new Respawn(this, _api);
+    }
+
     public override void Unload(bool hotReload)
     {
+        if (_api != null)
+            _api.OnCoreReady -= OnCoreReady;
+
         _respawn?.Dispose();
     }
 }
 
 public class Respawn : VipFeature<int>
 {
-    private readonly VipRespawn _vipRespawn;
-    private readonly Dictionary<ulong, int> _usedRespawns = new();
+    private readonly Dictionary<ulong, (long Round, int Count)> _usedRespawns = new();
+    private readonly HashSet<ulong> _respawning = new();
+    private long _round;
+    private int? _respawnOffset;
+    private nint _respawnTarget;
+    private Action<nint>? _invokeRespawn;
 
-    public Respawn(VipRespawn vipRespawn, IVipCoreApi api) : base("Respawn", api, FeatureType.Selectable)
+    public Respawn(VipRespawn plugin, IVipCoreApi api) : base("Respawn", api, FeatureType.Selectable)
     {
-        _vipRespawn = vipRespawn;
+        api.OnPlayerAuthorized -= OnPlayerAuthorized;
+        api.OnPlayerRemoved -= OnPlayerRemoved;
+        api.OnPlayerDisconnect -= OnPlayerDisconnect;
+        api.OnPlayerSpawn -= OnPlayerSpawn;
+        api.OnPlayerUseFeature -= OnPlayerUseFeature;
+        api.PlayerFeatureStatesChanged -= OnPlayerFeatureStatesChanged;
 
-        vipRespawn.RegisterEventHandler<EventRoundStart>((@event, info) =>
+        plugin.RegisterListener<Listeners.OnMapStart>(_ =>
         {
+            _round++;
             _usedRespawns.Clear();
-
+        });
+        plugin.RegisterEventHandler<EventRoundStart>((_, _) =>
+        {
+            _round++;
             return HookResult.Continue;
         });
 
-        vipRespawn.AddCommand("css_respawn", "", OnCmdVipCommand);
+        plugin.AddCommand("css_respawn", "", (player, _) => PlayerRespawn(player));
     }
 
-    public override void OnSelectItem(CCSPlayerController player, VipFeature feature)
-    {
-        PlayerRespawn(player);
-    }
+    public override void OnSelectItem(CCSPlayerController player, VipFeature feature) => PlayerRespawn(player);
 
-    private void OnCmdVipCommand(CCSPlayerController? player, CommandInfo info)
-    {
-        if (player == null) return;
-        PlayerRespawn(player);
-    }
+    private int GetUsedRespawns(ulong steamId) =>
+        _usedRespawns.TryGetValue(steamId, out var usage) && usage.Round == _round ? usage.Count : 0;
 
-    private void PlayerRespawn(CCSPlayerController player)
+    private void PlayerRespawn(CCSPlayerController? player)
     {
-        if (!IsPlayerVip(player)) return;
-        if (!PlayerHasFeature(player)) return;
-        
-        if (GetValue(player) <= _usedRespawns.GetValueOrDefault(player.SteamID))
+        if (player is not { IsValid: true } || !PlayerHasFeature(player) ||
+            GetPlayerFeatureState(player) is FeatureState.NoAccess)
+            return;
+
+        var steamId = player.SteamID;
+        if (_respawning.Contains(steamId)) return;
+
+        var used = GetUsedRespawns(steamId);
+        if (used >= GetValue(player))
         {
             PrintToChat(player, GetTranslatedText("respawn.Limit"));
             return;
         }
 
-        if (player.TeamNum is (int)CsTeam.None or (int)CsTeam.Spectator)
+        if (player.Team is CsTeam.None or CsTeam.Spectator)
         {
             PrintToChat(player, GetTranslatedText("respawn.InTeam"));
             return;
@@ -88,20 +104,54 @@ public class Respawn : VipFeature<int>
             return;
         }
 
-        var playerPawn = player.PlayerPawn.Value;
+        if (player.PlayerPawn.Value is not { IsValid: true } pawn) return;
 
-        if (playerPawn == null) return;
+        var round = _round;
+        _respawning.Add(steamId);
+        try
+        {
+            player.SetPawn(pawn);
+            if (!player.IsValid) return;
 
-        VirtualFunctions.CBasePlayerController_SetPawnFunc.Invoke(player, playerPawn, true, false);
-        VirtualFunction.CreateVoid<CCSPlayerController>(player.Handle, GameData.GetOffset("CCSPlayerController_Respawn"))(player);
-        _usedRespawns[player.SteamID] = _usedRespawns.GetValueOrDefault(player.SteamID) + 1;
-        PrintToChat(player, GetTranslatedText("respawn.Success"));
+            InvokeRespawn(player.Handle);
+            if (round == _round)
+                _usedRespawns[steamId] = (round, used + 1);
+        }
+        finally
+        {
+            _respawning.Remove(steamId);
+        }
+
+        if (player.IsValid)
+            PrintToChat(player, GetTranslatedText("respawn.Success"));
+    }
+
+    private void InvokeRespawn(nint controller)
+    {
+        var offset = _respawnOffset ?? GameData.GetOffset("CCSPlayerController_Respawn");
+        ArgumentOutOfRangeException.ThrowIfNegative(offset);
+
+        // CreateVoid binds the function at the current vtable entry.
+        var vtable = Marshal.ReadIntPtr(controller);
+        if (vtable == 0) throw new InvalidOperationException("Player controller has no virtual function table.");
+
+        var target = Marshal.ReadIntPtr(vtable, checked(offset * IntPtr.Size));
+        if (target == 0) throw new InvalidOperationException("Player controller has no respawn function.");
+
+        if (_invokeRespawn == null || target != _respawnTarget)
+        {
+            _invokeRespawn = VirtualFunction.CreateVoid<nint>(controller, offset);
+            _respawnOffset = offset;
+            _respawnTarget = target;
+        }
+
+        _invokeRespawn(controller);
     }
 
     public override void OnFeatureDisplay(FeatureDisplayArgs args)
     {
         var limit = GetValue(args.Controller);
-        var left = Math.Max(limit - _usedRespawns.GetValueOrDefault(args.Controller.SteamID), 0);
+        var left = Math.Max(limit - GetUsedRespawns(args.Controller.SteamID), 0);
 
         args.Display = $"[{left}/{limit}]";
     }
