@@ -31,7 +31,6 @@ public class VipEndurance : BasePlugin
 public class Endurance : VipFeature
 {
     private readonly BasePlugin _plugin;
-    private readonly IVipFeatureStateApi? _stateApi;
     private readonly Dictionary<int, CCSPlayerController> _players = new();
     private bool _mapEnding;
     private bool _tickRegistered;
@@ -41,8 +40,6 @@ public class Endurance : VipFeature
     public Endurance(BasePlugin basePlugin, IVipCoreApi api) : base("endurance", api)
     {
         _plugin = basePlugin;
-        _stateApi = api as IVipFeatureStateApi;
-        if (_stateApi != null) _stateApi.PlayerFeatureStatesChanged += UpdatePlayer;
 
         _plugin.RegisterListener<Listeners.OnClientDisconnectPost>(RemovePlayer);
         _plugin.RegisterListener<Listeners.OnMapStart>(OnMapStart);
@@ -91,7 +88,7 @@ public class Endurance : VipFeature
 
     public override void OnPlayerSpawn(CCSPlayerController player, bool vip) => UpdatePlayer(player);
 
-    public override void OnSelectItem(CCSPlayerController player, VipFeature feature) => UpdatePlayer(player);
+    public override void OnPlayerFeatureStatesChanged(CCSPlayerController player) => UpdatePlayer(player);
 
     public override void OnPlayerRemoved(CCSPlayerController player, string group)
     {
@@ -102,7 +99,7 @@ public class Endurance : VipFeature
     {
         if (_disposed || _mapEnding || player is not { IsValid: true, IsBot: false, IsHLTV: false }) return;
 
-        var state = _stateApi?.GetPlayerFeatureSelection(player, Name) ?? GetPlayerFeatureState(player);
+        var state = GetPlayerFeatureSelection(player);
         if (state is FeatureState.Enabled)
             _players[player.Slot] = player;
         else
@@ -143,7 +140,6 @@ public class Endurance : VipFeature
         _plugin.RemoveListener<Listeners.OnClientDisconnectPost>(RemovePlayer);
         _plugin.RemoveListener<Listeners.OnMapStart>(OnMapStart);
         _plugin.RemoveListener<Listeners.OnMapEnd>(OnMapEnd);
-        if (_stateApi != null) _stateApi.PlayerFeatureStatesChanged -= UpdatePlayer;
         base.Dispose();
     }
 }

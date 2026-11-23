@@ -14,7 +14,7 @@ using VipCoreApi.Enums;
 
 namespace VIPCore;
 
-public class VipCoreApi : IVipCoreApi, IVipFeatureStateApi
+public class VipCoreApi : IVipCoreApi
 {
     private readonly Plugin _plugin;
     private readonly PlayersManager _players;
@@ -88,7 +88,7 @@ public class VipCoreApi : IVipCoreApi, IVipFeatureStateApi
         NotifyFeatureStatesChanged(player);
     }
 
-    private void NotifyFeatureStatesChanged(CCSPlayerController player) =>
+    internal void NotifyFeatureStatesChanged(CCSPlayerController player) =>
         Invoke(PlayerFeatureStatesChanged, handler => handler(player));
 
     public bool IsPlayerVip(CCSPlayerController player) => IsPlayerVip(player, out _);

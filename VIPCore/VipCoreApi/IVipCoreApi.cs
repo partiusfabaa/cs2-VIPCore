@@ -50,6 +50,14 @@ public interface IVipCoreApi
     FeatureState GetPlayerFeatureState(CCSPlayerController player, string feature);
 
     /// <summary>
+    /// Gets the stored feature selection before temporary restrictions such as pistol rounds are applied.
+    /// </summary>
+    /// <param name="player">The player whose selection is requested.</param>
+    /// <param name="feature">The name of the feature.</param>
+    /// <returns>The stored selection, or <see cref="FeatureState.NoAccess"/> if none is available.</returns>
+    FeatureState GetPlayerFeatureSelection(CCSPlayerController player, string feature);
+
+    /// <summary>
     /// Sets the state of a specified feature for the given player.
     /// </summary>
     /// <param name="player">The player for whom the feature state is being set.</param>
@@ -258,6 +266,11 @@ public interface IVipCoreApi
     /// Event triggered when a player uses a feature.
     /// </summary>
     event OnPlayerUseFeatureDelegate? OnPlayerUseFeature;
+
+    /// <summary>
+    /// Event triggered when a player's stored feature selections change or are refreshed.
+    /// </summary>
+    event Action<CCSPlayerController>? PlayerFeatureStatesChanged;
 
     /// <summary>
     /// Event triggered when the core module is ready.
