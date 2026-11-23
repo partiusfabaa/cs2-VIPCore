@@ -99,6 +99,7 @@ public abstract class VipFeature : IDisposable
         api.OnPlayerDisconnect += OnPlayerDisconnect;
         api.OnPlayerSpawn += OnPlayerSpawn;
         api.OnPlayerUseFeature += OnPlayerUseFeature;
+        api.PlayerFeatureStatesChanged += OnPlayerFeatureStatesChanged;
     }
 
     /// <summary>
@@ -151,6 +152,14 @@ public abstract class VipFeature : IDisposable
     /// </summary>
     /// <param name="args">The event arguments of type <see cref="PlayerUseFeatureEventArgs"/>.</param>
     public virtual void OnPlayerUseFeature(PlayerUseFeatureEventArgs args)
+    {
+    }
+
+    /// <summary>
+    /// Handles changes or refreshes to a player's stored feature selections.
+    /// </summary>
+    /// <param name="player">The player whose selections were updated.</param>
+    public virtual void OnPlayerFeatureStatesChanged(CCSPlayerController player)
     {
     }
 
@@ -225,6 +234,13 @@ public abstract class VipFeature : IDisposable
     /// <param name="player">The player whose feature state is requested.</param>
     /// <returns>The feature state (<see cref="FeatureState"/>).</returns>
     public FeatureState GetPlayerFeatureState(CCSPlayerController player) => Api.GetPlayerFeatureState(player, Name);
+
+    /// <summary>
+    /// Gets the stored selection for this feature before temporary restrictions are applied.
+    /// </summary>
+    /// <param name="player">The player whose selection is requested.</param>
+    /// <returns>The stored selection, or <see cref="FeatureState.NoAccess"/> if none is available.</returns>
+    public FeatureState GetPlayerFeatureSelection(CCSPlayerController player) => Api.GetPlayerFeatureSelection(player, Name);
 
     /// <summary>
     /// Sets the state of this feature for the specified player.
@@ -349,6 +365,7 @@ public abstract class VipFeature : IDisposable
         Api.OnPlayerDisconnect -= OnPlayerDisconnect;
         Api.OnPlayerSpawn -= OnPlayerSpawn;
         Api.OnPlayerUseFeature -= OnPlayerUseFeature;
+        Api.PlayerFeatureStatesChanged -= OnPlayerFeatureStatesChanged;
 
         Api.FeatureManager.Unregister(this);
     }

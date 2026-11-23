@@ -1,6 +1,5 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Capabilities;
 using VipCoreApi;
 using VipCoreApi.Enums;
 
@@ -31,63 +30,116 @@ public class VipEndurance : BasePlugin
 
 public class Endurance : VipFeature
 {
-    private readonly CCSPlayerController?[] _players = new CCSPlayerController?[65];
+    private readonly BasePlugin _plugin;
+    private readonly Dictionary<int, CCSPlayerController> _players = new();
+    private bool _mapEnding;
+    private bool _tickRegistered;
+    private bool _tickUpdatePending;
+    private bool _disposed;
 
     public Endurance(BasePlugin basePlugin, IVipCoreApi api) : base("endurance", api)
     {
-        basePlugin.RegisterListener<Listeners.OnClientDisconnectPost>(slot => _players[slot] = null);
-        basePlugin.RegisterListener<Listeners.OnTick>(() =>
+        _plugin = basePlugin;
+
+        _plugin.RegisterListener<Listeners.OnClientDisconnectPost>(RemovePlayer);
+        _plugin.RegisterListener<Listeners.OnMapStart>(OnMapStart);
+        _plugin.RegisterListener<Listeners.OnMapEnd>(OnMapEnd);
+        Server.NextWorldUpdate(RestorePlayers);
+    }
+
+    private void OnTick()
+    {
+        foreach (var player in _players.Values)
         {
-            for (var slot = 0; slot < _players.Length; slot++)
-            {
-                var player = _players[slot];
-                if (player is null) continue;
+            if (player is not { IsValid: true, Connected: PlayerConnectedState.Connected, PawnIsAlive: true })
+                continue;
 
-                if (!player.IsValid)
-                {
-                    _players[slot] = null;
-                    continue;
-                }
+            if (player.PlayerPawn.Value is not { IsValid: true } pawn)
+                continue;
 
-                if (!IsFeatureEnabled(player))
-                {
-                    _players[slot] = null;
-                    continue;
-                }
+            ref var modifier = ref pawn.VelocityModifier;
+            if (modifier < 1.0f && IsFeatureEnabled(player))
+                modifier = 1.0f;
+        }
+    }
 
-                if (!player.PawnIsAlive) continue;
+    private void RestorePlayers()
+    {
+        if (_disposed || _mapEnding) return;
 
-                var playerPawn = player.PlayerPawn.Value;
-                if (playerPawn == null) continue;
+        foreach (var player in Utilities.GetPlayers())
+            UpdatePlayer(player);
+    }
 
-                if (playerPawn is { IsValid: true, VelocityModifier: < 1.0f })
-                {
-                    playerPawn.VelocityModifier = 1.0f;
-                }
-            }
-        });
+    private void OnMapStart(string mapName)
+    {
+        _mapEnding = false;
+        Server.NextWorldUpdate(RestorePlayers);
+    }
 
-        Server.NextWorldUpdate(() =>
-        {
-            foreach (var player in Utilities.GetPlayers())
-                UpdatePlayer(player);
-        });
+    private void OnMapEnd()
+    {
+        _mapEnding = true;
+        _players.Clear();
+        UpdateTickListener();
     }
 
     public override void OnPlayerAuthorized(CCSPlayerController player, string group) => UpdatePlayer(player);
 
     public override void OnPlayerSpawn(CCSPlayerController player, bool vip) => UpdatePlayer(player);
 
-    public override void OnSelectItem(CCSPlayerController player, VipFeature feature) => UpdatePlayer(player);
+    public override void OnPlayerFeatureStatesChanged(CCSPlayerController player) => UpdatePlayer(player);
 
-    public override void OnPlayerRemoved(CCSPlayerController player, string group) => _players[player.Slot] = null;
-
-    public override void OnPlayerDisconnect(CCSPlayerController player, bool vip) => _players[player.Slot] = null;
+    public override void OnPlayerRemoved(CCSPlayerController player, string group)
+    {
+        if (player.IsValid) RemovePlayer(player.Slot);
+    }
 
     private void UpdatePlayer(CCSPlayerController player)
     {
-        if (player is not { IsValid: true, IsBot: false }) return;
+        if (_disposed || _mapEnding || player is not { IsValid: true, IsBot: false, IsHLTV: false }) return;
 
-        _players[player.Slot] = IsFeatureEnabled(player) ? player : null;
+        var state = GetPlayerFeatureSelection(player);
+        if (state is FeatureState.Enabled)
+            _players[player.Slot] = player;
+        else
+            _players.Remove(player.Slot);
+        UpdateTickListener();
+    }
+
+    private void RemovePlayer(int slot)
+    {
+        if (_players.Remove(slot)) UpdateTickListener();
+    }
+
+    private void UpdateTickListener()
+    {
+        if (_tickUpdatePending || _tickRegistered == (_players.Count > 0)) return;
+
+        _tickUpdatePending = true;
+        // Change the listener list outside the current dispatch.
+        Server.NextWorldUpdate(() =>
+        {
+            _tickUpdatePending = false;
+            var needsTick = _players.Count > 0;
+            if (_disposed || _tickRegistered == needsTick) return;
+
+            if (needsTick)
+                _plugin.RegisterListener<Listeners.OnTick>(OnTick);
+            else
+                _plugin.RemoveListener<Listeners.OnTick>(OnTick);
+            _tickRegistered = needsTick;
+        });
+    }
+
+    public override void Dispose()
+    {
+        _disposed = true;
+        _players.Clear();
+        if (_tickRegistered) _plugin.RemoveListener<Listeners.OnTick>(OnTick);
+        _plugin.RemoveListener<Listeners.OnClientDisconnectPost>(RemovePlayer);
+        _plugin.RemoveListener<Listeners.OnMapStart>(OnMapStart);
+        _plugin.RemoveListener<Listeners.OnMapEnd>(OnMapEnd);
+        base.Dispose();
     }
 }

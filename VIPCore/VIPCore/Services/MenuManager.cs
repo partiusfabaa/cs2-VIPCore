@@ -139,6 +139,8 @@ public class MenuManager
             if (feature.Type is FeatureType.Toggle)
                 _cookies.Set(player.SteamID, feature.Name, (int)newState);
 
+            _api.NotifyFeatureStatesChanged(player);
+
             _plugin.PrintToChat(player,
                 $"{_plugin.Translate(player, feature.Name)}: {StateText(player, newState)}");
         }
